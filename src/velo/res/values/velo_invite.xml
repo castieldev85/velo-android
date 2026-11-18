@@ -3,6 +3,8 @@
     <!-- Velo 0.39: invite QR code to a group's server -->
     <string name="velo_invite_title">Invite</string>
     <string name="velo_invite_have">I have an invite</string>
+    <!-- Velo 0.43 -->
+    <string name="velo_trial_no_invite">No invite? Try Velo for free</string>
     <string name="velo_invite_invalid_title">Not a Velo invite</string>
     <string name="velo_invite_invalid_message">This code is not a valid Velo invite. Ask whoever runs your group for a new one.</string>
     <string name="velo_invite_confirm_title" formatted="true">Join %s?</string>

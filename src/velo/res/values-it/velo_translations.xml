@@ -656,6 +656,7 @@
     <string name="velo_intro_description">Velo è un\'app che ti collega a una rete globale chiamata XMPP.</string>
     <string name="velo_invite_title">Invito</string>
     <string name="velo_invite_have">Ho un invito</string>
+    <string name="velo_trial_no_invite">Non hai un invito? Prova Velo gratis</string>
     <string name="velo_invite_invalid_title">Non è un invito di Velo</string>
     <string name="velo_invite_invalid_message">Questo codice non è un invito di Velo valido. Chiedine uno nuovo a chi gestisce il tuo gruppo.</string>
     <string name="velo_invite_confirm_title">Entrare in %s?</string>

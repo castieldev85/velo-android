@@ -701,6 +701,18 @@ android:text="@string/xmpp_network_description" />
                     android:textAllCaps="false"
                     android:textSize="16sp" />
 
+                <!-- Velo 0.43: no invite yet? The free trial group on velochat.eu (store version only) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/use_velo_trial"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="4dp"
+                    android:text="@string/velo_trial_no_invite"
+                    android:textAllCaps="false"
+                    android:textSize="15sp"
+                    android:visibility="gone" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

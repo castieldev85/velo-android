@@ -1251,6 +1251,13 @@ public class EditAccountActivity extends OmemoActivity
                 // Velo 0.42.2: say the rule before, not after a failed registration
                 this.binding.accountPasswordLayout.setHelperText(getString(R.string.velo_invite_password_hint));
             }
+            // Velo 0.43: the trial group page gives the user name; only the password is left to type
+            final String veloUser =
+                    getIntent() == null ? null : getIntent().getStringExtra(eu.siacs.conversations.velo.VeloFriendInvite.EXTRA_USER);
+            if (mVeloInviteToken == null && veloUser != null && this.binding.accountJid.getText().length() == 0) {
+                this.binding.accountJid.setText(veloUser);
+                this.binding.accountPassword.requestFocus();
+            }
         }
         SharedPreferences preferences = getPreferences();
         mUseTor = preferences.getBoolean("use_tor", getResources().getBoolean(R.bool.use_tor));

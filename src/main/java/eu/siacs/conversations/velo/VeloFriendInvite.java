@@ -186,6 +186,19 @@ public final class VeloFriendInvite {
         return value != null && TOKEN.matcher(value).matches() ? value : null;
     }
 
+    /** Velo 0.43: the extra holding the user name an invite suggests (never a password). */
+    public static final String EXTRA_USER = "velo_invite_user";
+
+    /**
+     * Velo 0.43: the user name a trial group page puts in the invite ({@code &u=}), so the login
+     * page opens already filled in. Only the name: the password is never in an invite.
+     */
+    @Nullable
+    public static String user(@Nullable final String invite) {
+        final String value = param(invite, "u");
+        return value != null && NAME.matcher(value).matches() ? value : null;
+    }
+
     /** The user name of who invites, or null. */
     @Nullable
     public static String inviter(@Nullable final String invite) {

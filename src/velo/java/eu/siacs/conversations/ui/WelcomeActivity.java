@@ -271,6 +271,17 @@ public class WelcomeActivity extends XmppActivity implements XmppConnectionServi
         });
         binding.useTransfer.setOnClickListener(v -> eu.siacs.conversations.velo.VeloTransferActivity.startReceiving(this));
         binding.useVeloInvite.setOnClickListener(v -> eu.siacs.conversations.velo.VeloInviteActivity.start(this));
+        // Velo 0.43: whoever found Velo alone starts from the free trial group on the site
+        if (eu.siacs.conversations.BuildConfig.VELO_PUBLIC) {
+            binding.useVeloTrial.setVisibility(View.VISIBLE);
+            binding.useVeloTrial.setOnClickListener(v -> {
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://velochat.eu/#prova")));
+                } catch (final android.content.ActivityNotFoundException e) {
+                    Toast.makeText(this, R.string.no_application_found_to_open_link, Toast.LENGTH_LONG).show();
+                }
+            });
+        }
         binding.useCert.setOnClickListener(v -> addAccountFromKey());
         getDefaults();
         createInfoMenu();

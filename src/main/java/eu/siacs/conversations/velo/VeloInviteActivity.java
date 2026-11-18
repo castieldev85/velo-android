@@ -194,6 +194,7 @@ public class VeloInviteActivity extends BaseActivity {
         // Velo 0.42: an invite from "Invite a friend" also carries the token to create the account
         final String token = VeloFriendInvite.token(text);
         final String inviter = VeloFriendInvite.inviter(text);
+        final String user = token == null ? VeloFriendInvite.user(text) : null;
         final VeloServers.Server server;
         try {
             server = VeloServers.parseInvite(text);
@@ -229,6 +230,9 @@ public class VeloInviteActivity extends BaseActivity {
                             if (token != null) {
                                 intent.putExtra(VeloFriendInvite.EXTRA_TOKEN, token);
                                 intent.putExtra(VeloFriendInvite.EXTRA_INVITER, inviter);
+                            }
+                            if (user != null) {
+                                intent.putExtra(VeloFriendInvite.EXTRA_USER, user);
                             }
                             intent.putExtra("init", true);
                             intent.putExtra(VeloServers.EXTRA_INVITE, server.toInvite());

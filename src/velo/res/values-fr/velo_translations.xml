@@ -153,6 +153,7 @@
     <string name="velo_whats_new_text">Cette version apporte les invitations.\n\n• Inviter un ami : depuis le menu latéral, vous créez une invitation et l\'envoyez par un lien ou un QR. La personne télécharge Velo depuis la page, choisit un nom et un mot de passe et entre, déjà en contact avec vous.\n• Sans numéro de téléphone et sans email.\n• Sur le serveur public de Velo, chacun a 5 invitations ; chacune est valable une seule fois, pendant 7 jours.\n• Correction (0.42.1) : le bouton « J\'ai installé Velo : entrer » de la page d\'invitation ouvre maintenant Velo.\n• Correction (0.42.2) : en entrant avec une invitation, Velo indique dès le début que le mot de passe doit avoir au moins 14 caractères, au lieu d\'un simple « Échec de l\'inscription ». L\'icône Tor ne reste plus jaune quand tout est connecté, et les profils se reconnectent plus vite quand Velo redémarre seule.</string>
     <string name="velo_invite_title">Invitation</string>
     <string name="velo_invite_have">J\'ai une invitation</string>
+    <string name="velo_trial_no_invite">Pas d\'invitation ? Essayez Velo gratuitement</string>
     <string name="velo_invite_invalid_title">Ce n\'est pas une invitation Velo</string>
     <string name="velo_invite_invalid_message">Ce code n\'est pas une invitation Velo valide. Demandez-en une nouvelle à la personne qui gère votre groupe.</string>
     <string name="velo_invite_confirm_title">Rejoindre %s ?</string>
