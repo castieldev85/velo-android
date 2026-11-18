@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.19: the same icon for Android 6/7 (no adaptive icons) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/velo_launcher_calc_bg" />
+        </shape>
+    </item>
+    <item android:drawable="@drawable/velo_launcher_calc_fg" />
+</layer-list>

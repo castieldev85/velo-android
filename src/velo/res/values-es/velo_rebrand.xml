@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generato da velo-branding/rinomina_testi.py: non modificare a mano. -->
+<resources>
+    <string name="not_a_backup_file">El archivo seleccionado no es un archivo de respaldo de Velo</string>
+    <string name="invite_to_app">Invitar a Velo</string>
+    <string name="welcome_to_velo">Bienvenido a Velo</string>
+    <string name="velo_intro_description">Velo es una app que te conecta a la red global llamada XMPP. Esta red incluye servicios, llamados pasarelas, para chatear con otras redes como SMS, IRC, Matrix, y más.</string>
+    <string name="internal_meda_viewer_summary">Usar visualizador interno para abrir imágenes o vídeos dentro de Velo</string>
+    <string name="pref_export_settings_summary">Exportar los ajustes de Velo a la carpeta de backup</string>
+</resources>

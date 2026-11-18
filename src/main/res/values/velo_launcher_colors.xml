@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Velo 0.19: disguised launcher icons -->
+    <color name="velo_launcher_calc_bg">#FF455A64</color>
+    <color name="velo_launcher_notes_bg">#FFFBC02D</color>
+</resources>

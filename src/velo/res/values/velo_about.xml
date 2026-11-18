@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo: pagina Informazioni. Gli avvisi di copyright e licenza restano: la licenza AGPLv3 lo
+     richiede (sezioni 5 e 7). Tolti solo i collegamenti, le donazioni e la privacy del progetto originale. -->
+<resources>
+    <string name="pref_about_message" translatable="false"><b>Velo</b>
+			\n\nBased on monocles chat, Copyright © 2020-2026 Arne-Brün Vogelsang and contributors,
+			and on Conversations, Copyright © Daniel Gultsch.
+			\n\nThis program is free software: you can redistribute it and/or modify
+			it under the terms of the GNU Affero General Public License version 3 only
+			(AGPL-3.0-only) as published by the Free Software Foundation.
+			\n\nStickers (CC BY-SA): Racoon by Corine Tea, Miho by Hey-Xander, ZeMarmot by Aryeom Han,
+			Mochi by Timothée Jaussoin.
+			\n\nThis program includes the libsignal library, which is licensed under the
+			GNU Affero General Public License version 3 only (AGPLv3). As a result, the combined
+			work is also subject to the terms of the AGPLv3, version 3 only, including its requirement to make
+			the complete corresponding source code available to its users.
+			\n\nThis program includes Apache POI, Copyright © The Apache Software Foundation,
+			licensed under the Apache License, Version 2.0.
+			\n\nThis program is distributed in the hope that it will be useful,
+			but WITHOUT ANY WARRANTY; without even the implied warranty of
+			MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+			GNU Affero General Public License for more details.
+			\n\nYou should have received a copy of the GNU Affero General Public License along with
+			this program. If not, see https://www.gnu.org/licenses/agpl-3.0.html
+			\n\nCode taken from Conversations, blabber.im and Cheogram is licensed under the GNU General
+			Public License version 3 (GPLv3). Section 13 of the GPLv3 allows it to be combined with AGPLv3 code.
+			\n\nThe Inter, Nunito and Lora typefaces are copyright their authors and are licensed under the SIL Open Font License, Version 1.1.
+			\n\nThe complete corresponding source code of Velo is available from whoever gave you this app.
+			\n\n\nLibraries
+			\n\nWebRTC, Copyright (c) 2011, The WebRTC project authors (BSD)
+			\n\nTranscoder (Apache License, Version 2.0)
+			\n\nBouncy Castle (The MIT License)
+			\n\nGNU libidn (GNU LGPL 2.1 or later)
+			\n\njxmpp (Apache License, Version 2.0)
+			\n\nMemorizingTrustManager (The MIT License)
+			\n\nMiniDNS (Apache License, Version 2.0 / LGPL 2.1 / WTFPL)
+			\n\nOpenKeychain API (Apache License, Version 2.0)
+			\n\nAndroid support libraries (Apache License, Version 2.0)
+			\n\nMaterial design icons (CC BY 4.0)
+			\n\nShortcutBadger (Apache License, Version 2.0)
+			\n\nlibsignal-protocol-java (GPLv3)
+			\n\nlibsignal, Copyright © Signal Messenger, LLC, with post-quantum OMEMO2 changes (GNU AGPLv3 only)
+			\n\nAndroid Image Cropper (Apache License, Version 2.0)
+			\n\nZXing (Apache License, Version 2.0)
+			\n\nosmdroid (Apache License, Version 2.0)
+			\n\nCheogram (GPLv3)
+			\n\notr4j (Apache License, Version 2.0; parts GNU LGPL 2.1)
+			\n\nSQLCipher, Copyright © Zetetic LLC (BSD-style license)
+			\n\nTink (Apache License, Version 2.0)
+			\n\nConscrypt (Apache License, Version 2.0)
+			\n\nOkHttp, Retrofit (Apache License, Version 2.0)
+			\n\nGuava (Apache License, Version 2.0)
+			\n\nAndroidX Media (Apache License, Version 2.0)
+			\n\nGlide (BSD, part MIT and Apache License, Version 2.0)
+			\n\nMarkwon (Apache License, Version 2.0)
+			\n\nAndroidPhotoFilters (Apache License, Version 2.0)
+			\n\n\nMaps
+			\n\nMaps by OpenStreetMap. Copyright restrictions may apply.
+	</string>
+</resources>

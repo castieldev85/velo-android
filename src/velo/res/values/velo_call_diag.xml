@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="velo_diag_ok">All good</string>
+    <string name="velo_diag_ko">Not connected</string>
+    <string name="velo_diag_connection">Connection</string>
+    <string name="velo_diag_state">Status</string>
+    <string name="velo_diag_on">Connected</string>
+    <string name="velo_diag_off">Not connected</string>
+    <string name="velo_diag_since">Connected for</string>
+    <string name="velo_diag_tries">Reconnections</string>
+    <string name="velo_diag_ping">Last check sent</string>
+    <string name="velo_diag_packet">Last data received</string>
+    <string name="velo_diag_tor_battery">Tor and battery</string>
+    <string name="velo_diag_tor">Tor</string>
+    <string name="velo_diag_last_connect">Last connection took</string>
+    <string name="velo_diag_tor_startup">Tor started in</string>
+    <string name="velo_diag_tor_ready_for">Tor ready for</string>
+    <string name="velo_diag_tor_circuits">Open circuits</string>
+    <string name="velo_diag_battery">Battery optimisation</string>
+    <string name="velo_diag_battery_off">Off</string>
+    <string name="velo_diag_battery_on">On</string>
+    <string name="velo_diag_data">Data since the phone was switched on</string>
+    <string name="velo_diag_received">Received</string>
+    <string name="velo_diag_sent">Sent</string>
+    <string name="velo_diag_log">Tor log</string>
+    <string name="velo_diag_crash">Last error</string>
+    <string name="velo_diag_no_crash">No errors recorded</string>
+    <string name="velo_diag_hint">Many reconnections, or battery optimisation on, explain high battery use.</string>
+    <string name="velo_diag_no_account">No active profile</string>
+    <string name="velo_diag_ago" formatted="false">%s ago</string>
+    <string name="velo_call_mic">Microphone</string>
+    <string name="velo_call_speaker">Speaker</string>
+    <string name="velo_call_video">Video</string>
+    <string name="velo_call_flip">Flip</string>
+    <string name="velo_call_dialpad">Keypad</string>
+    <string name="velo_call_headset">Headset</string>
+    <string name="velo_call_bluetooth">Bluetooth</string>
+    <string name="velo_call_encrypted">End-to-end encrypted</string>
+    <string name="velo_dict_title">Getting dictation ready</string>
+    <string name="velo_dict_wait">One moment…</string>
+    <string name="velo_dict_almost">Almost ready…</string>
+    <string name="velo_dict_progress">%1$d of %2$d MB · first time only</string>
+    <string name="velo_dict_close">Close</string>
+    <string name="velo_dict_retry">Try again</string>
+    <string name="velo_dict_failed">Dictation failed</string>
+</resources>

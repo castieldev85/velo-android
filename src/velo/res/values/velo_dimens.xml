@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Velo 0.15 (new look): rounder bubbles with a small corner on the sender's side,
+         a bolder title in the top bar, tighter avatar spacing in the chat list. -->
+    <dimen name="bubble_radius">20dp</dimen>
+    <dimen name="bubble_radius_large">20dp</dimen>
+    <dimen name="bubble_radius_small">6dp</dimen>
+    <dimen name="actionbar_text_size">22sp</dimen>
+    <dimen name="avatar_item_distance">14dp</dimen>
+</resources>

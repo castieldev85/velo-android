@@ -1,0 +1,3 @@
+[submodule "deps/libsignal"]
+	path = deps/libsignal
+	url = https://codeberg.org/velo/pq-omemo-2.git

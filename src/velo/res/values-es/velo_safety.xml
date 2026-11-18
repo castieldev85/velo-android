@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="velo_contact_action_verify">Verificar</string>
+    <string name="velo_purge_queued">Estás sin conexión: el chat se borra aquí, y del otro teléfono en cuanto vuelvas a conectarte.</string>
+    <string name="velo_autowipe_title">Borrar si no se desbloquea</string>
+    <string name="velo_autowipe_off">Desactivado</string>
+    <string name="velo_autowipe_days" formatted="true">Tras %d días</string>
+    <string name="velo_autowipe_explanation" formatted="true">Si no escribes tu PIN durante %d días, Velo se borra de este teléfono: chats, archivos, claves y cuenta. Un día antes recibes una notificación. Los demás conservan sus chats. No se puede deshacer: si lo necesitas, guarda una copia.</string>
+    <string name="velo_autowipe_warning">Abre Velo en menos de un día para conservarla.</string>
+    <string name="velo_transfer_title">Pasar a un teléfono nuevo</string>
+    <string name="velo_transfer_summary">Chats, claves y archivos, directamente entre los dos teléfonos</string>
+    <string name="velo_transfer_warning">Los dos teléfonos deben estar en la misma Wi-Fi. Durante el paso este teléfono se desconecta y, cuando el nuevo lo ha recibido todo, Velo se borra de aquí. El PIN, el PIN de pánico y el aspecto no se pasan: configúralos de nuevo en el teléfono nuevo.</string>
+    <string name="velo_transfer_continue">Continuar</string>
+    <string name="velo_transfer_receive_title">Recibir de otro teléfono</string>
+    <string name="velo_transfer_receive_explanation">En el teléfono antiguo abre Ajustes, Copia de seguridad, Pasar a un teléfono nuevo. Sigue en la misma Wi-Fi y escanea el código que aparece.</string>
+    <string name="velo_transfer_scan_this">En el teléfono nuevo toca Recibir de otro teléfono y escanea este código. No se lo enseñes a nadie más: quien lo tenga puede llevarse tus chats.</string>
+    <string name="velo_transfer_or_type">O escribe el código:</string>
+    <string name="velo_transfer_scan">Escanear el código</string>
+    <string name="velo_transfer_start">Empezar</string>
+    <string name="velo_transfer_bad_code">Este código no es válido.</string>
+    <string name="velo_transfer_no_wifi">No se encuentra Wi-Fi. Conecta los dos teléfonos a la misma Wi-Fi e inténtalo de nuevo.</string>
+    <string name="velo_transfer_expired">Se acabó el tiempo: no se ha pasado nada. Abre de nuevo esta página.</string>
+    <string name="velo_transfer_connecting">Conectando con el otro teléfono…</string>
+    <string name="velo_transfer_preparing">Preparando la copia…</string>
+    <string name="velo_transfer_sending" formatted="true">Enviando: %d%%</string>
+    <string name="velo_transfer_receiving" formatted="true">Recibidos: %d MB</string>
+    <string name="velo_transfer_restoring">Restaurando los chats…</string>
+    <string name="velo_transfer_waiting_new_phone">Esperando a que termine el teléfono nuevo…</string>
+    <string name="velo_transfer_wiping">Listo. Borrando Velo de este teléfono…</string>
+    <string name="velo_transfer_failed_old">El paso no ha terminado: no se ha borrado nada y este teléfono vuelve a conectarse.</string>
+    <string name="velo_transfer_failed_new">El paso no ha terminado: el teléfono antiguo lo conserva todo. Borra los datos de Velo aquí antes de volver a intentarlo.</string>
+    <string name="velo_transfer_finished">Ha llegado todo. Velo se está borrando del teléfono antiguo. Ahora configura de nuevo el PIN y el PIN de pánico en Ajustes, Seguridad.</string>
+    <string name="velo_transfer_open">Abrir Velo</string>
+    <string name="velo_verify_title">Verificar contacto</string>
+    <string name="velo_verify_explanation" formatted="true">Lee este código a %s, en persona o en una llamada. Si es igual en los dos teléfonos, no hay nadie en medio.</string>
+    <string name="velo_verify_no_keys">Las claves de este contacto aún no han llegado. Intercambiad un mensaje y abre de nuevo esta página.</string>
+    <string name="velo_verify_phone_number" formatted="true">Su teléfono %d</string>
+    <string name="velo_verify_match">Los códigos coinciden</string>
+    <string name="velo_verify_mismatch">No coinciden</string>
+    <string name="velo_verify_mismatch_explanation">No marques este contacto como verificado ni escribas nada delicado en este chat. Si ha cambiado de teléfono, espera la clave nueva y vuelve a comprobarlo. Si no, alguien podría estar escuchando.</string>
+    <string name="velo_verify_done">Verificado</string>
+    <string name="velo_verify_or_qr">O, si estáis juntos:</string>
+    <string name="velo_verify_scan">Escanear su QR</string>
+    <string name="velo_verify_show_qr">Mostrar mi QR</string>
+    <string name="velo_transfer_no_answer">El teléfono nuevo no ha respondido. Míralo: ¿ves tus chats?</string>
+    <string name="velo_transfer_it_has_everything">Lo tiene todo: borrar Velo de aquí</string>
+    <string name="velo_transfer_it_failed">No ha funcionado: este teléfono vuelve a conectarse</string>
+</resources>

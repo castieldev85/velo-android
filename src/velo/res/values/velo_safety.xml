@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="velo_contact_action_verify">Verify</string>
+    <string name="velo_purge_queued">You are offline: the chat is deleted here, and from the other phone as soon as you are back online.</string>
+    <string name="velo_autowipe_title">Wipe if not unlocked</string>
+    <string name="velo_autowipe_off">Off</string>
+    <string name="velo_autowipe_days" formatted="true">After %d days</string>
+    <string name="velo_autowipe_explanation" formatted="true">If you don\'t type your PIN for %d days, Velo deletes itself from this phone: chats, files, keys and account. You get a notification one day before. The other people keep their chats. It can\'t be undone: keep a backup if you need one.</string>
+    <string name="velo_autowipe_warning">Open Velo within a day to keep it.</string>
+    <string name="velo_transfer_title">Move to a new phone</string>
+    <string name="velo_transfer_summary">Chats, keys and files, directly between the two phones</string>
+    <string name="velo_transfer_warning">Both phones must be on the same Wi-Fi. This phone goes offline during the move and, when the new one has everything, Velo is deleted from here. PIN, panic PIN and appearance are not moved: set them again on the new phone.</string>
+    <string name="velo_transfer_continue">Continue</string>
+    <string name="velo_transfer_receive_title">Receive from another phone</string>
+    <string name="velo_transfer_receive_explanation">On the old phone open Settings, Backup, Move to a new phone. Stay on the same Wi-Fi, then scan the code it shows.</string>
+    <string name="velo_transfer_scan_this">On the new phone tap Receive from another phone and scan this code. Show it to no one else: whoever has it can take your chats.</string>
+    <string name="velo_transfer_or_type">Or type the code:</string>
+    <string name="velo_transfer_scan">Scan the code</string>
+    <string name="velo_transfer_start">Start</string>
+    <string name="velo_transfer_bad_code">This is not a valid code.</string>
+    <string name="velo_transfer_no_wifi">No Wi-Fi found. Connect both phones to the same Wi-Fi and try again.</string>
+    <string name="velo_transfer_expired">Time is up: nothing was moved. Open this page again.</string>
+    <string name="velo_transfer_connecting">Connecting to the other phone…</string>
+    <string name="velo_transfer_preparing">Preparing the copy…</string>
+    <string name="velo_transfer_sending" formatted="true">Sending: %d%%</string>
+    <string name="velo_transfer_receiving" formatted="true">Received: %d MB</string>
+    <string name="velo_transfer_restoring">Restoring chats…</string>
+    <string name="velo_transfer_waiting_new_phone">Waiting for the new phone to finish…</string>
+    <string name="velo_transfer_wiping">Done. Deleting Velo from this phone…</string>
+    <string name="velo_transfer_failed_old">The move did not finish: nothing was deleted and this phone is back online.</string>
+    <string name="velo_transfer_failed_new">The move did not finish: the old phone keeps everything. Clear Velo\'s data here before trying again.</string>
+    <string name="velo_transfer_finished">Everything arrived. Velo is being deleted from the old phone. Now set your PIN and panic PIN again in Settings, Security.</string>
+    <string name="velo_transfer_open">Open Velo</string>
+    <string name="velo_verify_title">Verify contact</string>
+    <string name="velo_verify_explanation" formatted="true">Read this code to %s, in person or on a call. If it is the same on both phones, nobody is in between.</string>
+    <string name="velo_verify_no_keys">The keys of this contact aren\'t here yet. Exchange a message, then open this page again.</string>
+    <string name="velo_verify_phone_number" formatted="true">Their phone %d</string>
+    <string name="velo_verify_match">The codes match</string>
+    <string name="velo_verify_mismatch">They don\'t match</string>
+    <string name="velo_verify_mismatch_explanation">Don\'t mark this contact as verified and don\'t share anything sensitive in this chat. If they changed phone, wait for the new key and check again. Otherwise someone may be listening.</string>
+    <string name="velo_verify_done">Verified</string>
+    <string name="velo_verify_or_qr">Or, when you are together:</string>
+    <string name="velo_verify_scan">Scan their QR</string>
+    <string name="velo_verify_show_qr">Show my QR</string>
+    <string name="velo_transfer_no_answer">The new phone didn\'t answer. Look at it: does it show your chats?</string>
+    <string name="velo_transfer_it_has_everything">It has everything: delete Velo from here</string>
+    <string name="velo_transfer_it_failed">It didn\'t work: this phone goes back online</string>
+</resources>

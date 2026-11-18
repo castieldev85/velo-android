@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="velo_diag_ok">Todo bien</string>
+    <string name="velo_diag_ko">Sin conexión</string>
+    <string name="velo_diag_connection">Conexión</string>
+    <string name="velo_diag_state">Estado</string>
+    <string name="velo_diag_on">Conectado</string>
+    <string name="velo_diag_off">Sin conexión</string>
+    <string name="velo_diag_since">Conectado desde hace</string>
+    <string name="velo_diag_tries">Reconexiones</string>
+    <string name="velo_diag_ping">Última comprobación enviada</string>
+    <string name="velo_diag_packet">Último dato recibido</string>
+    <string name="velo_diag_tor_battery">Tor y batería</string>
+    <string name="velo_diag_tor">Tor</string>
+    <string name="velo_diag_last_connect">Última conexión en</string>
+    <string name="velo_diag_tor_startup">Arranque de Tor en</string>
+    <string name="velo_diag_tor_ready_for">Tor listo desde hace</string>
+    <string name="velo_diag_tor_circuits">Circuitos abiertos</string>
+    <string name="velo_diag_battery">Optimización de batería</string>
+    <string name="velo_diag_battery_off">Desactivada</string>
+    <string name="velo_diag_battery_on">Activada</string>
+    <string name="velo_diag_data">Datos desde que se encendió el teléfono</string>
+    <string name="velo_diag_received">Recibidos</string>
+    <string name="velo_diag_sent">Enviados</string>
+    <string name="velo_diag_log">Registro de Tor</string>
+    <string name="velo_diag_crash">Último error</string>
+    <string name="velo_diag_no_crash">Ningún error registrado</string>
+    <string name="velo_diag_hint">Muchas reconexiones, o la optimización de batería activada, explican el consumo.</string>
+    <string name="velo_diag_no_account">Ningún perfil activo</string>
+    <string name="velo_diag_ago" formatted="false">hace %s</string>
+    <string name="velo_call_mic">Micrófono</string>
+    <string name="velo_call_speaker">Altavoz</string>
+    <string name="velo_call_video">Vídeo</string>
+    <string name="velo_call_flip">Girar</string>
+    <string name="velo_call_dialpad">Teclado</string>
+    <string name="velo_call_headset">Auriculares</string>
+    <string name="velo_call_bluetooth">Bluetooth</string>
+    <string name="velo_call_encrypted">Cifrada de extremo a extremo</string>
+    <string name="velo_dict_title">Preparando el dictado</string>
+    <string name="velo_dict_wait">Un momento…</string>
+    <string name="velo_dict_almost">Casi listo…</string>
+    <string name="velo_dict_progress">%1$d de %2$d MB · solo la primera vez</string>
+    <string name="velo_dict_close">Cerrar</string>
+    <string name="velo_dict_retry">Reintentar</string>
+    <string name="velo_dict_failed">El dictado ha fallado</string>
+</resources>

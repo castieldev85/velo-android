@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Velo 0.39: invite QR code to a group's server -->
+    <string name="velo_invite_title">Invite</string>
+    <string name="velo_invite_have">I have an invite</string>
+    <string name="velo_invite_invalid_title">Not a Velo invite</string>
+    <string name="velo_invite_invalid_message">This code is not a valid Velo invite. Ask whoever runs your group for a new one.</string>
+    <string name="velo_invite_confirm_title" formatted="true">Join %s?</string>
+    <string name="velo_invite_confirm_message" formatted="true">Velo will connect to this group\'s private server, through Tor.\n\nCheck with whoever gave you the code that their phone shows the same verification code:\n\n%s\n\nIf it is different, do not continue.</string>
+    <string name="velo_invite_join">Join</string>
+    <string name="velo_invite_conflict_title">Invite refused</string>
+    <string name="velo_invite_conflict_message">Velo already knows this server, but this invite points to a different address or different security keys. It could lead to a fake server, so it was not used. Ask whoever runs the group to check.</string>
+    <string name="velo_invite_login_title" formatted="true">Join %s</string>
+    <string name="velo_invite_show">Invite to this server</string>
+    <string name="velo_invite_show_title" formatted="true">Invite to %s</string>
+    <string name="velo_invite_show_text">Show this code in person to the new member: they tap I have an invite and scan it. Then give them their user name and temporary password, by voice. The password is never in the code.</string>
+    <string name="velo_invite_code_label">Verification code</string>
+    <!-- Velo 0.39.3: the invite also from a photo of the QR code or from the clipboard -->
+    <string name="velo_invite_from_camera">Scan with the camera</string>
+    <string name="velo_invite_from_photo">Choose a photo of the QR code</string>
+    <string name="velo_invite_from_paste">Paste the invite</string>
+</resources>

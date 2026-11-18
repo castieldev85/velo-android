@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="velo_tab_all">All</string>
+    <string name="velo_tab_unread">Unread</string>
+    <string name="velo_tab_direct">Direct</string>
+    <string name="velo_tab_channels">Channels</string>
+    <!-- Velo 0.35: welcome page -->
+    <string name="velo_welcome_tagline">Private chats, encrypted, just between us</string>
+</resources>

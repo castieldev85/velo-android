@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generato da velo-branding/rinomina_testi.py: non modificare a mano. -->
+<resources>
+    <string name="not_a_backup_file">The file you selected is not a Velo backup file</string>
+    <string name="welcome_to_velo">Welcome to Velo</string>
+    <string name="velo_intro_description">Velo is an app that connects you to a global network called XMPP. This network includes services, called gateways, for chatting with other networks such as SMS, IRC, Matrix, and more.</string>
+    <string name="pref_show_mappreview_inside_summary">Show map previews in chats. Connects to the Velo server.</string>
+    <string name="use_conversations.im">Use Velo</string>
+    <string name="do_you_have_an_account">Do you already have a XMPP address? This might be the case if you are already using a different XMPP client or have used Velo, Conversations, or Snikket before. If not you can create a new XMPP address right now.</string>
+    <string name="invite_to_app">Invite to Velo</string>
+    <string name="pref_export_settings_summary">Export the Velo app settings to the backup folder</string>
+</resources>

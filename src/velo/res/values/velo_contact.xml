@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="velo_contact_action_message">Message</string>
+    <string name="velo_contact_action_call">Call</string>
+    <string name="velo_contact_action_video">Video</string>
+    <string name="velo_contact_action_search">Search</string>
+    <string name="velo_invite_text">Tap the share button to send your contact an invitation to Velo.</string>
+</resources>

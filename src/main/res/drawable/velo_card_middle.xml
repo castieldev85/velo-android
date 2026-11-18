@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.16: settings entry, middle of a rounded card -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <corners android:radius="0dp" />
+    <solid android:color="?attr/colorSurfaceContainerHigh" />
+</shape>

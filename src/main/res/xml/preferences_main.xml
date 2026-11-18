@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <Preference
+        android:layout="@layout/velo_pref_card_single"
+        android:icon="@drawable/ic_touch_app_24dp"
+        android:key="velo_appearance"
+        app:summary="@string/pref_summary_appearance"
+        app:title="@string/pref_title_interface" />
+    <!-- Velo: Aspetto, Privacy, Sicurezza, Notifiche, Dati e media, Backup, Informazioni.
+         Connessione, Estensioni e UnifiedPush hidden (advanced, defaults are right). -->
+    <Preference
+        android:layout="@layout/velo_pref_card_top"
+        android:icon="@drawable/ic_privacy_tip_24dp"
+        app:fragment="eu.siacs.conversations.ui.fragment.settings.PrivacySettingsFragment"
+        app:summary="@string/pref_privacy_summary"
+        app:title="@string/pref_privacy" />
+    <Preference
+        android:layout="@layout/velo_pref_card_middle"
+        android:icon="@drawable/ic_security_24dp"
+        app:fragment="eu.siacs.conversations.ui.fragment.settings.SecuritySettingsFragment"
+        app:summary="@string/pref_summary_security"
+        app:title="@string/pref_title_security" />
+    <Preference
+        android:layout="@layout/velo_pref_card_bottom"
+        android:icon="@drawable/ic_notifications_24dp"
+        android:summary="@string/pref_notifications_summary"
+        android:title="@string/notifications"
+        app:fragment="eu.siacs.conversations.ui.fragment.settings.NotificationsSettingsFragment" />
+    <Preference
+        android:layout="@layout/velo_pref_card_top"
+        android:icon="@drawable/ic_attachment_24dp"
+        android:summary="@string/pref_attachments_summary"
+        android:title="@string/pref_attachments"
+        app:fragment="eu.siacs.conversations.ui.fragment.settings.AttachmentsSettingsFragment" />
+    <Preference
+            app:isPreferenceVisible="false"
+        android:icon="@drawable/ic_settings_ethernet_24dp"
+        android:key="connection"
+        app:fragment="eu.siacs.conversations.ui.fragment.settings.ConnectionSettingsFragment"
+        app:summary="@string/pref_connection_summary_w_cd"
+        app:title="@string/pref_connection_options" />
+    <Preference
+            app:isPreferenceVisible="false"
+        android:icon="@drawable/toys_and_games_24dp"
+        android:key="extensions"
+        app:summary="@string/pref_extensions_summary"
+        app:title="@string/pref_extensions_title" />
+    <Preference
+        android:layout="@layout/velo_pref_card_middle"
+        android:icon="@drawable/ic_archive_24dp"
+        android:key="backup"
+        android:summary="@string/pref_backup_summary"
+        android:title="@string/backup"
+        app:fragment="eu.siacs.conversations.ui.fragment.settings.BackupSettingsFragment" />
+    <Preference
+            app:isPreferenceVisible="false"
+        android:icon="@drawable/ic_cloud_sync_24dp"
+        android:key="up"
+        app:fragment="eu.siacs.conversations.ui.fragment.settings.UpSettingsFragment"
+        app:summary="@string/unified_push_summary"
+        app:title="@string/unified_push_distributor" />
+    <!-- Velo 0.20: check for a new version on our server -->
+    <Preference
+        android:layout="@layout/velo_pref_card_middle"
+        android:icon="@drawable/ic_cloud_download_24dp"
+        android:key="velo_update"
+        android:summary="@string/velo_update_summary"
+        android:title="@string/velo_update_title" />
+    <!-- Velo 0.32: shown only when the server offers this account its admin commands -->
+    <Preference
+        android:layout="@layout/velo_pref_card_middle"
+        android:icon="@drawable/ic_group_24dp"
+        android:key="velo_admin"
+        android:summary="@string/velo_admin_summary"
+        android:title="@string/velo_admin_title"
+        app:isPreferenceVisible="false" />
+    <!-- Velo 0.22.5: read-only connection/battery diagnostics -->
+    <Preference
+        android:layout="@layout/velo_pref_card_middle"
+        android:icon="@drawable/ic_settings_ethernet_24dp"
+        android:key="velo_diagnostics"
+        android:summary="@string/velo_diagnostics_summary"
+        android:title="@string/velo_diagnostics_title" />
+    <Preference
+        android:layout="@layout/velo_pref_card_bottom"
+        android:key="about"
+        android:icon="@drawable/rounded_info_24"
+        android:title="@string/title_activity_about_x">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="eu.siacs.conversations.ui.AboutActivity"
+            android:targetPackage="@string/applicationId" />
+    </Preference>
+</PreferenceScreen>

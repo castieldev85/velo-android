@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo: logo (icona dell'app). Stessa geometria di velo-branding/genera_icone.py. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="140dp"
+    android:height="140dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#1F2557" android:pathData="M24,0 H84 A24,24 0 0 1 108,24 V84 A24,24 0 0 1 84,108 H24 A24,24 0 0 1 0,84 V24 A24,24 0 0 1 24,0 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M39,32 H69 A11,11 0 0 1 80,43 V61 A11,11 0 0 1 69,72 H39 A11,11 0 0 1 28,61 V43 A11,11 0 0 1 39,32 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M36,66 L48,72 L33,81 Z" />
+    <group>
+        <clip-path android:pathData="M39,32 H69 A11,11 0 0 1 80,43 V61 A11,11 0 0 1 69,72 H39 A11,11 0 0 1 28,61 V43 A11,11 0 0 1 39,32 Z" />
+        <path android:fillColor="#DC7C8CFF" android:pathData="M26,28 H82 V51 Q75,59 68,51 Q61,43 54,51 Q47,59 40,51 Q33,43 26,51 Z" />
+    </group>
+    <path android:fillColor="#1F2557" android:pathData="M39.8,62.2 a3.2,3.2 0 1,0 6.4,0 a3.2,3.2 0 1,0 -6.4,0 Z M50.8,62.2 a3.2,3.2 0 1,0 6.4,0 a3.2,3.2 0 1,0 -6.4,0 Z M61.8,62.2 a3.2,3.2 0 1,0 6.4,0 a3.2,3.2 0 1,0 -6.4,0 Z" />
+</vector>

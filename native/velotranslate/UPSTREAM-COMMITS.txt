@@ -1,0 +1,5 @@
+bergamot-translator https://github.com/browsermt/bergamot-translator commit 9271618ebbdc5d21ac4dc4df9e72beb7ce644774
+2781d735d4a10dca876d61be587afdab2726293c 3rd_party/marian-dev (heads/master)
+9ec1128c7aac3d069a4ec2bd1dfc7f57c6526d1c 3rd_party/pybind11 (9ec1128)
+a311f9865ade34db1e8e080e6cc146f55dafb067 3rd_party/ssplit-cpp (heads/master)
+a04432d7921bfa1dd62bc2e5cdca46b226f256de bergamot-translator-tests (heads/main)

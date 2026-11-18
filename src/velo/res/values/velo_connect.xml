@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Velo 0.39.1: first login through Tor -->
+    <string name="velo_connect_first_wait">Connecting through Tor. The first time it can take a few minutes: please wait and do not close Velo.</string>
+    <string name="velo_connect_unreachable">Server not reachable. Check your connection and try again later.</string>
+</resources>

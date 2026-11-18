@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generato da velo-branding/rinomina_testi.py: non modificare a mano. -->
+<resources>
+    <string name="set_profile_picture">Immagine profilo di Velo</string>
+    <string name="conversations_backup">Backup di Velo</string>
+    <string name="not_a_backup_file">Il file selezionato non è un file di backup di Velo</string>
+    <string name="invite_to_app">Invita su Velo</string>
+    <string name="welcome_header">Benvenuto in Velo</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.21: new story (dashed circle with a plus) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:tint="?attr/colorControlNormal"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M12.94,3.05 A9,9 0 0,1 17.66,5.01 M18.99,6.34 A9,9 0 0,1 20.95,11.06 M20.95,12.94 A9,9 0 0,1 18.99,17.66 M17.66,18.99 A9,9 0 0,1 12.94,20.95 M11.06,20.95 A9,9 0 0,1 6.34,18.99 M5.01,17.66 A9,9 0 0,1 3.05,12.94 M3.05,11.06 A9,9 0 0,1 5.01,6.34 M6.34,5.01 A9,9 0 0,1 11.06,3.05" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M11.1,7.5h1.8v3.6h3.6v1.8h-3.6v3.6h-1.8v-3.6H7.5v-1.8h3.6z" />
+</vector>

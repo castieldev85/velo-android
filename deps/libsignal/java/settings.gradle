@@ -1,0 +1,17 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'libsignal'
+
+include 'client', 'server', 'backup-tool'
+
+if (!hasProperty('skipAndroid')) {
+    // Only include the library module; benchmarks/packaging-test use
+    // androidx.benchmark:1.1.1 which is incompatible with AGP 9.
+    include ':android'
+}

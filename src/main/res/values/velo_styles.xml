@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Velo: icons on the top bar. Since 0.15 the bar is light (surface colour), so icons
+         take the text colour. Only icon colours: text colours stay untouched so the overflow
+         menu reads normally. -->
+    <style name="ThemeOverlay.Velo.TopBar" parent="">
+        <item name="colorControlNormal">?attr/colorOnSurface</item>
+        <item name="colorOnSurfaceVariant">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Velo 0.28: the typeface chosen in Personalizza -->
+    <style name="ThemeOverlay.Velo.FontRounded" parent="">
+        <item name="fontFamily">@font/velo_nunito</item>
+        <item name="android:fontFamily">@font/velo_nunito</item>
+    </style>
+    <style name="ThemeOverlay.Velo.FontElegant" parent="">
+        <item name="fontFamily">@font/velo_lora</item>
+        <item name="android:fontFamily">@font/velo_lora</item>
+    </style>
+
+    <!-- Velo 0.28: icons on the coloured top bar of the chat list and of the chats -->
+    <style name="ThemeOverlay.Velo.ColourBar" parent="">
+        <item name="colorControlNormal">@android:color/white</item>
+        <item name="colorOnSurfaceVariant">@android:color/white</item>
+    </style>
+
+    <!-- Velo 0.15: the "new chat" button is a rounded square, as in the new look -->
+    <style name="ShapeAppearanceOverlay.Velo.Fab" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Velo 0.15: lock screen keys, round and filled -->
+    <style name="Widget.Velo.PinKey" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:layout_height">72dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">36dp</item>
+        <item name="android:textSize">26sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <!-- Velo 0.17: a switch row inside a rounded card (contact details) -->
+    <style name="Widget.Velo.CardSwitch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">60dp</item>
+        <item name="android:drawablePadding">14dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
+    </style>
+
+    <!-- Velo 0.17: archive / remove contact, a full-width row in the error colour -->
+    <style name="Widget.Velo.DangerButton" parent="Widget.Material3.Button.TextButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">?attr/colorError</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+    </style>
+</resources>
