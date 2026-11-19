@@ -669,7 +669,10 @@ public class ConversationsOverviewFragment extends XmppFragment {
             startActivity(new Intent(getActivity(), SearchActivity.class));
             return true;
         } else if (id == R.id.action_easy_invite) {
-            selectAccountToStartEasyInvite();
+            // Velo 0.43.2: the same invite as "Invite a friend" (site link with onion and keys).
+            // The old Conversations screen showed the server domain, used the ejabberd landing page
+            // outside Tor and offered "create new account for yourself".
+            eu.siacs.conversations.velo.VeloFriendInviteUi.start(activity);
             return true;
         } else if (id == R.id.action_note_to_self) {
             // Velo 0.39.1: with more than one account it did nothing; now the selected one, or asked
