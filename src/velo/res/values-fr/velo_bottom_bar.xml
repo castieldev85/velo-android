@@ -2,4 +2,38 @@
 <resources>
     <string name="velo_nav_profile">Profil</string>
     <string name="velo_nav_choose_profile">Choisir le profil</string>
+
+    <string name="velo_customize_tab_bar">Barre</string>
+    <string name="velo_bar_hint">Voici la barre du bas, partout dans l\'app.</string>
+    <string name="velo_bar_size">Taille</string>
+    <string name="velo_bar_size_small">Petite</string>
+    <string name="velo_bar_size_normal">Normale</string>
+    <string name="velo_bar_size_large">Grande</string>
+    <string name="velo_bar_shape">Forme</string>
+    <string name="velo_bar_shape_pill">Pilule flottante</string>
+    <string name="velo_bar_shape_full">Barre pleine</string>
+    <string name="velo_bar_labels">Textes</string>
+    <string name="velo_bar_labels_always">Toujours</string>
+    <string name="velo_bar_labels_selected">Seulement l\'onglet choisi</string>
+    <string name="velo_bar_labels_never">Icônes seules</string>
+    <string name="velo_bar_accent">Couleur de l\'onglet choisi</string>
+    <string name="velo_bar_background">Couleur de la barre</string>
+    <string name="velo_bar_theme_colour">Comme le thème</string>
+
+    <string name="velo_profile_name">Nom</string>
+    <string name="velo_profile_name_hint">Touche pour choisir le nom que voient tes contacts</string>
+    <string name="velo_profile_username">Nom d\'utilisateur</string>
+    <string name="velo_profile_username_copied">Nom d\'utilisateur copié</string>
+    <string name="velo_profile_photo">Photo de profil</string>
+    <string name="velo_profile_photo_hint">Touche pour la changer</string>
+    <string name="velo_profile_invite">Inviter avec un code QR</string>
+    <string name="velo_profile_invite_hint">Un ami le scanne et rejoint Velo</string>
+    <string name="velo_profile_notes">Notes personnelles</string>
+    <string name="velo_profile_password">Changer le mot de passe</string>
+    <string name="velo_profile_devices">Appareils et clés</string>
+    <string name="velo_profile_devices_hint">Détails du compte, chiffrement, connexion</string>
+    <string name="velo_profile_profiles">Profils</string>
+    <string name="velo_profile_profiles_hint">Change, gère ou ajoute un profil</string>
+    <string name="velo_profile_online">en ligne</string>
+    <string name="velo_profile_offline">connexion…</string>
 </resources>

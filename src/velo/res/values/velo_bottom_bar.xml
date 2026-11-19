@@ -1,14 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Velo 0.44: the Telegram bottom bar (VeloBottomBar) -->
+<!-- Velo 0.44: the Telegram bottom bar (VeloBottomBar); 0.45: its choices in Personalizza and the
+     Telegram profile page (VeloProfileActivity) -->
 <resources>
     <string name="velo_nav_profile">Profile</string>
     <string name="velo_nav_choose_profile">Choose profile</string>
 
-    <!-- Overrides monocles' 10sp label: set in code after the bar is laid out, a bigger size kept
-         the old 10sp height and the labels came out cut in half (0.44.0-prova, 19/11) -->
+    <!-- Personalizza → Barra -->
+    <string name="velo_customize_tab_bar">Bar</string>
+    <string name="velo_bar_hint">This is how the bar at the bottom will look everywhere in the app.</string>
+    <string name="velo_bar_size">Size</string>
+    <string name="velo_bar_size_small">Small</string>
+    <string name="velo_bar_size_normal">Normal</string>
+    <string name="velo_bar_size_large">Large</string>
+    <string name="velo_bar_shape">Shape</string>
+    <string name="velo_bar_shape_pill">Floating pill</string>
+    <string name="velo_bar_shape_full">Full bar</string>
+    <string name="velo_bar_labels">Labels</string>
+    <string name="velo_bar_labels_always">Always</string>
+    <string name="velo_bar_labels_selected">Only the chosen tab</string>
+    <string name="velo_bar_labels_never">Icons only</string>
+    <string name="velo_bar_accent">Colour of the chosen tab</string>
+    <string name="velo_bar_background">Colour of the bar</string>
+    <string name="velo_bar_theme_colour">As the theme</string>
+
+    <!-- Profile page -->
+    <string name="velo_profile_name">Name</string>
+    <string name="velo_profile_name_hint">Tap to set the name your contacts see</string>
+    <string name="velo_profile_username">User name</string>
+    <string name="velo_profile_username_copied">User name copied</string>
+    <string name="velo_profile_photo">Profile picture</string>
+    <string name="velo_profile_photo_hint">Tap to change it</string>
+    <string name="velo_profile_invite">Invite with QR code</string>
+    <string name="velo_profile_invite_hint">A friend scans it and joins Velo</string>
+    <string name="velo_profile_notes">Note to self</string>
+    <string name="velo_profile_password">Change password</string>
+    <string name="velo_profile_devices">Devices and keys</string>
+    <string name="velo_profile_devices_hint">Account details, encryption, connection</string>
+    <string name="velo_profile_profiles">Profiles</string>
+    <string name="velo_profile_profiles_hint">Switch, manage or add a profile</string>
+    <string name="velo_profile_online">online</string>
+    <string name="velo_profile_offline">connecting…</string>
+
+    <!-- Overrides monocles' 10sp label for the bar inflated in Chats; VeloBottomBar.sizeLabels
+         then sets the size chosen in Personalizza straight on the labels (through
+         setItemTextAppearance they came out cut in half, 0.44.0 and 0.45.0-prova). -->
     <style name="TextAppearance.App.NavigationBarLabel" parent="TextAppearance.App.LabelSmall">
         <item name="android:textSize">13sp</item>
-        <!-- room for the descenders (the g of Settings was cut) -->
         <item name="lineHeight">19sp</item>
         <item name="android:lineHeight">19sp</item>
     </style>

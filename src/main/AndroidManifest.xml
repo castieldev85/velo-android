@@ -439,6 +439,11 @@
             android:name=".velo.VeloCustomizeActivity"
             android:exported="false"
             android:label="@string/velo_customize_title" />
+        <!-- Velo 0.45: the Profile section of the bottom bar -->
+        <activity
+            android:name=".velo.VeloProfileActivity"
+            android:exported="false"
+            android:label="@string/velo_nav_profile" />
         <activity
             android:name=".velo.VeloTransferActivity"
             android:exported="false"

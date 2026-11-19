@@ -155,7 +155,7 @@
     <string name="velo_server_name">Servidor</string>
     <string name="velo_whats_new_title">Novedades de Velo %s</string>
     <string name="velo_whats_new_ok">Entendido</string>
-    <string name="velo_whats_new_text">Velo estrena aspecto: navegación como el nuevo Telegram.\n\n• Una barra abajo con Chats, Contactos, Ajustes y Perfil (con tu foto). El menú lateral ya no está.\n• Perfil abre tu perfil; mantenlo pulsado para cambiar de perfil, gestionarlos o añadir uno.\n• Las solicitudes de chat de desconocidos tienen su propia pestaña, junto a Todas, No leídas, Directos y Canales.\n• Llamadas, Notas personales, Invitar a un amigo y la galería de medios están en el menú ⋮ arriba a la derecha.</string>
+    <string name="velo_whats_new_text">Velo 0.45: la barra inferior en todas partes, y a tu gusto.\n\n• La barra se queda en Chats, Contactos, Ajustes y Perfil, con la sección en la que estás resaltada.\n• Nueva página de Perfil, como en Telegram: tu foto en grande, nombre, nombre de usuario, invitación con código QR, notas personales, contraseña, dispositivos y claves.\n• Personalizar → Barra: tamaño, píldora flotante o barra completa, textos siempre, solo en la pestaña elegida o solo iconos, y los colores de la barra.</string>
     <string name="velo_invite_title">Invitación</string>
     <string name="velo_invite_have">Tengo una invitación</string>
     <string name="velo_invite_invalid_title">No es una invitación de Velo</string>

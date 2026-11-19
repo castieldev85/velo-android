@@ -1,18 +1,34 @@
 package eu.siacs.conversations.velo;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.ColorFilter;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.DrawableWrapper;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.InsetDrawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.RippleDrawable;
+import android.graphics.drawable.StateListDrawable;
+import android.preference.PreferenceManager;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import androidx.annotation.Nullable;
+import androidx.core.graphics.ColorUtils;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.color.MaterialColors;
@@ -28,18 +44,42 @@ import java.util.function.Consumer;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.persistance.FileBackend;
+import eu.siacs.conversations.ui.ConversationsActivity;
+import eu.siacs.conversations.ui.EditAccountActivity;
+import eu.siacs.conversations.ui.StartConversationActivity;
 import eu.siacs.conversations.ui.XmppActivity;
+import eu.siacs.conversations.ui.activity.SettingsActivity;
+import eu.siacs.conversations.utils.AccountUtils;
 
 /**
  * Velo 0.44: the bottom bar of the new Telegram - Chats, Contacts, Settings and Profile, the last
  * one with the profile's own picture. It replaces the side menu.
  *
- * <p>Only Chats is ever the selected tab: the other three open their own screen and the bar comes
- * back on Chats. The selected tab sits on a light pill in the theme colour, as in Telegram.
+ * <p>Velo 0.45: the same bar sits on all four sections (Contacts, Settings and Profile are their
+ * own screens, which swap in place without animation, so Back always leads to Chats), the section
+ * in use is the highlighted tab, and Personalizza → Barra chooses its size, shape, labels and
+ * colours.
  */
 public final class VeloBottomBar {
 
+    public static final String SIZE = "velo_nav_size";
+    public static final String SHAPE = "velo_nav_shape";
+    public static final String LABELS = "velo_nav_labels";
+    public static final String ACCENT = "velo_nav_accent";
+    public static final String BACKGROUND = "velo_nav_background";
+    public static final String SIZE_SMALL = "small", SIZE_NORMAL = "normal", SIZE_LARGE = "large";
+    public static final String SHAPE_PILL = "pill", SHAPE_FULL = "full";
+    public static final String LABELS_ALWAYS = "always", LABELS_SELECTED = "selected", LABELS_NEVER = "never";
+    public static final String[] KEYS = {SIZE, SHAPE, LABELS, ACCENT, BACKGROUND};
+
+    /** Extra of the Settings screen opened as a section of the bar. */
+    public static final String EXTRA_TAB = "velo_tab";
+
     private static final ExecutorService AVATARS = Executors.newSingleThreadExecutor();
+    private static final int TAG_PLACE = R.id.velo_nav_settings;
+
+    /** The profile chosen in Chats (null: all of them), for the Profile tab of the other sections. */
+    @Nullable private static String selectedAccountUuid;
 
     private VeloBottomBar() {}
 
@@ -49,7 +89,7 @@ public final class VeloBottomBar {
      * stored value beats the new default, so on those phones 0.44.0 still showed the side menu.
      * Velo has no switch for either any more: the stored values go, once.
      */
-    public static void forgetOldNavigationSettings(final android.content.SharedPreferences preferences) {
+    public static void forgetOldNavigationSettings(final SharedPreferences preferences) {
         if (preferences == null || preferences.getBoolean("velo_nav_044", false)) {
             return;
         }
@@ -61,51 +101,417 @@ public final class VeloBottomBar {
                 .apply();
     }
 
-    /** Size, colours and labels of the bar. Once, when the screen is created. */
+    private static SharedPreferences prefs(final Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    public static String size(final Context context) {
+        return prefs(context).getString(SIZE, SIZE_NORMAL);
+    }
+
+    public static String shape(final Context context) {
+        return prefs(context).getString(SHAPE, SHAPE_PILL);
+    }
+
+    public static String labels(final Context context) {
+        return prefs(context).getString(LABELS, LABELS_ALWAYS);
+    }
+
+    /** The colour of the tab in use; the theme's buttons colour unless one was chosen. */
+    public static int accent(final View view) {
+        final int chosen = prefs(view.getContext()).getInt(ACCENT, 0);
+        return chosen != 0 ? chosen : MaterialColors.getColor(view, androidx.appcompat.R.attr.colorPrimary);
+    }
+
+    /** The colour of the bar itself; the theme's page colour unless one was chosen. */
+    public static int background(final View view) {
+        final int chosen = prefs(view.getContext()).getInt(BACKGROUND, 0);
+        return chosen != 0 ? chosen : MaterialColors.getColor(view, com.google.android.material.R.attr.colorSurface);
+    }
+
+    private static boolean pill(final Context context) {
+        return !SHAPE_FULL.equals(shape(context));
+    }
+
+    /** Height of the bar's tabs, without what it adds to clear the system navigation bar. */
+    private static int heightDp(final Context context) {
+        final int base =
+                switch (size(context)) {
+                    case SIZE_SMALL -> 60;
+                    case SIZE_LARGE -> 84;
+                    default -> 72;
+                };
+        // without labels there is only the icon to hold
+        return LABELS_NEVER.equals(labels(context)) ? base - 16 : base;
+    }
+
+    /**
+     * Size, shape, colours and labels of the bar, from the choices in Personalizza. Safe to call
+     * again, as on the way back from Personalizza: every value is set, nothing is added up.
+     */
     public static void style(final BottomNavigationView bar) {
         if (bar == null) {
             return;
         }
-        final float density = bar.getResources().getDisplayMetrics().density;
-        final ViewGroup.LayoutParams params = bar.getLayoutParams();
-        if (params instanceof ViewGroup.MarginLayoutParams) {
-            final ViewGroup.MarginLayoutParams margins = (ViewGroup.MarginLayoutParams) params;
-            // four labels need almost the whole width; the bottom margin is FloatingBars' business
-            margins.leftMargin = Math.round(12 * density);
-            margins.rightMargin = Math.round(12 * density);
-            margins.setMarginStart(margins.leftMargin);
-            margins.setMarginEnd(margins.rightMargin);
-            margins.height = Math.round(72 * density);
-            bar.setLayoutParams(margins);
-        }
-        final int primary = MaterialColors.getColor(bar, androidx.appcompat.R.attr.colorPrimary);
-        final int normal = MaterialColors.getColor(bar, com.google.android.material.R.attr.colorOnSurface);
+        final Context context = bar.getContext();
+        final float density = context.getResources().getDisplayMetrics().density;
+        final boolean pill = pill(context);
+        final String size = size(context);
+        final int accent = accent(bar);
+        final int surface = background(bar);
+        final int normal = VeloThemes.onColor(surface);
         final ColorStateList tint =
                 new ColorStateList(
                         new int[][] {new int[] {android.R.attr.state_checked}, new int[] {}},
-                        new int[] {primary, normal});
+                        new int[] {accent, normal});
         bar.setItemIconTintList(tint);
         bar.setItemTextColor(tint);
         bar.setItemActiveIndicatorEnabled(false);
-        // a resource rather than a drawable: every tab needs its own copy of a stateful background
-        bar.setItemBackgroundResource(R.drawable.velo_nav_item_background);
-        bar.setItemIconSize(Math.round(27 * density));
-        bar.setItemPaddingTop(Math.round(9 * density));
-        bar.setItemPaddingBottom(Math.round(6 * density));
+        bar.setItemIconSize(Math.round((SIZE_SMALL.equals(size) ? 23 : SIZE_LARGE.equals(size) ? 30 : 27) * density));
+        bar.setItemPaddingTop(Math.round((SIZE_SMALL.equals(size) ? 7 : SIZE_LARGE.equals(size) ? 12 : 9) * density));
+        bar.setItemPaddingBottom(Math.round((SIZE_SMALL.equals(size) ? 4 : SIZE_LARGE.equals(size) ? 8 : 6) * density));
         bar.setActiveIndicatorLabelPadding(Math.round(3 * density));
-        // the label size comes from TextAppearance.App.NavigationBarLabel (velo_bottom_bar.xml)
         bar.setItemTextAppearanceActiveBoldEnabled(true);
-        bar.setLabelVisibilityMode(BottomNavigationView.LABEL_VISIBILITY_LABELED);
-        // Telegram's bar: a full pill, nearly opaque, on its shadow
-        final android.graphics.drawable.GradientDrawable pill = new android.graphics.drawable.GradientDrawable();
-        pill.setCornerRadius(35 * density);
-        final int surface = MaterialColors.getColor(bar, com.google.android.material.R.attr.colorSurface);
-        pill.setColor(surface);
-        // on a white list the white pill needs an edge to be seen at all
-        pill.setStroke(
-                Math.max(1, Math.round(density)),
-                MaterialColors.getColor(bar, com.google.android.material.R.attr.colorOutlineVariant));
-        bar.setBackground(pill);
+        bar.setLabelVisibilityMode(
+                switch (labels(context)) {
+                    case LABELS_SELECTED -> BottomNavigationView.LABEL_VISIBILITY_SELECTED;
+                    case LABELS_NEVER -> BottomNavigationView.LABEL_VISIBILITY_UNLABELED;
+                    default -> BottomNavigationView.LABEL_VISIBILITY_LABELED;
+                });
+        final Drawable background;
+        if (pill) {
+            // Telegram's bar: a full pill on its shadow, with an edge to stand out on a page of the
+            // same colour
+            final GradientDrawable shape = new GradientDrawable();
+            shape.setCornerRadius(heightDp(context) / 2f * density);
+            shape.setColor(surface);
+            shape.setStroke(Math.max(1, Math.round(density)), ColorUtils.blendARGB(surface, normal, 0.14f));
+            background = shape;
+            bar.setElevation(8 * density);
+        } else {
+            // the classic bar: edge to edge, a hairline on top
+            final LayerDrawable layers =
+                    new LayerDrawable(
+                            new Drawable[] {
+                                new ColorDrawable(ColorUtils.blendARGB(surface, normal, 0.14f)),
+                                new InsetDrawable(new ColorDrawable(surface), 0, Math.max(1, Math.round(density)), 0, 0)
+                            });
+            background = layers;
+            bar.setElevation(0);
+        }
+        bar.setBackground(background);
+        bar.setItemBackground(null);
+        // setItemBackground just took every tab's pill away: paint them again, whatever was cached
+        bar.setTag(R.id.chats, null);
+        paintTabs(bar, accent);
+        sizeLabels(bar, SIZE_SMALL.equals(size) ? 11 : SIZE_LARGE.equals(size) ? 15 : 13);
+        place(bar);
+    }
+
+    /**
+     * The labels' size, straight on the labels. Through setItemTextAppearance the bar measured them
+     * a few pixels tall and cut them in half (0.44.0 and 0.45.0-prova, 19/11), so the size and a
+     * line tall enough for the descenders are set on the two labels of every tab instead.
+     */
+    private static void sizeLabels(final BottomNavigationView bar, final int sp) {
+        if (bar.getChildCount() == 0 || !(bar.getChildAt(0) instanceof ViewGroup)) {
+            return;
+        }
+        final ViewGroup tabs = (ViewGroup) bar.getChildAt(0);
+        final float scaled = bar.getResources().getDisplayMetrics().scaledDensity;
+        for (int i = 0; i < tabs.getChildCount(); i++) {
+            for (final int id : new int[] {
+                com.google.android.material.R.id.navigation_bar_item_small_label_view,
+                com.google.android.material.R.id.navigation_bar_item_large_label_view
+            }) {
+                final View label = tabs.getChildAt(i).findViewById(id);
+                if (label instanceof android.widget.TextView text) {
+                    text.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, sp);
+                    androidx.core.widget.TextViewCompat.setLineHeight(text, Math.round(sp * 1.45f * scaled));
+                    text.setIncludeFontPadding(true);
+                }
+            }
+        }
+    }
+
+    /**
+     * The pill under the tab in use, and the ripple of a touch. Every tab gets its own drawable:
+     * one stateful drawable shared between tabs would show the state of whichever drew last.
+     */
+    private static void paintTabs(final BottomNavigationView bar, final int accent) {
+        // the tabs can be measured taller than the bar shows them: the pill is fitted to the part
+        // that shows, with a margin, once the bar is laid out (and again when that changes)
+        if (bar.getTag(R.id.velo_nav_contacts) == null) {
+            bar.setTag(R.id.velo_nav_contacts, Boolean.TRUE);
+            bar.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> paintTabs(bar, accent(bar)));
+        }
+        if (bar.getChildCount() == 0 || !(bar.getChildAt(0) instanceof ViewGroup)) {
+            return;
+        }
+        final ViewGroup tabs = (ViewGroup) bar.getChildAt(0);
+        final float density = bar.getResources().getDisplayMetrics().density;
+        final int visible = bar.getHeight() - bar.getPaddingBottom();
+        final int above = visible > 0 ? Math.max(0, -tabs.getTop()) : 0;
+        final int below = visible > 0 ? Math.max(0, tabs.getBottom() - visible) : 0;
+        final String key = accent + "|" + above + "|" + below + "|" + tabs.getChildCount();
+        if (key.equals(bar.getTag(R.id.chats))) {
+            return;
+        }
+        bar.setTag(R.id.chats, key);
+        final int insetX = Math.round(3 * density);
+        final int insetY = Math.round(5 * density);
+        final int insetTop = insetY + above;
+        final int insetBottom = insetY + below;
+        for (int i = 0; i < tabs.getChildCount(); i++) {
+            final GradientDrawable selected = new GradientDrawable();
+            selected.setCornerRadius(40 * density);
+            selected.setColor(ColorUtils.setAlphaComponent(accent, 0x26));
+            final StateListDrawable states = new StateListDrawable();
+            states.addState(new int[] {android.R.attr.state_checked}, new InsetDrawable(selected, insetX, insetTop, insetX, insetBottom));
+            states.addState(new int[] {}, new ColorDrawable(0));
+            final GradientDrawable mask = new GradientDrawable();
+            mask.setCornerRadius(40 * density);
+            mask.setColor(0xFFFFFFFF);
+            final View tab = tabs.getChildAt(i);
+            tab.setBackground(
+                    new RippleDrawable(
+                            ColorStateList.valueOf(ColorUtils.setAlphaComponent(accent, 0x1F)),
+                            states,
+                            new InsetDrawable(mask, insetX, insetTop, insetX, insetBottom)));
+            // an inset background hands its insets to the tab as padding: the tab then asked for
+            // more height than the bar has and the labels were squeezed to half (0.45.0-prova)
+            tab.setPadding(0, 0, 0, 0);
+            // the tabs too come with an 80dp minimum, taller than a normal or small bar
+            tab.setMinimumHeight(0);
+        }
+    }
+
+    /**
+     * Holds the bar clear of the system navigation bar, from the insets the bar itself is handed:
+     * a screen whose window already keeps its content out of there hands it none. The pill floats
+     * a little above; the full bar runs under the navigation bar, so its colour reaches the edge.
+     */
+    private static void place(final BottomNavigationView bar) {
+        final Context context = bar.getContext();
+        final float density = context.getResources().getDisplayMetrics().density;
+        final boolean pill = pill(context);
+        final int height = Math.round(heightDp(context) * density);
+        final int side = pill ? Math.round(12 * density) : 0;
+        final int lift = pill ? Math.round(10 * density) : 0;
+        // Material's style gives the bar a minimum of 80dp: its tabs were measured that tall inside
+        // a lower bar and the pill of the chosen tab stuck out above it
+        bar.setMinimumHeight(0);
+        final Runnable[] apply = new Runnable[1];
+        final int[] navigation = {0};
+        apply[0] =
+                () -> {
+                    final ViewGroup.LayoutParams params = bar.getLayoutParams();
+                    if (!(params instanceof ViewGroup.MarginLayoutParams)) {
+                        return;
+                    }
+                    final ViewGroup.MarginLayoutParams margins = (ViewGroup.MarginLayoutParams) params;
+                    final int wantHeight = pill ? height : height + navigation[0];
+                    final int wantBottom = pill ? lift + navigation[0] : 0;
+                    final int wantPadding = pill ? 0 : navigation[0];
+                    if (margins.height != wantHeight
+                            || margins.bottomMargin != wantBottom
+                            || margins.leftMargin != side
+                            || margins.rightMargin != side
+                            || bar.getPaddingBottom() != wantPadding) {
+                        margins.height = wantHeight;
+                        margins.bottomMargin = wantBottom;
+                        margins.leftMargin = side;
+                        margins.rightMargin = side;
+                        margins.setMarginStart(side);
+                        margins.setMarginEnd(side);
+                        bar.setPadding(0, 0, 0, wantPadding);
+                        bar.setLayoutParams(margins);
+                    }
+                };
+        bar.setTag(TAG_PLACE, apply[0]);
+        ViewCompat.setOnApplyWindowInsetsListener(
+                bar,
+                (v, insets) -> {
+                    navigation[0] = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+                    apply[0].run();
+                    return insets;
+                });
+        apply[0].run();
+        ViewCompat.requestApplyInsets(bar);
+    }
+
+    /**
+     * Puts the bar on a section that is a screen of its own (Contacts, Settings, Profile), with
+     * {@code selected} as the tab in use. The bar floats over the bottom of the screen and the
+     * screen is held clear of it, so the last line of a list never ends up underneath.
+     */
+    public static BottomNavigationView attach(final XmppActivity activity, final int selected) {
+        final ViewGroup content = activity.findViewById(android.R.id.content);
+        final BottomNavigationView bar = new BottomNavigationView(activity);
+        bar.setId(R.id.bottom_navigation);
+        bar.inflateMenu(R.menu.bottom_navigation_menu_chat);
+        bar.setSelectedItemId(selected);
+        content.addView(bar, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
+        style(bar);
+        final View screen = content.getChildAt(0);
+        bar.addOnLayoutChangeListener(
+                (v, l, t, r, b, ol, ot, or, ob) -> {
+                    if (screen == bar || !(screen.getLayoutParams() instanceof ViewGroup.MarginLayoutParams)) {
+                        return;
+                    }
+                    final ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) screen.getLayoutParams();
+                    final ViewGroup.MarginLayoutParams barParams = (ViewGroup.MarginLayoutParams) bar.getLayoutParams();
+                    final int below = bar.getVisibility() == View.GONE ? 0 : bar.getHeight() + barParams.bottomMargin;
+                    if (params.bottomMargin != below) {
+                        params.bottomMargin = below;
+                        screen.post(() -> screen.setLayoutParams(params));
+                    }
+                });
+        bar.setOnItemSelectedListener(
+                item -> {
+                    final int id = item.getItemId();
+                    if (id != selected) {
+                        open(activity, id);
+                    }
+                    return id == selected;
+                });
+        bar.setOnItemReselectedListener(item -> {});
+        return bar;
+    }
+
+    /** Badge and picture of a bar put on with {@link #attach}, once the service is there. */
+    public static void refresh(final XmppActivity activity) {
+        final View view = activity.findViewById(R.id.bottom_navigation);
+        if (!(view instanceof BottomNavigationView) || activity.xmppConnectionService == null) {
+            return;
+        }
+        final BottomNavigationView bar = (BottomNavigationView) view;
+        final int unread = activity.xmppConnectionService.unreadCount();
+        final var badge = bar.getOrCreateBadge(R.id.chats);
+        badge.setNumber(unread);
+        badge.setVisible(unread > 0);
+        showAvatar(activity, bar, profileAccount(activity));
+    }
+
+    /**
+     * Goes to the section {@code id} from {@code from}, as Telegram swaps its tabs: in place and
+     * without animation. Only Chats stays underneath, so Back from any section leads there.
+     */
+    public static void open(final XmppActivity from, final int id) {
+        final boolean fromChats = from instanceof ConversationsActivity;
+        if (id == R.id.chats) {
+            if (!fromChats) {
+                from.startActivity(
+                        new Intent(from, ConversationsActivity.class)
+                                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+                leave(from);
+            }
+        } else if (id == R.id.velo_nav_contacts) {
+            StartConversationActivity.browse(from, selectedAccount(from));
+            leave(from);
+        } else if (id == R.id.velo_nav_settings) {
+            from.startActivity(new Intent(from, SettingsActivity.class).putExtra(EXTRA_TAB, true));
+            leave(from);
+        } else if (id == R.id.velo_nav_profile) {
+            final Account account = profileAccount(from);
+            if (account == null) {
+                return;
+            }
+            final boolean all =
+                    selectedAccountUuid == null
+                            && from.xmppConnectionService != null
+                            && from.xmppConnectionService.getAccounts().size() > 1;
+            if (all && fromChats) {
+                // "All accounts" in Chats: which profile is "mine" is a question, as in the old menu
+                chooseProfile(
+                        from,
+                        from.xmppConnectionService.getAccounts(),
+                        null,
+                        chosen -> {
+                            if (chosen != null) {
+                                ((ConversationsActivity) from).veloSelectProfile(chosen);
+                                VeloProfileActivity.open(from, chosen);
+                                from.overridePendingTransition(0, 0);
+                            }
+                        },
+                        () -> AccountUtils.launchManageAccounts(from),
+                        () -> from.startActivity(new Intent(from, EditAccountActivity.class)));
+                return;
+            }
+            VeloProfileActivity.open(from, account);
+            leave(from);
+        }
+    }
+
+    private static void leave(final Activity from) {
+        from.overridePendingTransition(0, 0);
+        if (!(from instanceof ConversationsActivity)) {
+            from.finish();
+            from.overridePendingTransition(0, 0);
+        }
+    }
+
+    /** Chats tells the bar which profile is chosen, for the sections that are screens of their own. */
+    public static void rememberSelected(@Nullable final Account account) {
+        selectedAccountUuid = account == null ? null : account.getUuid();
+    }
+
+    private static boolean choiceForChats = false;
+
+    /** A profile chosen on the Profile page: Chats switches to it when it comes back. */
+    public static void chooseForChats(final Account account) {
+        rememberSelected(account);
+        choiceForChats = true;
+    }
+
+    /** The profile chosen elsewhere that Chats still has to switch to, if any (once). */
+    @Nullable
+    public static String takeChoiceForChats() {
+        if (!choiceForChats) {
+            return null;
+        }
+        choiceForChats = false;
+        return selectedAccountUuid;
+    }
+
+    /** Shows or hides a bar put on with {@link #attach}, and the room kept for it under the screen. */
+    public static void setShown(final Activity activity, final boolean shown) {
+        final View bar = activity.findViewById(R.id.bottom_navigation);
+        final ViewGroup content = activity.findViewById(android.R.id.content);
+        if (bar == null || content == null || content.getChildCount() == 0) {
+            return;
+        }
+        bar.setVisibility(shown ? View.VISIBLE : View.GONE);
+        final View screen = content.getChildAt(0);
+        if (!shown && screen.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+            final ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) screen.getLayoutParams();
+            params.bottomMargin = 0;
+            screen.setLayoutParams(params);
+        }
+    }
+
+    @Nullable
+    private static Account selectedAccount(final XmppActivity activity) {
+        if (selectedAccountUuid == null || activity.xmppConnectionService == null) {
+            return null;
+        }
+        for (final Account account : activity.xmppConnectionService.getAccounts()) {
+            if (selectedAccountUuid.equals(account.getUuid())) {
+                return account;
+            }
+        }
+        return null;
+    }
+
+    /** The profile the Profile tab stands for: the chosen one, or the first. */
+    @Nullable
+    public static Account profileAccount(final XmppActivity activity) {
+        final Account selected = selectedAccount(activity);
+        if (selected != null || activity.xmppConnectionService == null) {
+            return selected;
+        }
+        final List<Account> accounts = activity.xmppConnectionService.getAccounts();
+        return accounts.isEmpty() ? null : accounts.get(0);
     }
 
     /**
@@ -130,7 +536,7 @@ public final class VeloBottomBar {
             item.setIcon(R.drawable.rounded_account_circle_24);
             return;
         }
-        final int size = Math.round(27 * activity.getResources().getDisplayMetrics().density);
+        final int size = Math.round(30 * activity.getResources().getDisplayMetrics().density);
         final Drawable cached = activity.xmppConnectionService.getAvatarService().get(account, size, true);
         if (cached == null) {
             // not drawn yet: draw it away from the screen, then come back here
@@ -220,13 +626,6 @@ public final class VeloBottomBar {
         public ConstantState getConstantState() {
             return null;
         }
-    }
-
-    /** True for the tabs that open their own screen instead of being selected. */
-    public static boolean opensScreen(final int itemId) {
-        return itemId == R.id.velo_nav_contacts
-                || itemId == R.id.velo_nav_settings
-                || itemId == R.id.velo_nav_profile;
     }
 
     /** The tab view, for the long press on Profile. */

@@ -50,7 +50,7 @@ public class VeloCustomizeActivity extends BaseActivity {
         R.string.velo_customize_part_sent, R.string.velo_customize_part_received, R.string.velo_customize_part_bar,
         R.string.velo_customize_part_buttons, R.string.velo_customize_part_wall, R.string.velo_customize_part_page
     };
-    private static final int TAB_COLOURS = 0, TAB_WALL = 1, TAB_SHAPES = 2, TAB_TEXT = 3;
+    private static final int TAB_COLOURS = 0, TAB_WALL = 1, TAB_SHAPES = 2, TAB_TEXT = 3, TAB_BAR = 4;
 
     private final int[] colours = new int[6];
     private int part = SENT;
@@ -139,6 +139,7 @@ public class VeloCustomizeActivity extends BaseActivity {
             case TAB_WALL -> fillWall();
             case TAB_SHAPES -> fillShapes();
             case TAB_TEXT -> fillText();
+            case TAB_BAR -> fillBar();
             default -> fillColours();
         }
         if (keepScroll > 0) {
@@ -181,6 +182,17 @@ public class VeloCustomizeActivity extends BaseActivity {
         final LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(14), dp(12), dp(14), dp(4));
+        if (tab == TAB_BAR) {
+            box.addView(barPreview(), new LinearLayout.LayoutParams(-1, dp(118)));
+            final TextView hint = new TextView(this);
+            hint.setText(R.string.velo_bar_hint);
+            hint.setTextSize(13);
+            hint.setGravity(Gravity.CENTER);
+            hint.setTextColor(androidx.core.graphics.ColorUtils.blendARGB(on, surface, 0.32f));
+            hint.setPadding(dp(4), dp(8), dp(4), dp(4));
+            box.addView(hint);
+            return box;
+        }
         final LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setClipToOutline(true);
@@ -267,7 +279,7 @@ public class VeloCustomizeActivity extends BaseActivity {
         final LinearLayout row = new LinearLayout(this);
         row.setPadding(dp(14), dp(4), dp(14), dp(8));
         final int[] names = {R.string.velo_customize_tab_colours, R.string.velo_customize_tab_wall,
-            R.string.velo_customize_tab_shapes, R.string.velo_customize_tab_text};
+            R.string.velo_customize_tab_shapes, R.string.velo_customize_tab_text, R.string.velo_customize_tab_bar};
         for (int i = 0; i < names.length; i++) {
             final int index = i;
             final TextView button = chip(names[i], tab == i);
@@ -543,10 +555,92 @@ public class VeloCustomizeActivity extends BaseActivity {
         }
     }
 
+    /** Velo 0.45: the real bottom bar, styled as chosen, on a page of the chosen colour. */
+    private View barPreview() {
+        final FrameLayout frame = new FrameLayout(this);
+        frame.setClipToOutline(true);
+        frame.setBackground(rounded(androidx.core.graphics.ColorUtils.blendARGB(surface, on, 0.04f), dp(20)));
+        final com.google.android.material.bottomnavigation.BottomNavigationView bar =
+                new com.google.android.material.bottomnavigation.BottomNavigationView(this);
+        bar.inflateMenu(R.menu.bottom_navigation_menu_chat);
+        bar.setSelectedItemId(R.id.chats);
+        frame.addView(bar, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
+        VeloBottomBar.style(bar);
+        return frame;
+    }
+
+    private void choices(final int title, final String key, final String current, final String[] values, final int[] names) {
+        section(title);
+        final GridLayout grid = grid(values.length);
+        for (int i = 0; i < values.length; i++) {
+            final String value = values[i];
+            final TextView chip = chip(names[i], value.equals(current));
+            chip.setOnClickListener(v -> {
+                prefs.edit().putString(key, value).apply();
+                render();
+            });
+            addCell(grid, chip, dp(52));
+        }
+    }
+
+    /** A colour of the bar: "as the theme" (0) or one of the swatches. */
+    private void barColour(final int title, final String key) {
+        section(title);
+        final int current = prefs.getInt(key, 0);
+        final TextView theme = chip(R.string.velo_bar_theme_colour, current == 0);
+        theme.setOnClickListener(v -> {
+            prefs.edit().remove(key).apply();
+            render();
+        });
+        final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, dp(44));
+        params.bottomMargin = dp(4);
+        body.addView(theme, params);
+        final GridLayout swatches = grid(8);
+        for (final int colour : SWATCHES) {
+            final View swatch = new View(this);
+            final GradientDrawable drawable = new GradientDrawable();
+            drawable.setShape(GradientDrawable.OVAL);
+            drawable.setColor(colour);
+            drawable.setStroke(current == colour ? dp(3) : dp(1),
+                    current == colour ? on : androidx.core.graphics.ColorUtils.setAlphaComponent(on, 0x30));
+            swatch.setBackground(drawable);
+            swatch.setContentDescription(String.format("#%06X", colour & 0xFFFFFF));
+            swatch.setOnClickListener(v -> {
+                prefs.edit().putInt(key, colour).apply();
+                render();
+            });
+            final int side = (getResources().getDisplayMetrics().widthPixels - dp(28) - dp(6) * 8) / 8;
+            final GridLayout.LayoutParams cell = new GridLayout.LayoutParams();
+            cell.width = side;
+            cell.height = side;
+            cell.setMargins(dp(3), dp(3), dp(3), dp(3));
+            swatches.addView(swatch, cell);
+        }
+    }
+
+    /** Velo 0.45: Personalizza, Barra - size, shape, labels and colours of the bottom bar. */
+    private void fillBar() {
+        choices(R.string.velo_bar_size, VeloBottomBar.SIZE, VeloBottomBar.size(this),
+                new String[] {VeloBottomBar.SIZE_SMALL, VeloBottomBar.SIZE_NORMAL, VeloBottomBar.SIZE_LARGE},
+                new int[] {R.string.velo_bar_size_small, R.string.velo_bar_size_normal, R.string.velo_bar_size_large});
+        choices(R.string.velo_bar_shape, VeloBottomBar.SHAPE, VeloBottomBar.shape(this),
+                new String[] {VeloBottomBar.SHAPE_PILL, VeloBottomBar.SHAPE_FULL},
+                new int[] {R.string.velo_bar_shape_pill, R.string.velo_bar_shape_full});
+        choices(R.string.velo_bar_labels, VeloBottomBar.LABELS, VeloBottomBar.labels(this),
+                new String[] {VeloBottomBar.LABELS_ALWAYS, VeloBottomBar.LABELS_SELECTED, VeloBottomBar.LABELS_NEVER},
+                new int[] {R.string.velo_bar_labels_always, R.string.velo_bar_labels_selected, R.string.velo_bar_labels_never});
+        barColour(R.string.velo_bar_accent, VeloBottomBar.ACCENT);
+        barColour(R.string.velo_bar_background, VeloBottomBar.BACKGROUND);
+    }
+
     private void reset() {
         globalPhoto().delete();
-        prefs.edit().remove(VeloThemes.CHAT_PATTERN).remove(VeloThemes.FONT).remove("avatar_shape")
-                .remove(VeloThemes.TEXT_SIZE).remove(VeloThemes.CORNERS).commit();
+        final SharedPreferences.Editor editor = prefs.edit().remove(VeloThemes.CHAT_PATTERN).remove(VeloThemes.FONT)
+                .remove("avatar_shape").remove(VeloThemes.TEXT_SIZE).remove(VeloThemes.CORNERS);
+        for (final String key : VeloBottomBar.KEYS) {
+            editor.remove(key);
+        }
+        editor.commit();
         VeloThemes.apply(this, VeloThemes.CLASSICO, null, false);
         Toast.makeText(this, R.string.velo_customize_reset_done, Toast.LENGTH_SHORT).show();
         recreate();
@@ -564,6 +658,12 @@ public class VeloCustomizeActivity extends BaseActivity {
             saved.put("avatar", prefs.getString("avatar_shape", getString(R.string.avatar_shape)));
             saved.put("size", VeloThemes.textSize(this));
             saved.put("corners", VeloThemes.corners(this));
+            // Velo 0.45: the bottom bar is part of one's own theme too
+            saved.put("nav_size", VeloBottomBar.size(this));
+            saved.put("nav_shape", VeloBottomBar.shape(this));
+            saved.put("nav_labels", VeloBottomBar.labels(this));
+            saved.put("nav_accent", prefs.getInt(VeloBottomBar.ACCENT, 0));
+            saved.put("nav_background", prefs.getInt(VeloBottomBar.BACKGROUND, 0));
         } catch (final JSONException e) {
             return;
         }
@@ -596,7 +696,13 @@ public class VeloCustomizeActivity extends BaseActivity {
                     .putString(VeloThemes.FONT, saved.getString("font"))
                     .putString("avatar_shape", saved.getString("avatar"))
                     .putInt(VeloThemes.TEXT_SIZE, saved.getInt("size"))
-                    .putInt(VeloThemes.CORNERS, saved.getInt("corners")).commit();
+                    .putInt(VeloThemes.CORNERS, saved.getInt("corners"))
+                    // themes saved before 0.45 have no bar: it goes back to how it comes
+                    .putString(VeloBottomBar.SIZE, saved.optString("nav_size", VeloBottomBar.SIZE_NORMAL))
+                    .putString(VeloBottomBar.SHAPE, saved.optString("nav_shape", VeloBottomBar.SHAPE_PILL))
+                    .putString(VeloBottomBar.LABELS, saved.optString("nav_labels", VeloBottomBar.LABELS_ALWAYS))
+                    .putInt(VeloBottomBar.ACCENT, saved.optInt("nav_accent", 0))
+                    .putInt(VeloBottomBar.BACKGROUND, saved.optInt("nav_background", 0)).commit();
         } catch (final JSONException ignored) {
             // a saved theme is written whole by saveAsMine; nothing to apply otherwise
         }

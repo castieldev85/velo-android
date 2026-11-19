@@ -24,12 +24,23 @@ public class SettingsActivity extends XmppActivity {
     protected void refreshUiReal() {}
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // Velo 0.45: back from Personalizza, the bar of this section as it was just chosen
+        final android.view.View bar = findViewById(R.id.bottom_navigation);
+        if (bar instanceof com.google.android.material.bottomnavigation.BottomNavigationView navigation) {
+            eu.siacs.conversations.velo.VeloBottomBar.style(navigation);
+        }
+    }
+
+    @Override
     protected void onBackendConnected() {
         final var fragmentManager = getSupportFragmentManager();
         final var currentFragment = fragmentManager.findFragmentById(R.id.fragment_container);
         if (currentFragment instanceof XmppPreferenceFragment xmppPreferenceFragment) {
             xmppPreferenceFragment.onBackendConnected();
         }
+        eu.siacs.conversations.velo.VeloBottomBar.refresh(this);
     }
 
     @Override
@@ -57,6 +68,15 @@ public class SettingsActivity extends XmppActivity {
                     .beginTransaction()
                     .replace(R.id.fragment_container, preferenceFragment)
                     .commit();
+        }
+        // Velo 0.45: opened from the bottom bar, the main page is the Settings section and carries
+        // the bar; a sub-page (Privacy, Notifications...) has none, as in Telegram
+        if (intent != null && intent.getBooleanExtra(eu.siacs.conversations.velo.VeloBottomBar.EXTRA_TAB, false)) {
+            eu.siacs.conversations.velo.VeloBottomBar.attach(this, R.id.velo_nav_settings);
+            fragmentManager.addOnBackStackChangedListener(
+                    () -> eu.siacs.conversations.velo.VeloBottomBar.setShown(
+                            this, fragmentManager.getBackStackEntryCount() == 0));
+            eu.siacs.conversations.velo.VeloBottomBar.setShown(this, fragmentManager.getBackStackEntryCount() == 0);
         }
         binding.materialToolbar.setNavigationOnClickListener(
                 view -> {

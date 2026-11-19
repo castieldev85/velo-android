@@ -426,6 +426,8 @@ public class StartConversationActivity extends XmppActivity
         }
         if (intent.getBooleanExtra(EXTRA_VELO_BROWSE, false)) {
             setTitle(R.string.contacts);
+            // Velo 0.45: the Contacts section carries the bottom bar, its tab lit
+            eu.siacs.conversations.velo.VeloBottomBar.attach(this, R.id.velo_nav_contacts);
         }
         mRequestedContactsPermission.set(
                 savedInstanceState != null
@@ -1201,6 +1203,8 @@ public class StartConversationActivity extends XmppActivity
 
     @Override
     protected void onBackendConnected() {
+        // Velo 0.45: unread count and profile picture on the bottom bar, if this is the Contacts section
+        eu.siacs.conversations.velo.VeloBottomBar.refresh(this);
         if (QuickConversationsService.isContactListIntegration(this)
                 && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
                 || checkSelfPermission(Manifest.permission.READ_CONTACTS)

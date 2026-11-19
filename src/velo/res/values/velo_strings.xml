@@ -229,7 +229,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">What\'s new in Velo %s</string>
     <string name="velo_whats_new_ok">Got it</string>
-    <string name="velo_whats_new_text">Velo has a new look: navigation like the new Telegram.\n\n• A bar at the bottom with Chats, Contacts, Settings and Profile (with your picture). The side menu is gone.\n• Profile opens your profile; hold it to switch profile, manage them or add one.\n• Chat requests from strangers have their own tab, next to All, Unread, Direct and Channels.\n• Calls, Note to self, Invite a friend and the media gallery are in the ⋮ menu at the top right.</string>
+    <string name="velo_whats_new_text">Velo 0.45: the bottom bar everywhere, and yours to shape.\n\n• The bar stays on Chats, Contacts, Settings and Profile, with the section you are in highlighted.\n• New Profile page, as in Telegram: your picture large, name, user name, invite with QR code, note to self, password, devices and keys.\n• Personalise → Bar: size, floating pill or full bar, labels always, only on the chosen tab or icons only, and the colours of the bar.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Remove and wipe their phone</string>
     <string name="velo_admin_action_wipe_phone">Wipe their phone only</string>
