@@ -194,7 +194,8 @@ public class VeloInviteActivity extends BaseActivity {
         // Velo 0.42: an invite from "Invite a friend" also carries the token to create the account
         final String token = VeloFriendInvite.token(text);
         final String inviter = VeloFriendInvite.inviter(text);
-        final String user = token == null ? VeloFriendInvite.user(text) : null;
+        // Velo 0.43.1: also with a token, the personal invite of a trial group member
+        final String user = VeloFriendInvite.user(text);
         final VeloServers.Server server;
         try {
             server = VeloServers.parseInvite(text);

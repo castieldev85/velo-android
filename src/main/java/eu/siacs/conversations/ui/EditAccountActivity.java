@@ -151,6 +151,8 @@ public class EditAccountActivity extends OmemoActivity
     @androidx.annotation.Nullable private eu.siacs.conversations.velo.VeloServers.Server mVeloInvite;
     /** Velo 0.42: an invite from "Invite a friend": the token creates the account, the inviter becomes a contact. */
     @androidx.annotation.Nullable private String mVeloInviteToken;
+    /** Velo 0.43.1: the personal invite fixes the user name. */
+    private boolean mVeloFixedUser = false;
     @androidx.annotation.Nullable private String mVeloInviter;
     // Velo 0.39.1: the first connection through Tor to a server never seen can outlast a timeout,
     // and a server that is off fails at once and only leaves the account "offline"
@@ -1254,8 +1256,13 @@ public class EditAccountActivity extends OmemoActivity
             // Velo 0.43: the trial group page gives the user name; only the password is left to type
             final String veloUser =
                     getIntent() == null ? null : getIntent().getStringExtra(eu.siacs.conversations.velo.VeloFriendInvite.EXTRA_USER);
-            if (mVeloInviteToken == null && veloUser != null && this.binding.accountJid.getText().length() == 0) {
+            if (veloUser != null && this.binding.accountJid.getText().length() == 0) {
                 this.binding.accountJid.setText(veloUser);
+                // Velo 0.43.1: a personal invite is valid only for this name (the server refuses others)
+                if (mVeloInviteToken != null) {
+                    mVeloFixedUser = true;
+                    this.binding.accountJid.setEnabled(false);
+                }
                 this.binding.accountPassword.requestFocus();
             }
         }
@@ -1281,6 +1288,10 @@ public class EditAccountActivity extends OmemoActivity
         }
         mAccount.setKey(Account.KEY_PRE_AUTH_REGISTRATION_TOKEN, mVeloInviteToken);
         mAccount.setOption(Account.OPTION_REGISTER, true);
+        if (mVeloFixedUser) {
+            // stays fixed also after a refused password (updateAccountInformation reads this)
+            mAccount.setOption(Account.OPTION_FIXED_USERNAME, true);
+        }
         eu.siacs.conversations.velo.VeloFriendInvite.rememberInviter(this, mAccount, mVeloInviter);
     }
 
