@@ -43,6 +43,24 @@ public final class VeloBottomBar {
 
     private VeloBottomBar() {}
 
+    /**
+     * Velo 0.44.1: up to 0.27 the Interface settings carried two hidden switches, and opening that
+     * page was enough for Android to store their values then - bottom bar off, side menu on. A
+     * stored value beats the new default, so on those phones 0.44.0 still showed the side menu.
+     * Velo has no switch for either any more: the stored values go, once.
+     */
+    public static void forgetOldNavigationSettings(final android.content.SharedPreferences preferences) {
+        if (preferences == null || preferences.getBoolean("velo_nav_044", false)) {
+            return;
+        }
+        preferences
+                .edit()
+                .remove("show_nav_bar")
+                .remove("show_nav_drawer")
+                .putBoolean("velo_nav_044", true)
+                .apply();
+    }
+
     /** Size, colours and labels of the bar. Once, when the screen is created. */
     public static void style(final BottomNavigationView bar) {
         if (bar == null) {

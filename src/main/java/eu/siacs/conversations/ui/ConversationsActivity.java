@@ -1335,6 +1335,7 @@ public class ConversationsActivity extends XmppActivity
         FloatingBars.belowStatusBar(binding.topBarContainer);
         FloatingBars.aboveNavigationBar(binding.bottomNavigation);
         // Velo 0.44: the Telegram bottom bar in place of the side menu
+        eu.siacs.conversations.velo.VeloBottomBar.forgetOldNavigationSettings(getPreferences());
         eu.siacs.conversations.velo.VeloBottomBar.style(binding.bottomNavigation);
         veloAttachProfileLongPress();
         final View miniPlayerRoot = binding.getRoot().findViewById(R.id.audio_miniplayer);
