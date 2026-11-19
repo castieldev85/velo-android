@@ -95,6 +95,11 @@ public final class VeloFriendInvite {
                     form.setFormType(asked.getFormType());
                 }
             }
+            // Velo 0.46.1: an invite "with friendship" (XEP-0401 roster-subscription). ejabberd
+            // then makes inviter and new account contacts of each other as soon as the account
+            // is created; without it the newcomer only sent a contact request, and with strangers
+            // blocked on the public server their first messages would be dropped.
+            form.put("roster-subscription", "true");
             form.submit();
             service.sendIqPacket(
                     account,

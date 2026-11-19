@@ -155,7 +155,7 @@
     <string name="velo_server_name">Servidor</string>
     <string name="velo_whats_new_title">Novedades de Velo %s</string>
     <string name="velo_whats_new_ok">Entendido</string>
-    <string name="velo_whats_new_text">Velo 0.46: se puede entrar sin invitación.\n\n• En la Velo de la web y de la tienda, “Crear una cuenta” funciona sin invitación: una breve comprobación de que no eres un robot y luego eliges nombre de usuario y contraseña.\n• Cuando bloqueas a alguien en el servidor público, también puedes denunciarlo a Velo. La denuncia no dice quién la envió.\n• Corregido en la Velo pública: un contacto escrito por su nombre se rechazaba como si estuviera en otro servidor.</string>
+    <string name="velo_whats_new_text">Velo 0.46: se puede entrar sin invitación.\n\n• En la Velo de la web y de la tienda, “Crear una cuenta” funciona sin invitación: una breve comprobación de que no eres un robot y luego eliges nombre de usuario y contraseña.\n• Cuando bloqueas a alguien en el servidor público, también puedes denunciarlo a Velo. La denuncia no dice quién la envió.\n• Invita a un amigo: quien entra con tu invitación está enseguida entre tus contactos, y tú entre los suyos.\n• Corregido en la Velo pública: un contacto escrito por su nombre se rechazaba como si estuviera en otro servidor.</string>
     <string name="velo_invite_title">Invitación</string>
     <string name="velo_invite_have">Tengo una invitación</string>
     <string name="velo_invite_invalid_title">No es una invitación de Velo</string>
