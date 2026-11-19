@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.44: a tab of the bottom bar. The selected one sits on a light pill in the theme
+     colour, as in Telegram; a touch ripples inside the same pill. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/velo_nav_ripple">
+    <item android:id="@android:id/mask">
+        <inset
+            android:insetLeft="3dp"
+            android:insetRight="3dp"
+            android:insetTop="5dp"
+            android:insetBottom="5dp">
+            <shape android:shape="rectangle">
+                <corners android:radius="30dp" />
+                <solid android:color="@android:color/white" />
+            </shape>
+        </inset>
+    </item>
+    <item>
+        <selector>
+            <item android:state_checked="true">
+                <inset
+                    android:insetLeft="3dp"
+                    android:insetRight="3dp"
+                    android:insetTop="5dp"
+                    android:insetBottom="5dp">
+                    <shape android:shape="rectangle">
+                        <corners android:radius="30dp" />
+                        <solid android:color="@color/velo_nav_selected" />
+                    </shape>
+                </inset>
+            </item>
+            <item>
+                <color android:color="@android:color/transparent" />
+            </item>
+        </selector>
+    </item>
+</ripple>

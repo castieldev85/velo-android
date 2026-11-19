@@ -194,16 +194,25 @@
                 android:orientation="horizontal" />
         </HorizontalScrollView>
 
-        <!-- Velo 0.28: the chat filters as tabs, on the rounded top of the list -->
-        <LinearLayout
-            android:id="@+id/velo_home_tabs"
+        <!-- Velo 0.28: the chat filters as tabs, on the rounded top of the list.
+             Velo 0.44: scrolling, as in Telegram, for the fifth tab (Requests) -->
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/velo_sheet_top"
-            android:orientation="horizontal"
-            android:paddingHorizontal="10dp"
-            android:paddingTop="8dp"
-            android:visibility="gone" />
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/velo_home_tabs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/velo_sheet_top"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:paddingTop="8dp"
+                android:visibility="gone" />
+        </HorizontalScrollView>
 
 
         <include

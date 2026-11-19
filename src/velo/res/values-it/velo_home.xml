@@ -4,6 +4,7 @@
     <string name="velo_tab_unread">Non lette</string>
     <string name="velo_tab_direct">Diretti</string>
     <string name="velo_tab_channels">Canali</string>
+    <string name="velo_tab_requests">Richieste</string>
     <!-- Velo 0.35: welcome page -->
     <string name="velo_welcome_tagline">Chat private, cifrate, solo tra noi</string>
 </resources>

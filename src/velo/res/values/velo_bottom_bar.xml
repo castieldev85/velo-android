@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.44: the Telegram bottom bar (VeloBottomBar) -->
+<resources>
+    <string name="velo_nav_profile">Profile</string>
+    <string name="velo_nav_choose_profile">Choose profile</string>
+
+    <!-- Overrides monocles' 10sp label: set in code after the bar is laid out, a bigger size kept
+         the old 10sp height and the labels came out cut in half (0.44.0-prova, 19/11) -->
+    <style name="TextAppearance.App.NavigationBarLabel" parent="TextAppearance.App.LabelSmall">
+        <item name="android:textSize">13sp</item>
+        <!-- room for the descenders (the g of Settings was cut) -->
+        <item name="lineHeight">19sp</item>
+        <item name="android:lineHeight">19sp</item>
+    </style>
+</resources>

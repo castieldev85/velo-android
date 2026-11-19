@@ -239,6 +239,7 @@ public class ConversationsActivity extends XmppActivity
     private HashSet<Tag> selectedTag = new HashSet<>();
     private long mainFilter = DRAWER_ALL_CHATS;
     private int veloTotalUnread = 0;
+    private int veloChatRequests = 0;
     private boolean refreshAccounts = true;
 
     private static boolean isViewOrShareIntent(Intent i) {
@@ -284,6 +285,13 @@ public class ConversationsActivity extends XmppActivity
         bottomBadge.setVisible(unreadCount > 0);
         bottomBadge.setHorizontalOffset(20);
 
+        // Velo 0.44: the Telegram bar has no Stories, Feeds or Calls tab, and asking a badge for a
+        // tab that is not there throws; its Profile tab shows the profile in use instead
+        if (bottomnav.getMenu().findItem(R.id.velo_nav_profile) != null) {
+            eu.siacs.conversations.velo.VeloBottomBar.showAvatar(this, bottomnav, veloProfileAccount());
+            veloAttachProfileLongPress();
+        }
+        if (bottomnav.getMenu().findItem(R.id.stories) != null) {
         // Show badge for new stories in bottom nav
         long lastRead = getPreferences().getLong("last_read_story_timestamp", 0);
         boolean hasNewStories = xmppConnectionService.getStories().stream().anyMatch(s -> s.getPublished() > lastRead);
@@ -301,6 +309,7 @@ public class ConversationsActivity extends XmppActivity
         boolean hasNewMissedCalls = xmppConnectionService.getNotificationService().hasNewMissedCalls();
         var callsBadge = bottomnav.getOrCreateBadge(R.id.calls);
         callsBadge.setVisible(hasNewMissedCalls);
+        }
 
         final var chatRequestsPref = xmppConnectionService.getStringPreference("chat_requests", R.string.default_chat_requests);
         final var accountUnreads = new HashMap<Account, Integer>();
@@ -346,6 +355,7 @@ public class ConversationsActivity extends XmppActivity
             }
 
             veloTotalUnread = totalUnread;
+            veloChatRequests = chatRequests;
             veloRefreshHomeTabs(getFragmentManager().findFragmentById(R.id.main_fragment) instanceof ConversationsOverviewFragment);
             com.mikepenz.materialdrawer.util.MaterialDrawerSliderViewExtensionsKt.updateBadge(
                     binding.drawer,
@@ -837,6 +847,81 @@ public class ConversationsActivity extends XmppActivity
         return selectedAccount();
     }
 
+    /**
+     * Velo 0.44: the long press on the Profile tab switches profile, as in Telegram. Set again on
+     * every refresh: the bar puts its own tooltip listener back whenever a tab changes.
+     */
+    private void veloAttachProfileLongPress() {
+        final View tab = eu.siacs.conversations.velo.VeloBottomBar.tab(binding.bottomNavigation, R.id.velo_nav_profile);
+        if (tab != null) {
+            tab.setOnLongClickListener(v -> {
+                veloChooseProfile();
+                return true;
+            });
+        }
+    }
+
+    /** Velo 0.44: the profile the Profile tab stands for - the chosen one, or the first. */
+    @Nullable
+    private Account veloProfileAccount() {
+        final Account selected = selectedAccount();
+        if (selected != null || xmppConnectionService == null) {
+            return selected;
+        }
+        final List<Account> accounts = xmppConnectionService.getAccounts();
+        return accounts.isEmpty() ? null : accounts.get(0);
+    }
+
+    /** Velo 0.44: Profile opens the profile in use; with "All accounts" chosen, asks which. */
+    private void veloOpenProfile() {
+        if (xmppConnectionService == null) {
+            return;
+        }
+        final List<Account> accounts = xmppConnectionService.getAccounts();
+        final Account selected = selectedAccount();
+        if (selected != null) {
+            switchToAccount(selected);
+        } else if (accounts.size() == 1) {
+            switchToAccount(accounts.get(0));
+        } else if (accounts.isEmpty()) {
+            startActivity(new Intent(this, EditAccountActivity.class));
+        } else {
+            veloChooseProfile();
+        }
+    }
+
+    /** Velo 0.44: the account switcher that used to be the top of the side menu. */
+    private void veloChooseProfile() {
+        if (xmppConnectionService == null) {
+            return;
+        }
+        eu.siacs.conversations.velo.VeloBottomBar.chooseProfile(
+                this,
+                xmppConnectionService.getAccounts(),
+                selectedAccount(),
+                this::veloSelectProfile,
+                () -> AccountUtils.launchManageAccounts(this),
+                () -> startActivity(new Intent(this, EditAccountActivity.class)));
+    }
+
+    /** Velo 0.44: makes {@code account} (null: all of them) the one the chat list shows. */
+    private void veloSelectProfile(@Nullable final Account account) {
+        if (accountHeader == null) {
+            return;
+        }
+        for (final var p : ImmutableList.copyOf(accountHeader.getProfiles())) {
+            if (p instanceof com.mikepenz.materialdrawer.model.ProfileSettingDrawerItem) continue;
+            if (account == null ? p.getTag() == null : account.equals(p.getTag())) {
+                final var active = accountHeader.getActiveProfile();
+                if (active != p) {
+                    // fired like a tap in the old menu: back to the list, and everything redrawn
+                    accountHeader.setActiveProfile(p, true);
+                }
+                return;
+            }
+        }
+    }
+
     protected Account selectedAccount() {
         if (accountHeader == null || accountHeader.getActiveProfile() == null) return null;
         return (Account) accountHeader.getActiveProfile().getTag();
@@ -1249,6 +1334,9 @@ public class ConversationsActivity extends XmppActivity
         FloatingBars.behindSystemBars(this);
         FloatingBars.belowStatusBar(binding.topBarContainer);
         FloatingBars.aboveNavigationBar(binding.bottomNavigation);
+        // Velo 0.44: the Telegram bottom bar in place of the side menu
+        eu.siacs.conversations.velo.VeloBottomBar.style(binding.bottomNavigation);
+        veloAttachProfileLongPress();
         final View miniPlayerRoot = binding.getRoot().findViewById(R.id.audio_miniplayer);
         if (miniPlayerRoot != null) {
             this.audioMiniPlayer =
@@ -1303,6 +1391,16 @@ public class ConversationsActivity extends XmppActivity
             final int navId = item.getItemId();
             if (navId == R.id.chats) {
                 return true;
+            } else if (navId == R.id.velo_nav_contacts) {
+                // Velo 0.44: these open their own screen, so the bar stays on Chats (false)
+                StartConversationActivity.browse(this, selectedAccount());
+                return false;
+            } else if (navId == R.id.velo_nav_settings) {
+                startActivity(new Intent(this, eu.siacs.conversations.ui.activity.SettingsActivity.class));
+                return false;
+            } else if (navId == R.id.velo_nav_profile) {
+                veloOpenProfile();
+                return false;
             } else if (navId == R.id.feeds) {
                 Intent i = new Intent(getApplicationContext(), PostsActivity.class);
                 i.putExtra("show_nav_bar", true);
@@ -2188,7 +2286,7 @@ public class ConversationsActivity extends XmppActivity
         if (!overview) {
             return;
         }
-        eu.siacs.conversations.velo.VeloHomeTabs.fill(binding.veloHomeTabs, mainFilter, veloTotalUnread, id -> {
+        eu.siacs.conversations.velo.VeloHomeTabs.fill(binding.veloHomeTabs, mainFilter, veloTotalUnread, veloChatRequests, id -> {
             selectedTag.clear();
             mainFilter = id;
             binding.drawer.getSelectExtension().deselect();

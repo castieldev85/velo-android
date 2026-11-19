@@ -124,6 +124,7 @@ public class StartConversationActivity extends XmppActivity
     public static final String EXTRA_ACCOUNT_FILTER = "account_filter";
     public static final String EXTRA_TEXT_FILTER = "text_filter";
     public static final String EXTRA_GOTO = "goto";
+    public static final String EXTRA_VELO_BROWSE = "velo_browse";
 
     private final int REQUEST_SYNC_CONTACTS = 0x28cf;
     private final int REQUEST_CREATE_CONFERENCE = 0x39da;
@@ -289,6 +290,17 @@ public class StartConversationActivity extends XmppActivity
         launch(context, null, null, 0);
     }
 
+    /** Velo 0.44: the Contacts tab - the contact list of {@code account}, no search open. */
+    public static void browse(Context context, final Account account) {
+        final Intent intent = new Intent(context, StartConversationActivity.class);
+        if (account != null) {
+            intent.putExtra(EXTRA_ACCOUNT_FILTER, account.getJid().asBareJid().toString());
+        }
+        intent.putExtra(EXTRA_GOTO, 0);
+        intent.putExtra(EXTRA_VELO_BROWSE, true);
+        context.startActivity(intent);
+    }
+
     public static void launch(Context context, final Account account, final String q, final int goTo) {
         final Intent intent = new Intent(context, StartConversationActivity.class);
         if (account != null) {
@@ -406,6 +418,14 @@ public class StartConversationActivity extends XmppActivity
             setIntent(createLauncherIntent(this));
         } else if (startSearching && mInitialSearchValue.peek() == null) {
             mInitialSearchValue.push("");
+        }
+        // Velo 0.44: from the Contacts tab of the bottom bar the list opens as a list, as in
+        // Telegram, not with the search open and the keyboard up as for New chat
+        if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_VELO_BROWSE, false)) {
+            mInitialSearchValue.pop();
+        }
+        if (intent.getBooleanExtra(EXTRA_VELO_BROWSE, false)) {
+            setTitle(R.string.contacts);
         }
         mRequestedContactsPermission.set(
                 savedInstanceState != null

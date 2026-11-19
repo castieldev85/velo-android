@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="velo_nav_profile">Perfil</string>
+    <string name="velo_nav_choose_profile">Elige el perfil</string>
+</resources>

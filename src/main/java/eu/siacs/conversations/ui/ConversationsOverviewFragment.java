@@ -630,6 +630,19 @@ public class ConversationsOverviewFragment extends XmppFragment {
                 item.setVisible(false);
             }
         }
+        // Velo 0.44: with the Telegram bottom bar, Settings and the profiles live in the bar,
+        // while Calls (a monocles tab Velo's bar does not have) stays in this menu
+        if (navBarVisible) {
+            for (final int inBar : new int[] {R.id.action_settings, R.id.action_accounts, R.id.action_account}) {
+                final MenuItem item = menu.findItem(inBar);
+                if (item != null) {
+                    item.setVisible(false);
+                }
+            }
+            if (calls != null) {
+                calls.setVisible(true);
+            }
+        }
 	}
 
 	@Override

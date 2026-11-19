@@ -241,7 +241,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">Novità di Velo %s</string>
     <string name="velo_whats_new_ok">Ho capito</string>
-    <string name="velo_whats_new_text">Questa versione rende più facile entrare.\n\n• “Invita su Velo” (menu in alto) ora apre lo stesso invito di “Invita un amico”: un link alla pagina di Velo, senza mostrare l\'indirizzo del server.\n• Inviti personali: un invito può contenere il tuo nome utente. Velo lo scrive e lo blocca; tu scegli solo la tua password, che nessun altro conosce.\n• Nella Velo scaricata dal sito, “Prova Velo gratis” nella schermata di benvenuto apre un gruppo di prova gratuito.\n• Correzione: chi entra con un invito pochi minuti dopo un altro non riceve più “Registrazione fallita”.</string>
+    <string name="velo_whats_new_text">Velo cambia faccia: navigazione come il nuovo Telegram.\n\n• Barra in basso con Chat, Contatti, Impostazioni e Profilo (con la tua foto). Il menu laterale non c\'è più.\n• Profilo apre il tuo profilo; tienilo premuto per cambiare profilo, gestirli o aggiungerne uno.\n• Le richieste di chat da sconosciuti hanno una scheda tutta loro, accanto a Tutte, Non lette, Diretti e Canali.\n• Chiamate, Note personali, Invita un amico e Galleria media sono nel menu ⋮ in alto a destra.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Togli e cancella dal telefono</string>
     <string name="velo_admin_action_wipe_phone">Cancella solo il telefono</string>

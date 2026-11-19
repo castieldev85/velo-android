@@ -4,6 +4,7 @@
     <string name="velo_tab_unread">Non lues</string>
     <string name="velo_tab_direct">Directs</string>
     <string name="velo_tab_channels">Canaux</string>
+    <string name="velo_tab_requests">Demandes</string>
     <!-- Velo 0.35: welcome page -->
     <string name="velo_welcome_tagline">Discussions privées, chiffrées, rien qu\'entre nous</string>
 </resources>

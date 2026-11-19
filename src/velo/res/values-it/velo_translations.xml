@@ -656,7 +656,6 @@
     <string name="velo_intro_description">Velo è un\'app che ti collega a una rete globale chiamata XMPP.</string>
     <string name="velo_invite_title">Invito</string>
     <string name="velo_invite_have">Ho un invito</string>
-    <string name="velo_trial_no_invite">Non hai un invito? Prova Velo gratis</string>
     <string name="velo_invite_invalid_title">Non è un invito di Velo</string>
     <string name="velo_invite_invalid_message">Questo codice non è un invito di Velo valido. Chiedine uno nuovo a chi gestisce il tuo gruppo.</string>
     <string name="velo_invite_confirm_title">Entrare in %s?</string>
@@ -674,6 +673,7 @@
     <string name="velo_invite_conflict_message">Velo conosce già questo server, ma l\'invito indica un indirizzo o chiavi di sicurezza diversi. Potrebbe portare a un server falso, quindi non è stato usato. Chiedi a chi gestisce il gruppo di controllare.</string>
     <string name="velo_connect_first_wait">Collegamento tramite Tor. La prima volta può richiedere qualche minuto: attendi e non chiudere Velo.</string>
     <string name="velo_connect_unreachable">Server non raggiungibile. Controlla la connessione e riprova più tardi.</string>
+    <string name="velo_trial_no_invite">Non hai un invito? Prova Velo gratis</string>
     <plurals name="album_more_description">
         <item quantity="one">%1$d altra foto</item>
         <item quantity="other">%1$d altre foto</item>

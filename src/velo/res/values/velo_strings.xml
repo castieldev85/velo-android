@@ -229,7 +229,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">What\'s new in Velo %s</string>
     <string name="velo_whats_new_ok">Got it</string>
-    <string name="velo_whats_new_text">This version makes joining easier.\n\n• “Invite to Velo” (top menu) now opens the same invite as “Invite a friend”: a link to the Velo page, without showing the server address.\n• Personal invites: an invite can carry your user name. Velo fills it in and locks it; you only pick your own password, which nobody else knows.\n• In Velo downloaded from the site, “Try Velo for free” on the welcome screen opens a free trial group.\n• Fix: whoever joins with an invite a few minutes after someone else no longer gets “Registration failed”.</string>
+    <string name="velo_whats_new_text">Velo has a new look: navigation like the new Telegram.\n\n• A bar at the bottom with Chats, Contacts, Settings and Profile (with your picture). The side menu is gone.\n• Profile opens your profile; hold it to switch profile, manage them or add one.\n• Chat requests from strangers have their own tab, next to All, Unread, Direct and Channels.\n• Calls, Note to self, Invite a friend and the media gallery are in the ⋮ menu at the top right.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Remove and wipe their phone</string>
     <string name="velo_admin_action_wipe_phone">Wipe their phone only</string>

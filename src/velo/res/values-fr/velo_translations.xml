@@ -150,10 +150,9 @@
     <string name="velo_server_name">Serveur</string>
     <string name="velo_whats_new_title">Nouveautés de Velo %s</string>
     <string name="velo_whats_new_ok">Compris</string>
-    <string name="velo_whats_new_text">Cette version rend l\'entrée plus simple.\n\n• « Inviter à Velo » (menu du haut) ouvre maintenant la même invitation que « Inviter un ami » : un lien vers la page de Velo, sans montrer l\'adresse du serveur.\n• Invitations personnelles : une invitation peut contenir votre nom d\'utilisateur. Velo le remplit et le bloque ; vous choisissez seulement votre propre mot de passe, que personne d\'autre ne connaît.\n• Dans la Velo téléchargée depuis le site, « Essayez Velo gratuitement » sur l\'écran d\'accueil ouvre un groupe d\'essai gratuit.\n• Correction : la personne qui entre avec une invitation quelques minutes après une autre ne reçoit plus « Échec de l\'inscription ».</string>
+    <string name="velo_whats_new_text">Velo change de look : navigation comme le nouveau Telegram.\n\n• Une barre en bas avec Discussions, Contacts, Paramètres et Profil (avec ta photo). Le menu latéral a disparu.\n• Profil ouvre ton profil ; maintiens-le appuyé pour changer de profil, les gérer ou en ajouter un.\n• Les demandes de discussion d\'inconnus ont leur propre onglet, à côté de Toutes, Non lues, Directs et Canaux.\n• Appels, Notes personnelles, Inviter un ami et la galerie de médias sont dans le menu ⋮ en haut à droite.</string>
     <string name="velo_invite_title">Invitation</string>
     <string name="velo_invite_have">J\'ai une invitation</string>
-    <string name="velo_trial_no_invite">Pas d\'invitation ? Essayez Velo gratuitement</string>
     <string name="velo_invite_invalid_title">Ce n\'est pas une invitation Velo</string>
     <string name="velo_invite_invalid_message">Ce code n\'est pas une invitation Velo valide. Demandez-en une nouvelle à la personne qui gère votre groupe.</string>
     <string name="velo_invite_confirm_title">Rejoindre %s ?</string>
@@ -196,4 +195,5 @@
     <string name="velo_friend_invite_confirm_title">%1$s vous invite sur Velo</string>
     <string name="velo_friend_invite_register_title">Créez votre compte</string>
     <string name="velo_friend_invite_offline">Velo n\'est pas encore connecté. Réessayez dans un instant.</string>
+    <string name="velo_trial_no_invite">Pas d\'invitation ? Essayez Velo gratuitement</string>
 </resources>

@@ -19,9 +19,10 @@
     <bool name="allow_unencrypted_reactions">false</bool>
     <!-- Velo 0.10: chiamate sempre tramite il relay del server (AppSettings.isUseRelays) -->
     <bool name="use_relays">true</bool>
-    <!-- Velo: navigazione stile Telegram, menu laterale e niente barra in basso -->
-    <bool name="show_nav_bar">false</bool>
-    <bool name="show_nav_drawer">true</bool>
+    <!-- Velo 0.44: navigazione come il Telegram nuovo, barra in basso (Chat, Contatti,
+         Impostazioni, Profilo) e niente menu laterale. Fino alla 0.43 era il contrario. -->
+    <bool name="show_nav_bar">true</bool>
+    <bool name="show_nav_drawer">false</bool>
     <!-- Velo 0.40: monocles turned this off; Velo keeps downloading files on Wi-Fi by itself
          (only from the own server, through Tor), as up to 0.39 -->
     <bool name="auto_accept_unmetered">true</bool>
