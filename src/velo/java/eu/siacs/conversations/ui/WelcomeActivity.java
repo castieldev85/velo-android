@@ -273,6 +273,14 @@ public class WelcomeActivity extends XmppActivity implements XmppConnectionServi
         binding.useVeloInvite.setOnClickListener(v -> eu.siacs.conversations.velo.VeloInviteActivity.start(this));
         // Velo 0.43: whoever found Velo alone starts from the free trial group on the site
         if (eu.siacs.conversations.BuildConfig.VELO_PUBLIC) {
+            // Velo 0.46 (strada C): who comes from the store gets an account without an invite
+            binding.registerNewAccount.setVisibility(View.VISIBLE);
+            binding.registerNewAccount.setText(R.string.velo_signup_button);
+            // The tonal style vanished on the white sheet: same filled look as "Log in"
+            binding.registerNewAccount.setBackgroundTintList(binding.useExisting.getBackgroundTintList());
+            binding.registerNewAccount.setTextColor(binding.useExisting.getTextColors());
+            binding.registerNewAccount.setTypeface(binding.useExisting.getTypeface());
+            binding.registerNewAccount.setOnClickListener(v -> eu.siacs.conversations.velo.VeloSignup.start(this));
             binding.useVeloTrial.setVisibility(View.VISIBLE);
             binding.useVeloTrial.setOnClickListener(v -> {
                 try {

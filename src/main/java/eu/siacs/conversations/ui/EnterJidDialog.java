@@ -269,7 +269,10 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
             // Velo: nel campo si mostra solo il nome utente; qui riaggiungo il
             // dominio del server quando manca la @, cosi' il JID resta valido.
             // Velo 0.39: con piu' server, il nome si cerca tra gli account.
-            if (text.indexOf('@') < 0 && !Strings.isNullOrEmpty(Config.VELO_LOGIN_DOMAIN)) {
+            // Velo 0.46: also without a built-in server (store version), where the name is looked
+            // up among the accounts; before, "name" became a JID whose domain was the name itself
+            // and every contact was refused as "not on your server".
+            if (text.indexOf('@') < 0) {
                 final XmppActivity veloActivity = (XmppActivity) getActivity();
                 return eu.siacs.conversations.velo.VeloServers.accountJid(
                         text,

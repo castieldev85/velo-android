@@ -241,7 +241,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">Novità di Velo %s</string>
     <string name="velo_whats_new_ok">Ho capito</string>
-    <string name="velo_whats_new_text">Velo 0.45: la barra in basso ovunque, e la scegli tu.\n\n• La barra resta in Chat, Contatti, Impostazioni e Profilo, con la sezione in cui sei evidenziata.\n• Nuova pagina Profilo, come in Telegram: la tua foto in grande, nome, nome utente, invito con codice QR, note personali, password, dispositivi e chiavi.\n• Personalizza → Barra: grandezza, pillola fluttuante o barra piena, scritte sempre, solo sulla scheda scelta o solo icone, e i colori della barra.</string>
+    <string name="velo_whats_new_text">Velo 0.46: si entra anche senza invito.\n\n• Nella Velo del sito e dello store, “Crea un account” funziona senza invito: un breve controllo che tu non sia un robot, poi scegli nome utente e password.\n• Quando blocchi qualcuno sul server pubblico puoi anche segnalarlo a Velo. La segnalazione non dice chi l\'ha mandata.\n• Corretto nella Velo pubblica: un contatto scritto col nome veniva rifiutato come se fosse su un altro server.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Togli e cancella dal telefono</string>
     <string name="velo_admin_action_wipe_phone">Cancella solo il telefono</string>

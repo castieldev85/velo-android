@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.46 (strada C): account dallo store senza invito (VeloSignup) e segnalazioni dal pulsante Blocca -->
+<resources>
+    <string name="velo_signup_button">Create an account</string>
+    <string name="velo_signup_working">One moment, I\'m preparing your account…</string>
+    <string name="velo_signup_limit_title">No more accounts today</string>
+    <string name="velo_signup_limit">Today\'s new accounts are gone. Try again tomorrow, or ask a friend who uses Velo for an invite.</string>
+    <string name="velo_signup_error_title">Server not reachable</string>
+    <string name="velo_signup_error">I can\'t reach the Velo server. Check your connection and try again.</string>
+    <string name="velo_report_check">Also report to Velo</string>
+    <string name="velo_report_title">Why are you reporting?</string>
+    <string name="velo_report_spam">Spam</string>
+    <string name="velo_report_harassment">Harassment</string>
+    <string name="velo_report_illegal">Illegal content</string>
+    <string name="velo_report_other">Other</string>
+    <string name="velo_report_skip">Just block</string>
+    <string name="velo_report_sending">Sending the report…</string>
+    <string name="velo_report_sent">Report sent. Thank you.</string>
+    <string name="velo_report_failed">Report not sent. Try again later.</string>
+</resources>

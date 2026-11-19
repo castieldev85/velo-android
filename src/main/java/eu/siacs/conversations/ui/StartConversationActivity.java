@@ -854,7 +854,8 @@ public class StartConversationActivity extends XmppActivity
                 final String text = spinner.getText().toString();
                 // Velo 0.39: con piu' server, il nome si cerca tra gli account
                 final XmppConnectionService veloService = ((XmppActivity) context).xmppConnectionService;
-                jid = text.indexOf('@') < 0 && !com.google.common.base.Strings.isNullOrEmpty(Config.VELO_LOGIN_DOMAIN)
+                // Velo 0.46: also in the store version, which has no built-in server
+                jid = text.indexOf('@') < 0
                         ? eu.siacs.conversations.velo.VeloServers.accountJid(
                                 text, veloService == null ? null : veloService.getAccounts())
                         : Jid.of(text);
@@ -862,7 +863,7 @@ public class StartConversationActivity extends XmppActivity
                 return null;
             }
             final XmppConnectionService service = ((XmppActivity) context).xmppConnectionService;
-            if (service == null) {
+            if (service == null || jid == null) {
                 return null;
             }
             return service.findAccountByJid(jid);

@@ -41,6 +41,16 @@ public final class BlockContactDialog {
 		} else {
 			binding.reportSpam.setVisibility(View.GONE);
 		}
+		// Velo 0.46: on the public server a block can also be reported to whoever runs it
+		final android.widget.CheckBox veloReport;
+		if (!isBlocked && eu.siacs.conversations.velo.VeloSignup.canReport(
+				blockable.getAccount().getJid(), blockable.getJid())) {
+			veloReport = new android.widget.CheckBox(xmppActivity);
+			veloReport.setText(R.string.velo_report_check);
+			((android.view.ViewGroup) binding.getRoot()).addView(veloReport);
+		} else {
+			veloReport = null;
+		}
 		builder.setView(binding.getRoot());
 
 		final String value;
@@ -81,6 +91,7 @@ public final class BlockContactDialog {
 					if (isBlocked) {
 						xmppActivity.xmppConnectionService.sendUnblockRequest(blockable);
 					} else {
+						final Runnable block = () -> {
 						boolean toastShown = false;
 						var finalServerId = serverMsgId;
 						if (serverMsgId == null && binding.reportSpam.isChecked() && blockable instanceof Conversation) {
@@ -105,6 +116,14 @@ public final class BlockContactDialog {
 										.show();
 							}
 							xmppActivity.finish();
+						}
+						};
+						if (veloReport != null && veloReport.isChecked()) {
+							// The reason first: the details page closes as soon as the block is sent
+							eu.siacs.conversations.velo.VeloSignup.report(
+									xmppActivity, blockable.getJid().asBareJid(), block);
+						} else {
+							block.run();
 						}
 					}
 				});

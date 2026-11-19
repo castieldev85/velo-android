@@ -36,6 +36,27 @@ public class VeloInviteActivity extends BaseActivity {
     private static final int REQUEST_PICK_IMAGE = 0x7a11;
     private static final int MAX_SIDE = 2048;
 
+    /** The login page for an invited server: with a token it creates the account. */
+    static Intent joinIntent(
+            final Context context,
+            final VeloServers.Server server,
+            @Nullable final String token,
+            @Nullable final String inviter,
+            @Nullable final String user) {
+        final Intent intent = new Intent(context, EditAccountActivity.class);
+        intent.putExtra(EditAccountActivity.EXTRA_FORCE_REGISTER, token != null);
+        if (token != null) {
+            intent.putExtra(VeloFriendInvite.EXTRA_TOKEN, token);
+            intent.putExtra(VeloFriendInvite.EXTRA_INVITER, inviter);
+        }
+        if (user != null) {
+            intent.putExtra(VeloFriendInvite.EXTRA_USER, user);
+        }
+        intent.putExtra("init", true);
+        intent.putExtra(VeloServers.EXTRA_INVITE, server.toInvite());
+        return intent;
+    }
+
     private boolean busy;
 
     public static void start(final Activity activity) {
@@ -218,27 +239,13 @@ public class VeloInviteActivity extends BaseActivity {
                     .show();
             return;
         }
+        final Intent intent = joinIntent(this, server, token, inviter, user);
         new MaterialAlertDialogBuilder(this)
                 .setTitle(token != null && inviter != null
                         ? getString(R.string.velo_friend_invite_confirm_title, inviter)
                         : getString(R.string.velo_invite_confirm_title, server.name))
                 .setMessage(getString(R.string.velo_invite_confirm_message, server.shortCode()))
-                .setPositiveButton(
-                        R.string.velo_invite_join,
-                        (d, w) -> {
-                            final Intent intent = new Intent(this, EditAccountActivity.class);
-                            intent.putExtra(EditAccountActivity.EXTRA_FORCE_REGISTER, token != null);
-                            if (token != null) {
-                                intent.putExtra(VeloFriendInvite.EXTRA_TOKEN, token);
-                                intent.putExtra(VeloFriendInvite.EXTRA_INVITER, inviter);
-                            }
-                            if (user != null) {
-                                intent.putExtra(VeloFriendInvite.EXTRA_USER, user);
-                            }
-                            intent.putExtra("init", true);
-                            intent.putExtra(VeloServers.EXTRA_INVITE, server.toInvite());
-                            startActivity(intent);
-                        })
+                .setPositiveButton(R.string.velo_invite_join, (d, w) -> startActivity(intent))
                 .setNegativeButton(R.string.cancel, null)
                 .setOnDismissListener(d -> finish())
                 .show();
