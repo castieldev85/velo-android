@@ -15,6 +15,11 @@
     and the only code asking for these is ImportBackupActivity, which then asks for nothing
     (it requests only permissions the manifest declares) and the backup is chosen with "Open a
     file" instead of the automatic scan of shared storage.
+
+    Velo 0.46.4: no "camera" foreground service. The connection service claimed it (and
+    "microphone") only as a fallback to stay alive, never for a camera task; in the public Velo
+    that fallback is "specialUse" (XmppConnectionService.startForegroundOrCatch). During a video
+    call the camera works while Velo is on screen; "microphone" stays for calls.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
@@ -34,5 +39,15 @@
     <uses-permission
         android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
         tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_CAMERA"
+        tools:node="remove" />
+
+    <application>
+        <service
+            android:name="eu.siacs.conversations.services.XmppConnectionService"
+            android:foregroundServiceType="specialUse|systemExempted|microphone|location"
+            tools:replace="android:foregroundServiceType" />
+    </application>
 
 </manifest>

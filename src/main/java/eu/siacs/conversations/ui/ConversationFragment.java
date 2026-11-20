@@ -6649,7 +6649,8 @@ public class ConversationFragment extends XmppFragment
                 () -> attachFile(ATTACHMENT_CHOICE_RECORD_VIDEO),
                 () -> attachFile(ATTACHMENT_CHOICE_CHOOSE_FILE),
                 () -> attachFile(ATTACHMENT_CHOICE_LOCATION),
-                () -> attachFile(ATTACHMENT_CHOICE_LIVE_LOCATION),
+                // Velo 0.46.4: first the duration, as from the menu; without one nothing started
+                this::showLiveLocationDurationPicker,
                 this::veloToggleDictation);
     }
 

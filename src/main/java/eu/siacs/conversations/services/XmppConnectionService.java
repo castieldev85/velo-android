@@ -3292,6 +3292,11 @@ public class XmppConnectionService extends Service {
                 } else if (getSystemService(PowerManager.class)
                         .isIgnoringBatteryOptimizations(getPackageName())) {
                     foregroundServiceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED;
+                } else if (eu.siacs.conversations.BuildConfig.VELO_PUBLIC) {
+                    // Velo 0.46.4: the public Velo (Google Play) keeps its connection as what it is,
+                    // special use "xmpp-im". Microphone and camera are not in use here, and
+                    // Google Play accepts those types only for the user-visible task they name.
+                    foregroundServiceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
                 } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                         == PackageManager.PERMISSION_GRANTED) {
                     foregroundServiceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
