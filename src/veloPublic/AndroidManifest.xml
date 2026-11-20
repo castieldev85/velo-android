@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Velo 0.46.2: manifest only of the public Velo (./gradlew -PveloPublic), the one of the site,
+    of GitHub and of Google Play. It removes two permissions that Google Play does not allow to a
+    chat app and that the public Velo never uses:
+    - REQUEST_INSTALL_PACKAGES: only the built-in updater (VeloUpdater) installs APKs, and it is
+      off in the public Velo (VeloUpdater.enabled); an app from Google Play may update itself only
+      through Google Play.
+    - ACCESS_BACKGROUND_LOCATION: never requested by the code; live location runs in the
+      foreground service of type "location", which needs no background permission.
+    The group Velo keeps both (it updates itself from its server).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission
+        android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_BACKGROUND_LOCATION"
+        tools:node="remove" />
+
+</manifest>

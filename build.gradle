@@ -242,8 +242,8 @@ android {
         velo {
             dimension "mode"
             applicationId = veloPublic ? "eu.velochat.velo" : "it.velo.chat"
-            versionCode 120
-            versionName "0.46.1"
+            versionCode 121
+            versionName "0.46.2"
             def appName = "Velo"
             resValue "string", "app_name", appName
             buildConfigField "String", "APP_NAME", "\"$appName\""
@@ -258,6 +258,10 @@ android {
         veloFree {
             java {
                 srcDir 'src/conversationsFree/java'
+            }
+            // Velo 0.46.2: the public Velo drops the permissions Google Play refuses
+            if (veloPublic) {
+                manifest.srcFile 'src/veloPublic/AndroidManifest.xml'
             }
         }
     }
