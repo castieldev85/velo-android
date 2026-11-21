@@ -123,6 +123,10 @@ public class ContactDetailsActivity extends OmemoActivity
     protected MenuItem save = null;
 
     private Contact contact;
+    // Velo 0.47: the contact's cover above the picture, asked to the server once per page
+    @androidx.annotation.Nullable private android.widget.ImageView coverView;
+    @androidx.annotation.Nullable private String coverFetchedFor;
+    @androidx.annotation.Nullable private String coverShownFor;
     private MaterialSwitch mDisableCallsSwitch;
     private MaterialSwitch mFollowFeedSwitch;
     private final DialogInterface.OnClickListener removeFromRoster =
@@ -727,6 +731,64 @@ public class ContactDetailsActivity extends OmemoActivity
         }
     }
 
+    /** Shows the cover last seen at once, then asks the contact's server whether it changed. */
+    private void showCover(final Contact contact) {
+        final String key = contact.getJid().asBareJid().toString();
+        if (key.equals(coverFetchedFor)) {
+            return;
+        }
+        if (!key.equals(coverShownFor)) {
+            coverShownFor = key;
+            applyCover(eu.siacs.conversations.velo.VeloCover.cached(this, contact.getJid()));
+        }
+        // the page refreshes when the account comes online: ask the server only then, and once
+        if (contact.getAccount().getStatus() != eu.siacs.conversations.entities.Account.State.ONLINE) {
+            return;
+        }
+        coverFetchedFor = key;
+        eu.siacs.conversations.velo.VeloCover.fetch(
+                xmppConnectionService, contact.getAccount(), contact.getJid(),
+                bitmap -> runOnUiThread(() -> applyCover(bitmap)));
+    }
+
+    /** The cover across the top with the picture on its lower edge, or the plain page without. */
+    private void applyCover(@androidx.annotation.Nullable final android.graphics.Bitmap bitmap) {
+        final android.widget.LinearLayout main = binding.detailsMainLayout;
+        final View head = (View) binding.detailsJidbox.getParent();
+        final android.widget.LinearLayout.LayoutParams headParams =
+                (android.widget.LinearLayout.LayoutParams) head.getLayoutParams();
+        final float density = getResources().getDisplayMetrics().density;
+        if (bitmap == null) {
+            if (coverView != null) {
+                main.removeView(coverView);
+                coverView = null;
+            }
+            headParams.topMargin = 0;
+            head.setLayoutParams(headParams);
+            binding.detailsContactBadge.setForeground(null);
+            return;
+        }
+        if (coverView == null) {
+            coverView = new android.widget.ImageView(this);
+            coverView.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+            coverView.setContentDescription(getString(R.string.velo_cover));
+            main.addView(coverView, 0, new android.widget.LinearLayout.LayoutParams(
+                    -1, getResources().getDisplayMetrics().widthPixels / 3));
+        }
+        coverView.setImageBitmap(bitmap);
+        // half the picture over the cover: its own half height plus the card padding above it
+        headParams.topMargin = -Math.round(48 * density + getResources().getDimension(R.dimen.card_padding_regular));
+        head.setLayoutParams(headParams);
+        // a ring in the page colour drawn over the picture's edge: the picture is clipped to its
+        // own circle, so a padding would cut it, while a foreground stroke stays inside that circle
+        final android.graphics.drawable.GradientDrawable ring = new android.graphics.drawable.GradientDrawable();
+        ring.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        ring.setColor(android.graphics.Color.TRANSPARENT);
+        ring.setStroke(Math.round(4 * density), com.google.android.material.color.MaterialColors.getColor(
+                main, com.google.android.material.R.attr.colorSurface));
+        binding.detailsContactBadge.setForeground(ring);
+    }
+
     private void populateView() {
         veloQuickActions();
         if (contact == null) {
@@ -893,6 +955,7 @@ public class ContactDetailsActivity extends OmemoActivity
         binding.detailsAccount.setText(getString(R.string.using_account, account));
         AvatarWorkerTask.loadAvatar(
                 contact, binding.detailsContactBadge, R.dimen.avatar_on_details_screen_size);
+        showCover(contact);
         binding.detailsContactBadge.setOnClickListener(this::onBadgeClick);
         binding.detailsContactBadge.setOnLongClickListener(v -> {
             ShowAvatarPopup(contact);

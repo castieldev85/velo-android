@@ -242,8 +242,8 @@ android {
         velo {
             dimension "mode"
             applicationId = veloPublic ? "eu.velochat.velo" : "it.velo.chat"
-            versionCode 125
-            versionName "0.46.6"
+            versionCode 126
+            versionName "0.47.0"
             def appName = "Velo"
             resValue "string", "app_name", appName
             buildConfigField "String", "APP_NAME", "\"$appName\""

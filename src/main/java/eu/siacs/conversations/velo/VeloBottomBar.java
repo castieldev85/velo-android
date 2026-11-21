@@ -618,36 +618,144 @@ public final class VeloBottomBar {
             final Consumer<Account> pick,
             final Runnable manage,
             final Runnable add) {
-        final List<String> names = new ArrayList<>();
-        final List<Runnable> actions = new ArrayList<>();
+        final List<ProfileRow> rows = new ArrayList<>();
         // the profile in use carries a tick, as in Telegram; the two actions below have none
         if (accounts.size() > 1) {
-            names.add(mark(current == null) + activity.getString(R.string.all_accounts));
-            actions.add(() -> pick.accept(null));
+            rows.add(new ProfileRow(null, R.drawable.ic_group_24dp,
+                    activity.getString(R.string.all_accounts), null, current == null, () -> pick.accept(null)));
         }
         for (final Account account : accounts) {
             final boolean inUse =
                     current != null
                             ? current.getUuid().equals(account.getUuid())
                             : accounts.size() == 1;
-            names.add(mark(inUse) + VeloNames.of(account));
-            actions.add(() -> pick.accept(account));
+            final String local = account.getJid().getLocal();
+            rows.add(new ProfileRow(account, 0, VeloNames.of(account),
+                    local == null ? null : "@" + local, inUse, () -> pick.accept(account)));
         }
-        names.add(activity.getString(R.string.action_accounts));
-        actions.add(manage);
-        names.add(activity.getString(R.string.action_add_account));
-        actions.add(add);
+        rows.add(new ProfileRow(null, R.drawable.ic_settings_24dp,
+                activity.getString(R.string.action_accounts), null, false, manage));
+        rows.add(new ProfileRow(null, R.drawable.ic_add_24dp,
+                activity.getString(R.string.action_add_account), null, false, add));
         new MaterialAlertDialogBuilder(activity)
                 .setTitle(R.string.velo_nav_choose_profile)
-                .setItems(
-                        names.toArray(new CharSequence[0]),
-                        (dialog, which) -> actions.get(which).run())
+                .setAdapter(new ProfileAdapter(activity, rows), (dialog, which) -> rows.get(which).action.run())
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
-    private static String mark(final boolean inUse) {
-        return inUse ? "✓  " : "     ";
+    /** One line of the profile chooser: a profile with its picture, or an action with an icon. */
+    private static final class ProfileRow {
+        @Nullable final Account account;
+        final int icon;
+        final String title;
+        @Nullable final String subtitle;
+        final boolean inUse;
+        final Runnable action;
+
+        ProfileRow(@Nullable final Account account, final int icon, final String title,
+                @Nullable final String subtitle, final boolean inUse, final Runnable action) {
+            this.account = account;
+            this.icon = icon;
+            this.title = title;
+            this.subtitle = subtitle;
+            this.inUse = inUse;
+            this.action = action;
+        }
+    }
+
+    /**
+     * Velo 0.47: the chooser as Telegram's - each profile with its own picture and "@user" under
+     * the name, a tick on the one in use - instead of a plain list of names.
+     */
+    private static final class ProfileAdapter extends android.widget.BaseAdapter {
+
+        private final XmppActivity activity;
+        private final List<ProfileRow> rows;
+
+        ProfileAdapter(final XmppActivity activity, final List<ProfileRow> rows) {
+            this.activity = activity;
+            this.rows = rows;
+        }
+
+        @Override
+        public int getCount() {
+            return rows.size();
+        }
+
+        @Override
+        public Object getItem(final int position) {
+            return rows.get(position);
+        }
+
+        @Override
+        public long getItemId(final int position) {
+            return position;
+        }
+
+        private int dp(final int value) {
+            return Math.round(value * activity.getResources().getDisplayMetrics().density);
+        }
+
+        @Override
+        public View getView(final int position, @Nullable final View convertView, final ViewGroup parent) {
+            final ProfileRow row = rows.get(position);
+            final int surface = MaterialColors.getColor(parent, com.google.android.material.R.attr.colorSurfaceContainerHigh);
+            final int text = VeloThemes.onColor(surface);
+            final int primary = MaterialColors.getColor(parent, androidx.appcompat.R.attr.colorPrimary);
+            final android.widget.LinearLayout line = new android.widget.LinearLayout(activity);
+            line.setGravity(Gravity.CENTER_VERTICAL);
+            line.setMinimumHeight(dp(64));
+            line.setPadding(dp(24), dp(8), dp(20), dp(8));
+
+            final com.google.android.material.imageview.ShapeableImageView picture =
+                    new com.google.android.material.imageview.ShapeableImageView(activity);
+            picture.setShapeAppearanceModel(com.google.android.material.shape.ShapeAppearanceModel.builder()
+                    .setAllCornerSizes(new com.google.android.material.shape.RelativeCornerSize(0.5f)).build());
+            picture.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+            if (row.account != null) {
+                eu.siacs.conversations.ui.util.AvatarWorkerTask.loadAvatar(row.account, picture, R.dimen.avatar);
+            } else {
+                // the actions get their icon on a soft disc the size of a picture, so all line up
+                picture.setImageResource(row.icon);
+                picture.setColorFilter(primary);
+                picture.setBackgroundColor(ColorUtils.setAlphaComponent(primary, 0x22));
+                picture.setPadding(dp(10), dp(10), dp(10), dp(10));
+            }
+            line.addView(picture, new android.widget.LinearLayout.LayoutParams(dp(44), dp(44)));
+
+            final android.widget.LinearLayout texts = new android.widget.LinearLayout(activity);
+            texts.setOrientation(android.widget.LinearLayout.VERTICAL);
+            texts.setPadding(dp(16), 0, dp(8), 0);
+            final android.widget.TextView title = new android.widget.TextView(activity);
+            title.setText(row.title);
+            title.setTextSize(16);
+            title.setTextColor(text);
+            title.setSingleLine(true);
+            title.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            if (row.inUse) {
+                title.setTypeface(title.getTypeface(), android.graphics.Typeface.BOLD);
+            }
+            texts.addView(title);
+            if (row.subtitle != null && !row.subtitle.equals("@" + row.title)) {
+                final android.widget.TextView subtitle = new android.widget.TextView(activity);
+                subtitle.setText(row.subtitle);
+                subtitle.setTextSize(13);
+                subtitle.setTextColor(ColorUtils.blendARGB(text, surface, 0.4f));
+                subtitle.setSingleLine(true);
+                texts.addView(subtitle);
+            }
+            line.addView(texts, new android.widget.LinearLayout.LayoutParams(0, -2, 1f));
+
+            if (row.inUse) {
+                final android.widget.ImageView tick = new android.widget.ImageView(activity);
+                tick.setImageResource(R.drawable.ic_check_24dp);
+                tick.setColorFilter(primary);
+                tick.setContentDescription(activity.getString(R.string.velo_profile_in_use));
+                line.addView(tick, new android.widget.LinearLayout.LayoutParams(dp(24), dp(24)));
+            }
+            return line;
+        }
     }
 
     /** The profile picture keeps its own colours: the bar tints every other icon. */

@@ -4,24 +4,33 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.core.graphics.ColorUtils;
 
+import com.canhub.cropper.CropImageContract;
+import com.canhub.cropper.CropImageContractOptions;
+import com.canhub.cropper.CropImageOptions;
+import com.canhub.cropper.CropImageView;
 import com.google.android.material.color.MaterialColors;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.shape.RelativeCornerSize;
 import com.google.android.material.shape.ShapeAppearanceModel;
@@ -42,12 +51,52 @@ import eu.siacs.conversations.utils.AccountUtils;
  * colour, the name, the user name - never the server - and the things that belong to oneself
  * below it. The technical account page stays one tap away ("Devices and keys").
  */
-public class VeloProfileActivity extends XmppActivity {
+public class VeloProfileActivity extends XmppActivity
+        implements eu.siacs.conversations.services.XmppConnectionService.OnAccountUpdate {
+
+    /**
+     * Velo 0.47: the page follows the profile's connection, so "connecting…" turns into "online"
+     * and the cover is asked for as soon as the profile is online.
+     */
+    @Override
+    public void onAccountUpdate() {
+        refreshUi();
+    }
 
     private LinearLayout root;
     private LinearLayout page;
     @Nullable private Account account;
     @Nullable private String jid;
+    /** The cover shown in the header, kept so that a render does not flash the plain band. */
+    @Nullable private Bitmap cover;
+    @Nullable private String coverOf;
+    @Nullable private String coverFetchedFor;
+
+    // Velo 0.47: the cover is picked from the gallery, then cut to 3:1 by the same cropper as
+    // the profile picture
+    private final ActivityResultLauncher<CropImageContractOptions> cropCover =
+            registerForActivityResult(new CropImageContract(), result -> {
+                if (result.isSuccessful() && result.getUriContent() != null) {
+                    publishCover(result.getUriContent());
+                }
+            });
+    private final ActivityResultLauncher<String> pickCover =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri == null) {
+                    return;
+                }
+                final CropImageOptions options = new CropImageOptions();
+                options.aspectRatioX = 3;
+                options.aspectRatioY = 1;
+                options.fixAspectRatio = true;
+                options.outputCompressFormat = Bitmap.CompressFormat.JPEG;
+                options.outputCompressQuality = 90;
+                options.outputRequestWidth = VeloCover.WIDTH;
+                options.outputRequestHeight = VeloCover.HEIGHT;
+                options.outputRequestSizeOptions = CropImageView.RequestSizeOptions.RESIZE_INSIDE;
+                options.activityTitle = getString(R.string.velo_cover);
+                cropCover.launch(new CropImageContractOptions(uri, options));
+            });
 
     public static void open(final XmppActivity from, final Account account) {
         from.startActivity(
@@ -85,6 +134,7 @@ public class VeloProfileActivity extends XmppActivity {
         }
         render();
         VeloBottomBar.refresh(this);
+        fetchCover();
     }
 
     @Override
@@ -92,7 +142,30 @@ public class VeloProfileActivity extends XmppActivity {
         if (xmppConnectionService != null) {
             render();
             VeloBottomBar.refresh(this);
+            fetchCover();
         }
+    }
+
+    /**
+     * Asks the server for the cover once per profile shown, as soon as that profile is online:
+     * opened while still connecting, the page asks when the connection comes up.
+     */
+    private void fetchCover() {
+        final Account shown = account;
+        if (shown == null || shown.getStatus() != Account.State.ONLINE) {
+            return;
+        }
+        final String key = shown.getJid().asBareJid().toString();
+        if (key.equals(coverFetchedFor)) {
+            return;
+        }
+        coverFetchedFor = key;
+        VeloCover.fetch(xmppConnectionService, shown, shown.getJid(), bitmap -> runOnUiThread(() -> {
+            if (shown == account) {
+                cover = bitmap;
+                render();
+            }
+        }));
     }
 
     private int dp(final int value) {
@@ -131,41 +204,165 @@ public class VeloProfileActivity extends XmppActivity {
         page.addView(space, new LinearLayout.LayoutParams(-1, dp(24)));
     }
 
-    /** Telegram's top: the picture large and round, the name, then "@user · online". */
+    /**
+     * Telegram's top: the cover across the top (the bar colour while there is none), the picture
+     * large and round on its lower edge, the name, then "@user · online".
+     */
     private View header() {
         final int bar = VeloUi.barColor(this);
-        final int on = VeloThemes.onColor(bar);
+        final int surface = MaterialColors.getColor(root, com.google.android.material.R.attr.colorSurface);
+        final int text = VeloThemes.onColor(surface);
+        final String key = account.getJid().asBareJid().toString();
+        if (!key.equals(coverOf)) {
+            coverOf = key;
+            cover = VeloCover.cached(this, account.getJid());
+        }
         final LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setGravity(Gravity.CENTER_HORIZONTAL);
-        box.setBackgroundColor(bar);
-        box.setPadding(dp(16), dp(28), dp(16), dp(22));
+        box.setPadding(0, 0, 0, dp(18));
+
+        final FrameLayout band = new FrameLayout(this);
+        band.setBackgroundColor(bar);
+        band.setContentDescription(getString(R.string.velo_cover));
+        band.setOnClickListener(v -> coverMenu());
+        if (cover != null) {
+            final ImageView picture = new ImageView(this);
+            picture.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            picture.setImageBitmap(cover);
+            band.addView(picture, new FrameLayout.LayoutParams(-1, -1));
+        }
+        band.addView(coverChip(cover == null), chipParams());
+        final int width = getResources().getDisplayMetrics().widthPixels;
+        box.addView(band, new LinearLayout.LayoutParams(-1, width / 3));
+
         final ShapeableImageView avatar = new ShapeableImageView(this);
         avatar.setScaleType(ImageView.ScaleType.CENTER_CROP);
         avatar.setShapeAppearanceModel(
                 ShapeAppearanceModel.builder().setAllCornerSizes(new RelativeCornerSize(0.5f)).build());
+        // a ring in the page colour parts the picture from the cover behind it
+        avatar.setStrokeColor(android.content.res.ColorStateList.valueOf(surface));
+        avatar.setStrokeWidth(dp(4));
+        avatar.setPadding(dp(2), dp(2), dp(2), dp(2));
+        avatar.setBackgroundColor(surface);
         avatar.setContentDescription(getString(R.string.velo_profile_photo));
         avatar.setOnClickListener(v -> changePhoto());
         AvatarWorkerTask.loadAvatar(account, avatar, R.dimen.avatar_on_details_screen_size);
-        box.addView(avatar, new LinearLayout.LayoutParams(dp(104), dp(104)));
+        final LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(108), dp(108));
+        avatarParams.topMargin = -dp(54);
+        box.addView(avatar, avatarParams);
+
         final TextView name = new TextView(this);
         name.setText(VeloNames.of(account));
-        name.setTextColor(on);
+        name.setTextColor(text);
         name.setTextSize(24);
         name.setTypeface(name.getTypeface(), Typeface.BOLD);
         name.setGravity(Gravity.CENTER);
-        name.setPadding(0, dp(14), 0, 0);
+        name.setPadding(dp(16), dp(10), dp(16), 0);
         box.addView(name);
         final TextView status = new TextView(this);
         final String user = account.getJid().getLocal() == null ? "" : "@" + account.getJid().getLocal();
         status.setText(user + " · " + getString(account.isOnlineAndConnected()
                 ? R.string.velo_profile_online : R.string.velo_profile_offline));
-        status.setTextColor(ColorUtils.setAlphaComponent(on, 0xCC));
+        status.setTextColor(ColorUtils.blendARGB(text, surface, 0.35f));
         status.setTextSize(15);
         status.setGravity(Gravity.CENTER);
         status.setPadding(0, dp(4), 0, 0);
         box.addView(status);
         return box;
+    }
+
+    /** The round dark button on the cover: a camera, plus "Add cover" while there is none. */
+    private View coverChip(final boolean withText) {
+        final TextView chip = new TextView(this);
+        chip.setTextColor(0xFFFFFFFF);
+        chip.setTextSize(14);
+        chip.setGravity(Gravity.CENTER_VERTICAL);
+        chip.setCompoundDrawablePadding(withText ? dp(8) : 0);
+        final android.graphics.drawable.Drawable camera =
+                androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_camera_alt_24dp);
+        if (camera != null) {
+            final android.graphics.drawable.Drawable icon = camera.mutate();
+            icon.setTint(0xFFFFFFFF);
+            icon.setBounds(0, 0, dp(20), dp(20));
+            chip.setCompoundDrawables(icon, null, null, null);
+        }
+        if (withText) {
+            chip.setText(R.string.velo_cover_add);
+            chip.setPadding(dp(12), dp(7), dp(14), dp(7));
+        } else {
+            chip.setPadding(dp(8), dp(8), dp(8), dp(8));
+            chip.setContentDescription(getString(R.string.velo_cover_change));
+        }
+        final GradientDrawable background = new GradientDrawable();
+        background.setColor(0x78000000);
+        background.setCornerRadius(dp(20));
+        chip.setBackground(background);
+        chip.setOnClickListener(v -> coverMenu());
+        return chip;
+    }
+
+    private FrameLayout.LayoutParams chipParams() {
+        final FrameLayout.LayoutParams params =
+                new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END);
+        params.setMargins(0, dp(12), dp(12), 0);
+        return params;
+    }
+
+    private void coverMenu() {
+        if (account == null) {
+            return;
+        }
+        if (cover == null) {
+            pickCover.launch("image/*");
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.velo_cover)
+                .setItems(
+                        new CharSequence[] {getString(R.string.velo_cover_change), getString(R.string.velo_cover_remove)},
+                        (dialog, which) -> {
+                            if (which == 0) {
+                                pickCover.launch("image/*");
+                            } else {
+                                VeloCover.remove(xmppConnectionService, account);
+                                cover = null;
+                                render();
+                                Toast.makeText(this, R.string.velo_cover_removed, Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void publishCover(final android.net.Uri uri) {
+        final Account target = account;
+        if (target == null || xmppConnectionService == null) {
+            return;
+        }
+        if (!target.isOnlineAndConnected()) {
+            Toast.makeText(this, R.string.velo_cover_offline, Toast.LENGTH_LONG).show();
+            return;
+        }
+        Toast.makeText(this, R.string.velo_cover_sending, Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            final byte[] jpeg = VeloCover.encode(this, uri);
+            if (jpeg == null) {
+                runOnUiThread(() -> Toast.makeText(this, R.string.velo_cover_failed, Toast.LENGTH_LONG).show());
+                return;
+            }
+            VeloCover.publish(xmppConnectionService, target, jpeg, ok -> runOnUiThread(() -> {
+                if (ok) {
+                    if (target == account) {
+                        cover = android.graphics.BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length);
+                        render();
+                    }
+                    Toast.makeText(this, R.string.velo_cover_updated, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, R.string.velo_cover_failed, Toast.LENGTH_LONG).show();
+                }
+            }));
+        }).start();
     }
 
     private void group(final int colour, final View... rows) {
@@ -285,6 +482,7 @@ public class VeloProfileActivity extends XmppActivity {
                         jid = chosen.getJid().asBareJid().toString();
                         render();
                         VeloBottomBar.refresh(this);
+                        fetchCover();
                     }
                 },
                 () -> AccountUtils.launchManageAccounts(this),

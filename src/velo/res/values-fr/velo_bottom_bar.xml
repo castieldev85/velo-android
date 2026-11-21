@@ -36,4 +36,15 @@
     <string name="velo_profile_profiles_hint">Change, gère ou ajoute un profil</string>
     <string name="velo_profile_online">en ligne</string>
     <string name="velo_profile_offline">connexion…</string>
+    <!-- Velo 0.47: the cover picture above the profile picture -->
+    <string name="velo_cover">Couverture</string>
+    <string name="velo_cover_add">Ajouter une couverture</string>
+    <string name="velo_cover_change">Changer la couverture</string>
+    <string name="velo_cover_remove">Retirer la couverture</string>
+    <string name="velo_cover_removed">Couverture retirée</string>
+    <string name="velo_cover_updated">Couverture mise à jour : tes contacts la verront dans tes détails</string>
+    <string name="velo_cover_failed">Impossible de mettre à jour la couverture. Réessaie dans un instant.</string>
+    <string name="velo_cover_offline">Connecte-toi d\'abord : la couverture arrive à tes contacts par le serveur.</string>
+    <string name="velo_cover_sending">Envoi de la couverture…</string>
+    <string name="velo_profile_in_use">Utilisé</string>
 </resources>

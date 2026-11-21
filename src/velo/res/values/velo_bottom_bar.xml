@@ -49,4 +49,15 @@
         <item name="lineHeight">19sp</item>
         <item name="android:lineHeight">19sp</item>
     </style>
+    <!-- Velo 0.47: the cover picture above the profile picture -->
+    <string name="velo_cover">Cover</string>
+    <string name="velo_cover_add">Add cover</string>
+    <string name="velo_cover_change">Change cover</string>
+    <string name="velo_cover_remove">Remove cover</string>
+    <string name="velo_cover_removed">Cover removed</string>
+    <string name="velo_cover_updated">Cover updated: your contacts will see it in your details</string>
+    <string name="velo_cover_failed">Couldn\'t update the cover. Try again in a moment.</string>
+    <string name="velo_cover_offline">Connect first: the cover is sent to your contacts through the server.</string>
+    <string name="velo_cover_sending">Sending the cover…</string>
+    <string name="velo_profile_in_use">In use</string>
 </resources>

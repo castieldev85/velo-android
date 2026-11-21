@@ -36,4 +36,15 @@
     <string name="velo_profile_profiles_hint">Cambia, gestiona o añade un perfil</string>
     <string name="velo_profile_online">en línea</string>
     <string name="velo_profile_offline">conectando…</string>
+    <!-- Velo 0.47: the cover picture above the profile picture -->
+    <string name="velo_cover">Portada</string>
+    <string name="velo_cover_add">Añadir portada</string>
+    <string name="velo_cover_change">Cambiar portada</string>
+    <string name="velo_cover_remove">Quitar portada</string>
+    <string name="velo_cover_removed">Portada quitada</string>
+    <string name="velo_cover_updated">Portada actualizada: tus contactos la verán en tus detalles</string>
+    <string name="velo_cover_failed">No se pudo actualizar la portada. Inténtalo de nuevo en un momento.</string>
+    <string name="velo_cover_offline">Conéctate primero: la portada llega a tus contactos a través del servidor.</string>
+    <string name="velo_cover_sending">Enviando la portada…</string>
+    <string name="velo_profile_in_use">En uso</string>
 </resources>

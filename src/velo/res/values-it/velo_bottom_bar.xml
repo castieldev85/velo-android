@@ -36,4 +36,15 @@
     <string name="velo_profile_profiles_hint">Cambia, gestisci o aggiungi un profilo</string>
     <string name="velo_profile_online">online</string>
     <string name="velo_profile_offline">connessione…</string>
+    <!-- Velo 0.47: the cover picture above the profile picture -->
+    <string name="velo_cover">Copertina</string>
+    <string name="velo_cover_add">Aggiungi copertina</string>
+    <string name="velo_cover_change">Cambia copertina</string>
+    <string name="velo_cover_remove">Rimuovi copertina</string>
+    <string name="velo_cover_removed">Copertina rimossa</string>
+    <string name="velo_cover_updated">Copertina aggiornata: i tuoi contatti la vedono nei tuoi dettagli</string>
+    <string name="velo_cover_failed">Non sono riuscita ad aggiornare la copertina. Riprova tra poco.</string>
+    <string name="velo_cover_offline">Prima collegati: la copertina arriva ai contatti attraverso il server.</string>
+    <string name="velo_cover_sending">Invio la copertina…</string>
+    <string name="velo_profile_in_use">In uso</string>
 </resources>

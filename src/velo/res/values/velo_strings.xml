@@ -229,7 +229,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">What\'s new in Velo %s</string>
     <string name="velo_whats_new_ok">Got it</string>
-    <string name="velo_whats_new_text">Velo 0.46.6: cleaner colours in every theme.\n\n• The buttons under a group\'s details (leave, delete, save) follow the theme: no more light patches on the dark themes.\n• The paper clip\'s sheet no longer has a black band under it on the light themes.\n• The chat list fades out under the bottom bar instead of showing cut lines.\n• Groups: when there are none, the page says how to create or join one.\n• The \"Encrypted message\" hint is easier to read on the light themes.\n• From the Play Store, Velo can now be installed on tablets and Chromebooks too.</string>
+    <string name="velo_whats_new_text">Velo 0.47.0: a cover for your profile.\n\n• Profile: tap the band at the top to add a cover picture; you choose which part to show. Tap it again to change or remove it.\n• Your contacts see it in your details, above your picture. Like the profile picture it is sent through the server, not end-to-end encrypted, and only your accepted contacts can see it.\n• Choose profile: each profile now has its own picture next to the name.\n• The Profile page now shows \"online\" as soon as the connection comes up.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Remove and wipe their phone</string>
     <string name="velo_admin_action_wipe_phone">Wipe their phone only</string>
