@@ -327,6 +327,7 @@ public final class VeloBottomBar {
                         bar.setPadding(0, 0, 0, wantPadding);
                         bar.setLayoutParams(margins);
                     }
+                    fade(bar, pill ? navigation[0] + lift + height + Math.round(18 * density) : 0);
                 };
         bar.setTag(TAG_PLACE, apply[0]);
         ViewCompat.setOnApplyWindowInsetsListener(
@@ -338,6 +339,51 @@ public final class VeloBottomBar {
                 });
         apply[0].run();
         ViewCompat.requestApplyInsets(bar);
+    }
+
+    private static final int TAG_FADE = R.id.velo_tag_fade;
+
+    /**
+     * Velo 0.46.6: under the floating pill of the chat list the rows ran on behind the system
+     * buttons, half cut, a mess of text. As in Telegram, a fade in the page colour now sits behind
+     * the pill and the system buttons. Only where the list scrolls under the bar (the chat list's
+     * RelativeLayout): the other sections are held clear of the bar already. {@code height} 0
+     * (the full bar, which reaches the edge itself) takes the fade away.
+     */
+    private static void fade(final BottomNavigationView bar, final int height) {
+        if (!(bar.getParent() instanceof android.widget.RelativeLayout parent)) {
+            return;
+        }
+        View scrim = (View) bar.getTag(TAG_FADE);
+        if (scrim == null) {
+            if (height == 0) {
+                return;
+            }
+            scrim = new View(bar.getContext());
+            scrim.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            final android.widget.RelativeLayout.LayoutParams params =
+                    new android.widget.RelativeLayout.LayoutParams(-1, height);
+            params.addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM);
+            // right under the bar, so it covers the list but never the bar
+            parent.addView(scrim, parent.indexOfChild(bar), params);
+            bar.setTag(TAG_FADE, scrim);
+            final View fadeView = scrim;
+            bar.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+                final int want = bar.getVisibility() == View.VISIBLE ? View.VISIBLE : View.GONE;
+                if (fadeView.getVisibility() != want && fadeView.getLayoutParams().height > 0) {
+                    fadeView.setVisibility(want);
+                }
+            });
+        }
+        final int page = MaterialColors.getColor(bar, com.google.android.material.R.attr.colorSurface);
+        scrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[] {
+                page, ColorUtils.setAlphaComponent(page, 0xEB), ColorUtils.setAlphaComponent(page, 0)}));
+        final ViewGroup.LayoutParams params = scrim.getLayoutParams();
+        if (params.height != height) {
+            params.height = height;
+            scrim.setLayoutParams(params);
+        }
+        scrim.setVisibility(height > 0 && bar.getVisibility() == View.VISIBLE ? View.VISIBLE : View.GONE);
     }
 
     /**

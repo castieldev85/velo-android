@@ -241,7 +241,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">Novità di Velo %s</string>
     <string name="velo_whats_new_ok">Ho capito</string>
-    <string name="velo_whats_new_text">Velo 0.46: si entra anche senza invito.\n\n• Nella Velo del sito e dello store, “Crea un account” funziona senza invito: un breve controllo che tu non sia un robot, poi scegli nome utente e password.\n• Quando blocchi qualcuno sul server pubblico puoi anche segnalarlo a Velo. La segnalazione non dice chi l\'ha mandata.\n• Invita un amico: chi entra col tuo invito è subito tra i tuoi contatti, e tu tra i suoi.\n• Corretto nella Velo pubblica: un contatto scritto col nome veniva rifiutato come se fosse su un altro server.\n• Corretto: «Posizione in tempo reale» dalla graffetta ora chiede per quanto tempo condividerla e parte (prima non succedeva nulla).\n• La traduzione offline ora funziona anche sui telefoni più recenti (memoria a pagine da 16 kB).</string>
+    <string name="velo_whats_new_text">Velo 0.46.6: colori più puliti in tutti i temi.\n\n• I pulsanti dei dettagli di un gruppo (esci, elimina, salva) seguono il tema: niente più macchie chiare nei temi scuri.\n• Il foglio della graffetta non ha più una striscia nera sotto nei temi chiari.\n• La lista delle chat sfuma sotto la barra in basso invece di mostrare righe tagliate.\n• Gruppi: quando non ce ne sono, la pagina spiega come crearne uno o entrarci.\n• La scritta \"Messaggio cifrato\" si legge meglio nei temi chiari.\n• Dal Play Store, Velo ora si installa anche su tablet e Chromebook.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Togli e cancella dal telefono</string>
     <string name="velo_admin_action_wipe_phone">Cancella solo il telefono</string>
@@ -269,4 +269,6 @@
     <string name="velo_friend_invite_confirm_title">%1$s ti invita su Velo</string>
     <string name="velo_friend_invite_register_title">Crea il tuo account</string>
     <string name="velo_friend_invite_offline">Velo non è ancora collegata. Riprova tra poco.</string>
+    <!-- Velo 0.46.6: shown on the Groups page when there are none -->
+    <string name="velo_groups_empty">Ancora nessun gruppo.\nCreane uno con il pulsante +, oppure entra da un invito.</string>
 </resources>

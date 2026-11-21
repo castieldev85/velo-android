@@ -65,6 +65,11 @@
     <uses-feature
         android:name="android.hardware.microphone"
         android:required="false" />
+    <!-- Velo 0.46.6: ScanActivity is locked to portrait, which made Play require a portrait
+         screen and leave out tablets, Chromebooks and cars -->
+    <uses-feature
+        android:name="android.hardware.screen.portrait"
+        android:required="false" />
 
     <queries>
         <package android:name="org.sufficientlysecure.keychain" />

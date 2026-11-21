@@ -125,6 +125,23 @@ public final class VeloUi {
         }
     }
 
+    /**
+     * Velo 0.46.6: the buttons under a group's details (leave, delete, bookmark) were painted a
+     * fixed light pink or white, light patches on the dark themes. Now the theme's own colours:
+     * {@code danger} on the theme's error colour, the others on a raised surface.
+     */
+    public static void paintGroupButton(final android.widget.Button button, final boolean danger) {
+        final Context context = button.getContext();
+        final int background = com.google.android.material.color.MaterialColors.getColor(context,
+                danger ? androidx.appcompat.R.attr.colorError : com.google.android.material.R.attr.colorSurfaceContainerHigh, 0);
+        final int text = VeloThemes.onColor(background);
+        button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(background));
+        button.setTextColor(text);
+        if (button instanceof com.google.android.material.button.MaterialButton material) {
+            material.setIconTint(android.content.res.ColorStateList.valueOf(text));
+        }
+    }
+
     @Nullable
     private static androidx.appcompat.widget.Toolbar findToolbar(final android.view.View view) {
         if (view instanceof androidx.appcompat.widget.Toolbar toolbar) {

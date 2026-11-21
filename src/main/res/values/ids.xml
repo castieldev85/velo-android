@@ -9,4 +9,6 @@
     <item type="id" name="TAG_AUDIO_PLAYER_VIEW_HOLDER"/>
     <item type="id" name="TAG_DRAGGABLE"/>
     <item type="id" name="swipe_listener_tag"/>
+    <!-- Velo 0.46.6: the fade behind the floating bottom bar (VeloBottomBar.fade) -->
+    <item name="velo_tag_fade" type="id" />
 </resources>

@@ -1666,6 +1666,12 @@ public class StartConversationActivity extends XmppActivity
     public static class MyListFragment extends SwipeRefreshListFragment {
         private AdapterView.OnItemClickListener mOnItemClickListener;
         private int mResContextMenu;
+        // Velo 0.46.6: what an empty list says (the Groups page was a blank screen)
+        private int emptyText;
+
+        public void setEmptyTextRes(final int res) {
+            this.emptyText = res;
+        }
 
         public void setContextMenu(final int res) {
             this.mResContextMenu = res;
@@ -1690,6 +1696,9 @@ public class StartConversationActivity extends XmppActivity
             getListView().setFastScrollEnabled(true);
             getListView().setDivider(null);
             getListView().setDividerHeight(0);
+            if (emptyText != 0) {
+                setEmptyText(getString(emptyText));
+            }
         }
 
         @Override
@@ -1837,6 +1846,7 @@ public class StartConversationActivity extends XmppActivity
                 if (position == 1) {
                     listFragment.setListAdapter(mConferenceAdapter);
                     listFragment.setContextMenu(R.menu.conference_context);
+                    listFragment.setEmptyTextRes(R.string.velo_groups_empty);
                     listFragment.setOnListItemClickListener(
                             (arg0, arg1, p, arg3) -> openConversationForBookmark(p));
                 } else {

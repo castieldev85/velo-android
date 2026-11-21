@@ -229,7 +229,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">What\'s new in Velo %s</string>
     <string name="velo_whats_new_ok">Got it</string>
-    <string name="velo_whats_new_text">Velo 0.46: you can join without an invite.\n\n• In the Velo from the website or the store, “Create an account” works without an invite: a quick check that you are not a robot, then you choose your user name and password.\n• When you block someone on the public server, you can also report them to Velo. The report does not say who sent it.\n• Invite a friend: whoever joins with your invite is straight away among your contacts, and you among theirs.\n• Fixed in the public Velo: a contact typed by name was refused as being on another server.\n• Fixed: “Live location” from the paper clip now asks for how long to share it and starts (before, nothing happened).\n• Offline translation now also works on the newest phones (16 KB memory pages).</string>
+    <string name="velo_whats_new_text">Velo 0.46.6: cleaner colours in every theme.\n\n• The buttons under a group\'s details (leave, delete, save) follow the theme: no more light patches on the dark themes.\n• The paper clip\'s sheet no longer has a black band under it on the light themes.\n• The chat list fades out under the bottom bar instead of showing cut lines.\n• Groups: when there are none, the page says how to create or join one.\n• The \"Encrypted message\" hint is easier to read on the light themes.\n• From the Play Store, Velo can now be installed on tablets and Chromebooks too.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Remove and wipe their phone</string>
     <string name="velo_admin_action_wipe_phone">Wipe their phone only</string>
@@ -257,4 +257,6 @@
     <string name="velo_friend_invite_confirm_title">%1$s invites you to Velo</string>
     <string name="velo_friend_invite_register_title">Create your account</string>
     <string name="velo_friend_invite_offline">Velo is not connected yet. Try again in a moment.</string>
+    <!-- Velo 0.46.6: shown on the Groups page when there are none -->
+    <string name="velo_groups_empty">No groups yet.\nCreate one with the + button, or join one from an invite.</string>
 </resources>

@@ -818,7 +818,7 @@ public class ConferenceDetailsActivity extends XmppActivity
             }
             if (self.getAffiliation().ranks(MucOptions.Affiliation.OWNER)) {
                 if (mAdvancedMode) {
-                    this.binding.destroy.getBackground().setTint(getResources().getColor(R.color.md_theme_dark_error));
+                    eu.siacs.conversations.velo.VeloUi.paintGroupButton(this.binding.destroy, true);
                     this.binding.destroy.setVisibility(View.VISIBLE);
                 } else {
                     this.binding.destroy.setVisibility(View.GONE);
@@ -843,11 +843,11 @@ public class ConferenceDetailsActivity extends XmppActivity
                         });
                 LeaveMucDialog.create().show();
             });
-            this.binding.leaveMuc.getBackground().setTint(getResources().getColor(R.color.md_theme_dark_error));
+            eu.siacs.conversations.velo.VeloUi.paintGroupButton(this.binding.leaveMuc, true);
             this.binding.addMucButton.setVisibility(View.VISIBLE);
             if (mConversation.getBookmark() != null) {
                 this.binding.addMucButton.setText(R.string.delete_bookmark);
-                this.binding.addMucButton.getBackground().setTint(getResources().getColor(R.color.md_theme_dark_error));
+                eu.siacs.conversations.velo.VeloUi.paintGroupButton(this.binding.addMucButton, true);
                 this.binding.addMucButton.setOnClickListener(v2 -> {
                     final MaterialAlertDialogBuilder deleteFromRosterDialog = new MaterialAlertDialogBuilder(ConferenceDetailsActivity.this);
                     deleteFromRosterDialog.setNegativeButton(getString(R.string.cancel), null);
@@ -862,7 +862,7 @@ public class ConferenceDetailsActivity extends XmppActivity
                 });
             } else {
                 this.binding.addMucButton.setText(R.string.save_as_bookmark);
-                binding.addMucButton.getBackground().setTint(getResources().getColor(R.color.md_theme_light_surface));
+                eu.siacs.conversations.velo.VeloUi.paintGroupButton(binding.addMucButton, false);
                 this.binding.addMucButton.setOnClickListener(v2 -> {
                     saveAsBookmark();
                     recreate();

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.46.6: the "Encrypted message" hint in the writing bar. The system hint grey was about
+     2.3:1 on the light themes, colorOnSurfaceVariant still only 2.8:1 on the custom ones; the
+     theme's own text colour at 62% stays near 4.5:1 on light and dark themes alike. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.62" android:color="?attr/colorOnSurface" />
+</selector>

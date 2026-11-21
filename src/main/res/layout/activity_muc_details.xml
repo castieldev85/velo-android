@@ -165,7 +165,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:layout_marginTop="14dp"
-                        android:textColor="@color/black87" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <Button
                         android:id="@+id/add_muc_button"
@@ -175,7 +175,7 @@
                         android:layout_gravity="center_horizontal"
                         android:layout_marginTop="14dp"
                         android:text="@string/add_to_contact_list"
-                        android:textColor="@color/black87" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <Button
                         android:id="@+id/destroy"
@@ -185,8 +185,8 @@
                         android:layout_gravity="center_horizontal"
                         android:layout_marginTop="14dp"
                         app:icon="@drawable/delete_black_24dp"
-                        app:iconTint="@color/black87"
-                        android:textColor="@color/black87" />
+                        app:iconTint="?attr/colorOnSurface"
+                        android:textColor="?attr/colorOnSurface" />
 
                         <RelativeLayout
                             android:id="@+id/muc_settings"

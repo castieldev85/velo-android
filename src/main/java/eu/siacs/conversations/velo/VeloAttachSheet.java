@@ -34,6 +34,24 @@ public final class VeloAttachSheet {
         add(dialog, grid, density, R.string.velo_dictation, R.drawable.ic_dictation_24, 0xFF4A6078, dictate);
         dialog.setContentView(grid);
         dialog.show();
+        matchNavigationBar(dialog);
+    }
+
+    /**
+     * Velo 0.46.6: the strip of the system buttons under the sheet was black (the app theme's
+     * navigationBarColor), a dark band under a light sheet. It takes the sheet's colour now, with
+     * icons that read on it.
+     */
+    private static void matchNavigationBar(final BottomSheetDialog dialog) {
+        final android.view.Window window = dialog.getWindow();
+        if (window == null) {
+            return;
+        }
+        final int sheet = com.google.android.material.color.MaterialColors.getColor(dialog.getContext(),
+                com.google.android.material.R.attr.colorSurfaceContainerLow, 0xFFFFFFFF);
+        window.setNavigationBarColor(sheet);
+        androidx.core.view.WindowCompat.getInsetsController(window, window.getDecorView())
+                .setAppearanceLightNavigationBars(VeloThemes.onColor(sheet) != 0xFFFFFFFF);
     }
 
     private static void add(final BottomSheetDialog dialog, final GridLayout grid, final float density, final int name,
