@@ -2721,6 +2721,8 @@ public class XmppConnectionService extends Service {
                         }
                     queueVeloExpiryRetractions(backend);
                     noteMessagesWiped(backend.expireOldMessages(timestamp));
+                    // Velo 0.49: the text of transcribed voice messages goes with them
+                    eu.siacs.conversations.velo.VeloTranscriber.cleanup(backend);
                     flushVeloPendingRetractions();
                     optimizeSearchIndexIfDue(backend);
                     synchronized (XmppConnectionService.this.conversations) {

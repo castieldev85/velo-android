@@ -222,6 +222,14 @@
             android:layout_marginVertical="4dp"
             android:visibility="gone">
 
+            <!-- Velo 0.49: the player in its own block, so the transcript below it does not move
+                 the play button (it is centred vertically in this block) -->
+            <RelativeLayout
+                android:id="@+id/velo_player_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true">
+
             <com.google.android.material.button.MaterialButton
                 style="?attr/materialIconButtonOutlinedStyle"
                 android:id="@+id/play_pause"
@@ -283,6 +291,48 @@
                 android:layout_below="@+id/progress"
                 android:scrollHorizontally="true"
                 android:textAppearance="?textAppearanceBodySmall" />
+
+            <!-- Velo 0.49: transcription of the voice message, on the phone (VeloTranscriber) -->
+            <com.google.android.material.button.MaterialButton
+                style="?attr/materialButtonOutlinedStyle"
+                android:id="@+id/velo_transcribe"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:layout_below="@+id/progress"
+                android:layout_toEndOf="@+id/play_pause"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="28dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:visibility="gone"
+                app:iconSize="14dp"
+                app:iconPadding="4dp"
+                tools:text="Trascrivi"
+                tools:visibility="visible" />
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/velo_transcript"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/velo_player_row"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/velo_transcript_background"
+                android:padding="10dp"
+                android:textAppearance="?textAppearanceBodyMedium"
+                android:textIsSelectable="true"
+                android:visibility="gone"
+                tools:text="Ciao, sono appena arrivato a casa."
+                tools:visibility="visible" />
 
         </RelativeLayout>
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Velo 0.49: transcription of voice messages (VeloTranscriber) -->
+    <string name="velo_transcribe">Transcrire</string>
+    <string name="velo_transcribing">Transcription…</string>
+    <string name="velo_transcribe_hide">Masquer</string>
+    <string name="velo_transcribe_show">Afficher le texte</string>
+    <string name="velo_transcript_note">Transcrit sur le téléphone</string>
+    <string name="velo_transcribe_model_title">Transcription des messages vocaux</string>
+    <string name="velo_transcribe_model_message">Pour transcrire, il faut la reconnaissance vocale italienne (48 Mo). Elle se télécharge une seule fois depuis le serveur de Velo puis fonctionne sans internet : les messages vocaux ne quittent jamais le téléphone.</string>
+    <string name="velo_transcribe_download">Télécharger</string>
+    <string name="velo_transcribe_downloading" formatted="true">Téléchargement %d%%</string>
+    <string name="velo_transcribe_empty">Aucun mot reconnu</string>
+    <string name="velo_transcribe_failed" formatted="true">Transcription impossible : %s</string>
+</resources>

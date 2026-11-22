@@ -241,7 +241,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">Novità di Velo %s</string>
     <string name="velo_whats_new_ok">Ho capito</string>
-    <string name="velo_whats_new_text">Velo 0.48.0: messaggi a tempo e cancellazioni più rigorosi.\n\n• I messaggi a tempo ora si portano via anche i file, i messaggi fissati e la copia nel backup, e spariscono anche i tuoi messaggi inviati da un altro dispositivo.\n• Elimina per tutti toglie tutti i file del messaggio e ferma i download in corso.\n• I messaggi modificati non compaiono più come messaggi nuovi nelle altre app.\n• Un file viene salvato solo quando è arrivato completo e verificato.\n• Vocali: un pulsante per ascoltarli a 1x, 1,5x o 2x.\n• Correzioni di sicurezza.</string>
+    <string name="velo_whats_new_text">Velo 0.49.0: trascrizione dei vocali.\n\n• Sotto ogni vocale c\'è ora il pulsante Trascrivi: il testo compare sotto il messaggio.\n• Tutto avviene sul telefono, senza internet: il vocale non esce mai. La prima volta Velo scarica il riconoscimento vocale italiano (48 MB).\n• Il testo sparisce insieme al suo messaggio (messaggi a tempo, Elimina per tutti).</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Togli e cancella dal telefono</string>
     <string name="velo_admin_action_wipe_phone">Cancella solo il telefono</string>

@@ -150,7 +150,7 @@
     <string name="velo_server_name">Serveur</string>
     <string name="velo_whats_new_title">Nouveautés de Velo %s</string>
     <string name="velo_whats_new_ok">Compris</string>
-    <string name="velo_whats_new_text">Velo 0.48.0 : messages éphémères et suppressions plus stricts.\n\n• Les messages éphémères emportent maintenant aussi leurs fichiers, les messages épinglés et la copie de sauvegarde, et tes messages envoyés depuis un autre appareil disparaissent aussi.\n• Supprimer pour tous retire tous les fichiers du message et arrête les téléchargements en cours.\n• Les messages modifiés n\'apparaissent plus comme de nouveaux messages dans les autres apps.\n• Un fichier n\'est enregistré qu\'une fois arrivé complet et vérifié.\n• Messages vocaux : un bouton pour les écouter à 1x, 1,5x ou 2x.\n• Corrections de sécurité.</string>
+    <string name="velo_whats_new_text">Velo 0.49.0 : transcription des messages vocaux.\n\n• Sous chaque message vocal il y a maintenant un bouton Transcrire : le texte apparaît sous le message.\n• Tout se passe sur le téléphone, sans internet : le message vocal ne le quitte jamais. La première fois, Velo télécharge la reconnaissance vocale italienne (48 Mo).\n• Le texte disparaît avec son message (messages éphémères, Supprimer pour tous).</string>
     <string name="velo_invite_title">Invitation</string>
     <string name="velo_invite_have">J\'ai une invitation</string>
     <string name="velo_invite_invalid_title">Ce n\'est pas une invitation Velo</string>
