@@ -121,7 +121,14 @@ public class PinnedMessageRepository {
         executorService.submit(() -> getDatabaseBackend().deletePinnedMessage(conversationUuid, messageUuid));
     }
 
-    public DecryptedPinnedMessageData getLatestDecryptedPinnedMessageForConversation(String conversationUuid) {
+    public DecryptedPinnedMessageData getLatestDecryptedPinnedMessageForConversation(
+            String conversationUuid) {
+        try {
+            // a pin whose (disappearing, retracted, deleted) message is gone is never shown
+            getDatabaseBackend().deleteStalePins(conversationUuid);
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing stale pins", e);
+        }
         try (Cursor cursor = getDatabaseBackend().getPinnedMessages(conversationUuid)) {
             if (cursor != null && cursor.moveToFirst()) {
                 return fromCursor(cursor);
@@ -134,6 +141,11 @@ public class PinnedMessageRepository {
 
     public List<DecryptedPinnedMessageData> getAllDecryptedPinnedMessagesForConversation(String conversationUuid) {
         List<DecryptedPinnedMessageData> result = new ArrayList<>();
+        try {
+            getDatabaseBackend().deleteStalePins(conversationUuid);
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing stale pins", e);
+        }
         try (Cursor cursor = getDatabaseBackend().getPinnedMessages(conversationUuid)) {
             while (cursor != null && cursor.moveToNext()) {
                 result.add(fromCursor(cursor));

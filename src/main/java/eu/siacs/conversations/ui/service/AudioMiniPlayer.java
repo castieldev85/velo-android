@@ -24,6 +24,7 @@ public class AudioMiniPlayer implements BackgroundAudioController.Listener {
     private final BackgroundAudioController controller;
     private final View root;
     private final MaterialButton playPause;
+    private final MaterialButton speed;
     private final TextView subtitle;
     private final LinearProgressIndicator progress;
 
@@ -35,7 +36,9 @@ public class AudioMiniPlayer implements BackgroundAudioController.Listener {
         this.subtitle = root.findViewById(R.id.miniplayer_subtitle);
         this.progress = root.findViewById(R.id.miniplayer_progress);
         final MaterialButton close = root.findViewById(R.id.miniplayer_close);
+        this.speed = root.findViewById(R.id.miniplayer_speed);
         this.playPause.setOnClickListener(v -> controller.toggleCurrentPlayPause());
+        this.speed.setOnClickListener(v -> controller.cyclePlaybackSpeed());
         close.setOnClickListener(v -> controller.stop());
         this.root.setOnClickListener(v -> jumpToMessage());
         update();
@@ -87,6 +90,7 @@ public class AudioMiniPlayer implements BackgroundAudioController.Listener {
                 playing ? R.drawable.rounded_pause_36 : R.drawable.rounded_play_arrow_36);
         playPause.setContentDescription(
                 activity.getString(playing ? R.string.pause_audio : R.string.play_audio));
+        AudioPlayer.applySpeed(speed, controller.getPlaybackSpeed());
         final String title = controller.getCurrentTitle();
         if (title != null && !title.isEmpty()) {
             subtitle.setText(title);

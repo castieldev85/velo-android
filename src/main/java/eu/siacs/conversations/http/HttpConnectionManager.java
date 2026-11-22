@@ -125,8 +125,21 @@ public class HttpConnectionManager extends AbstractConnectionManager {
         if (host.equals("localhost") || host.endsWith(".localhost") || host.endsWith(".local")) {
             return true;
         }
-        if (!com.google.common.net.InetAddresses.isInetAddress(host)) return false;
-        final InetAddress address = com.google.common.net.InetAddresses.forString(host);
+        if (!com.google.common.net.InetAddresses.isInetAddress(host)) {
+            // Shorthand numeric IPv4 forms ("127.1", "127.0.1", "2130706433") are not literals to
+            // Guava, but OkHttp connects to any [0-9.]+ host via InetAddress.getByName without
+            // asking our Dns, and that resolves them to e.g. 127.0.0.1. There is no canonical
+            // address to check, so treat them as local (refused).
+            return host.matches("[0-9.]+");
+        }
+        return isLocalAddress(com.google.common.net.InetAddresses.forString(host));
+    }
+
+    /**
+     * Loopback, link-local, private (RFC 1918, ULA, CGNAT), unspecified and multicast addresses,
+     * including IPv4-mapped IPv6 forms of them.
+     */
+    public static boolean isLocalAddress(final InetAddress address) {
         if (address.isAnyLocalAddress()
                 || address.isLoopbackAddress()
                 || address.isLinkLocalAddress()

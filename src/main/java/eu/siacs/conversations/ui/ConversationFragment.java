@@ -105,6 +105,7 @@ import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import androidx.core.view.inputmethod.InputConnectionCompat;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
 import androidx.databinding.DataBindingUtil;
@@ -132,6 +133,7 @@ import it.velo.chat.WebxdcPage;
 import it.velo.chat.WebxdcStore;
 import it.velo.chat.EditMessageSelectionActionModeCallback;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.common.base.Optional;
 import com.google.common.collect.Collections2;
@@ -221,6 +223,7 @@ import eu.siacs.conversations.ui.util.Attachment;
 import eu.siacs.conversations.ui.util.ConversationMenuConfigurator;
 import eu.siacs.conversations.ui.util.DateSeparator;
 import eu.siacs.conversations.ui.util.EditMessageActionModeCallback;
+import eu.siacs.conversations.ui.util.EphemeralTimerPicker;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.ui.util.MucDetailsContextMenuHelper;
 import eu.siacs.conversations.ui.util.PendingItem;
@@ -1664,11 +1667,19 @@ public class ConversationFragment extends XmppFragment
                 messageSent();
                 return;
             } else {
-                // Preserve the original stanza ID before the UUID changes, so recipients
-                // can still look up this message by the ID they stored on their side.
+                // XEP-0308: every correction names the original message by the id it went out
+                // with, which the first entry of its edits records. That is the id others know
+                // it by: remoteMsgId for a message from another of our devices or restored from
+                // the archive (its local uuid is our own), else our uuid, which it was sent
+                // under. Recorded before the uuid changes; later corrections keep it.
+                if (!message.edited()) {
                 if (message.getRemoteMsgId() == null) {
                     message.setRemoteMsgId(message.getUuid());
                 }
+                    message.putEdited(message.getRemoteMsgId(), message.getServerMsgId());
+                }
+                // The last entry is the uuid the row is stored under until the send path updates
+                // it (updateMessage(message, getEditedId())); a no-op when it is the one above.
                 message.putEdited(message.getUuid(), message.getServerMsgId());
                 // Do not clear serverMsgId: the edit reflection sets reflectedServerMsgId=null
                 // for edits, so markMessage won't overwrite it, and keeping the original
@@ -2153,6 +2164,11 @@ public class ConversationFragment extends XmppFragment
         final MenuItem menuGroupCall = menu.findItem(R.id.action_group_call);
         final MenuItem menuTogglePinned = menu.findItem(R.id.action_toggle_pinned);
         final MenuItem deleteCustomBg = menu.findItem(R.id.action_delete_custom_bg);
+        // Direct chats only (rooms keep it in their details); the only place Note to self, whose
+        // header opens the account, can switch the timer on.
+        // Velo: hidden. The clock in the message box is Velo's timer; a second one in this menu
+        // (the chat-wide timer, still in the contact details) would only confuse.
+        menu.findItem(R.id.action_ephemeral_timer).setVisible(false);
 
         if (conversation != null) {
             if (conversation.getMode() == Conversation.MODE_MULTI) {
@@ -2682,7 +2698,13 @@ public class ConversationFragment extends XmppFragment
         SpannableStringBuilder body = message.getSpannableBody(null, null);
         if ((message.isFileOrImage() || message.isOOb()) && binding.imageReplyPreview != null) {
             binding.imageReplyPreview.setVisibility(VISIBLE);
-            Glide.with(activity).load(message.getRelativeFilePath()).placeholder(R.drawable.ic_image_24dp).thumbnail(0.2f).into(binding.imageReplyPreview);
+            // no copy in Glide's disk cache: it would outlive a disappearing (or deleted) message
+            Glide.with(activity)
+                    .load(message.getRelativeFilePath())
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .placeholder(R.drawable.ic_image_24dp)
+                    .thumbnail(0.2f)
+                    .into(binding.imageReplyPreview);
         } else if (message.isGeoUri()) {
             if (activity.xmppConnectionService != null && activity.xmppConnectionService.getBooleanPreference("show_maps_inside", R.bool.show_maps_inside) && binding.imageReplyPreview != null) {
                 final String url = GeoHelper.MapPreviewUri(message, activity);
@@ -3254,7 +3276,8 @@ public class ConversationFragment extends XmppFragment
                     && t == null) {
                 shareWith.setVisible(true);
 
-                // pin to top
+                // pin to top (a disappearing message's pin goes with it, see
+                // DatabaseBackend.deleteStalePins)
                 pinToTop.setVisible(true);
             }
             if (m.getStatus() == Message.STATUS_SEND_FAILED) {
@@ -3400,7 +3423,12 @@ public class ConversationFragment extends XmppFragment
                             sendMessage(retractionMessage);
                         }
 
-                        // Mark the message as retracted locally to prevent it from reappearing after restart
+                                // Its file first, while the message still knows it: once the
+                                // path is cleared below, deleteMessage cannot find it any more
+                                // and the picture stayed on disk with nothing pointing at it.
+                                activity.xmppConnectionService.deleteFileIfUnused(messageToRetract);
+                                // Mark the message as retracted locally to prevent it from
+                                // reappearing after restart
                         messageToRetract.setCarbon(false);
                         messageToRetract.setOob(false);
                         messageToRetract.resetFileParams();
@@ -4266,6 +4294,8 @@ public class ConversationFragment extends XmppFragment
             );
         } else if (id == R.id.action_contact_details) {
             activity.switchToContactDetails(conversation.getContact());
+        } else if (id == R.id.action_ephemeral_timer) {
+            EphemeralTimerPicker.show(activity, activity.xmppConnectionService, conversation);
         } else if (id == R.id.action_muc_details) {
             ConferenceDetailsActivity.open(activity, conversation);
         } else if (id == R.id.action_muc_participants) {
@@ -6468,14 +6498,55 @@ public class ConversationFragment extends XmppFragment
                     if (timer > 0) {
                         String by = conversation.getEphemeralBy();
                         if (by != null) {
-                            binding.ephemeralHintText.setText(getString(R.string.ephemeral_messages_active_by_hint, by, UIHelper.getReadableEphemeralDuration(activity, timer)));
-                        } else {
-                            binding.ephemeralHintText.setText(getString(R.string.ephemeral_messages_active_hint, UIHelper.getReadableEphemeralDuration(activity, timer)));
+                                binding.ephemeralHintText.setText(
+                                        getString(
+                                                R.string.ephemeral_messages_active_by_hint,
+                                                by,
+                                                EphemeralTimerPicker.describe(activity, timer)));
+                            } else {
+                                binding.ephemeralHintText.setText(
+                                        getString(
+                                                R.string.ephemeral_messages_active_hint,
+                                                EphemeralTimerPicker.describe(activity, timer)));
                         }
+                            // Tapping it changes the timer; it is the way to do that in Note
+                            // to self, whose header opens the account and not a details screen.
+                            final boolean changeable =
+                                    EphemeralTimerPicker.isAvailable(conversation);
+                            if (changeable) {
+                                binding.ephemeralHint.setOnClickListener(v ->
+                                        EphemeralTimerPicker.show(
+                                                activity,
+                                                activity.xmppConnectionService,
+                                                conversation));
+                                ViewCompat.replaceAccessibilityAction(
+                                        binding.ephemeralHint,
+                                        AccessibilityNodeInfoCompat.AccessibilityActionCompat
+                                                .ACTION_CLICK,
+                                        getString(R.string.ephemeral_messages_change),
+                                        null);
+                            } else {
+                                binding.ephemeralHint.setOnClickListener(null);
+                                binding.ephemeralHint.setClickable(false);
+                                // the fragment is reused: drop the "Change" a 1:1 chat registered
+                                ViewCompat.removeAccessibilityAction(
+                                        binding.ephemeralHint,
+                                        AccessibilityNodeInfoCompat.AccessibilityActionCompat
+                                                .ACTION_CLICK
+                                                .getId());
+                            }
+                            binding.ephemeralHintChevron.setVisibility(
+                                    changeable ? View.VISIBLE : View.GONE);
+                            // the ripple follows the rounded bar
+                            binding.ephemeralHint.setClipToOutline(true);
                         binding.ephemeralHint.setVisibility(View.VISIBLE);
                     } else if (conversation.getVeloSendTimer() > 0) {
                         // Velo: the clock of the message box is on
                         binding.ephemeralHintText.setText(getString(R.string.velo_timer_active_hint, eu.siacs.conversations.velo.VeloDurations.format(activity, conversation.getVeloSendTimer())));
+                        // Velo 0.48: tapping the bar opens the same clock as the message box
+                        binding.ephemeralHint.setOnClickListener(v -> showVeloTimerDialog());
+                        binding.ephemeralHintChevron.setVisibility(View.VISIBLE);
+                        binding.ephemeralHint.setClipToOutline(true);
                         binding.ephemeralHint.setVisibility(View.VISIBLE);
                     } else {
                         binding.ephemeralHint.setVisibility(View.GONE);
@@ -8537,7 +8608,10 @@ public class ConversationFragment extends XmppFragment
                                 // Show media thumbnail
                                 Glide.with(ConversationFragment.this)
                                         .load(mediaFile)
-                                        .placeholder(R.drawable.ic_image_24dp) // Optional placeholder
+                                        // no disk copy, see the reply preview
+                                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                        .placeholder(
+                                                R.drawable.ic_image_24dp) // Optional placeholder
                                         .error(R.drawable.rounded_broken_image_24) // Optional error
                                         .into(binding.pinnedMessageImageThumbnail);
                             } else {

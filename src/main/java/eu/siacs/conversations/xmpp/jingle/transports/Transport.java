@@ -22,6 +22,9 @@ public interface Transport {
 
     default void readyToSentAdditionalCandidates() {}
 
+    /** The sender wrote everything; transports that need an explicit end of stream send it. */
+    default void finishSending() {}
+
     void terminate();
 
     void setTransportCallback(final Callback callback);

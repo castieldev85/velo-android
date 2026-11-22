@@ -460,9 +460,10 @@ public class NotificationService {
     public void pushFromBacklog(final Message message) {
         if (notifyMessage(message)) {
             synchronized (notifications) {
+                if (pushToStack(message)) {
                 getBacklogMessageCounter((Conversation) message.getConversation())
                         .incrementAndGet();
-                pushToStack(message);
+                }
             }
         } else if (notifyMissedCall(message)) {
             synchronized (mMissedCalls) {
@@ -542,7 +543,16 @@ public class NotificationService {
         finishBacklog(false, null);
     }
 
-    private void pushToStack(final Message message) {
+    /**
+     * Adds {@code message} to the notifications; false (nothing added) for a retracted message,
+     * which is never (re)notified. Late pushes come from downloads that were still running when it
+     * was retracted. Callers hold {@code notifications}, which {@link #markRetracted} takes after
+     * the retraction set the retract id, so a push after that always sees it.
+     */
+    private boolean pushToStack(final Message message) {
+        if (message.getRetractId() != null) {
+            return false;
+        }
         final String conversationUuid = message.getConversationUuid();
         if (notifications.containsKey(conversationUuid)) {
             notifications.get(conversationUuid).add(message);
@@ -551,6 +561,7 @@ public class NotificationService {
             mList.add(message);
             notifications.put(conversationUuid, mList);
         }
+        return true;
     }
 
     public void push(final Message message) {
@@ -1092,7 +1103,9 @@ public class NotificationService {
             return;
         }
         synchronized (notifications) {
-            pushToStack(message);
+            if (!pushToStack(message)) {
+                return;
+            }
             final Conversational conversation = message.getConversation();
             final Account account = conversation.getAccount();
             final boolean doNotify =

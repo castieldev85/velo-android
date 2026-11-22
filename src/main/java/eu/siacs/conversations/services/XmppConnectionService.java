@@ -2702,18 +2702,27 @@ public class XmppConnectionService extends Service {
         final DatabaseBackend backend = databaseBackend;
         if (backend == null) return;
         mLastExpiryRun.set(SystemClock.elapsedRealtime());
-        mDatabaseWriterExecutor.execute(
-                () -> {
-                    long timestamp = getAutomaticMessageDeletionDate();
-                    if (getAppSettings().isDeleteUnusedFiles()) {
-                        final List<String> exclusivePaths = backend.getExclusiveFilePathsExpiring(timestamp);
+        mDatabaseWriterExecutor.execute(() -> {
+            // first, so the extra files of a multi-file message are collected below with it
+            final int synced = backend.syncAttachmentExpiry();
+            if (synced > 0) {
+                Log.d(Config.LOGTAG, "gave " + synced + " extra files their message's expiry");
+            }
+            long timestamp = getAutomaticMessageDeletionDate();
+            // The files of disappearing messages go with them, whatever "delete unused files"
+            // says (otherwise a disappeared picture stayed in storage); that setting still
+            // decides for messages removed for their age (timestamp 0 leaves those out). Files
+            // another message still uses are never part of the list.
+            final List<String> exclusivePaths =
+                    backend.getExclusiveFilePathsExpiring(
+                            getAppSettings().isDeleteUnusedFiles() ? timestamp : 0);
                         if (!exclusivePaths.isEmpty()) {
                             FILE_ATTACHMENT_EXECUTOR.execute(() -> deleteFilesAsync(exclusivePaths, "background expiry"));
                         }
-                    }
                     queueVeloExpiryRetractions(backend);
-                    backend.expireOldMessages(timestamp);
+                    noteMessagesWiped(backend.expireOldMessages(timestamp));
                     flushVeloPendingRetractions();
+                    optimizeSearchIndexIfDue(backend);
                     synchronized (XmppConnectionService.this.conversations) {
                         for (Conversation conversation :
                                 XmppConnectionService.this.conversations) {
@@ -2729,11 +2738,89 @@ public class XmppConnectionService extends Service {
                 });
     }
 
+    /**
+     * At most one search-index rewrite per this interval (see {@link #optimizeSearchIndexIfDue}).
+     */
+    private static final long SEARCH_INDEX_OPTIMIZE_INTERVAL = 10 * 60 * 1000L;
+
+    private static final String SEARCH_INDEX_OPTIMIZE_DUE = "search_index_optimize_due";
+    private static final String SEARCH_INDEX_OPTIMIZED_AT = "search_index_optimized_at";
+
+    /**
+     * Disappearing messages were wiped: their words are still in the search index (see {@link
+     * DatabaseBackend#optimizeSearchIndex}) until it is rewritten. Remembered across restarts.
+     */
+    private void noteMessagesWiped(final int wiped) {
+        if (wiped > 0) {
+            getPreferences().edit().putBoolean(SEARCH_INDEX_OPTIMIZE_DUE, true).apply();
+        }
+    }
+
+    /**
+     * When the search index still holds words of wiped messages, the time it may next be rewritten;
+     * 0 if nothing is waiting. The rewrite covers the whole index, so with short timers in a busy
+     * chat it is limited to one per {@link #SEARCH_INDEX_OPTIMIZE_INTERVAL}.
+     */
+    private long searchIndexOptimizeTime() {
+        final SharedPreferences preferences = getPreferences();
+        if (!preferences.getBoolean(SEARCH_INDEX_OPTIMIZE_DUE, false)) {
+            return 0;
+        }
+        final long last = preferences.getLong(SEARCH_INDEX_OPTIMIZED_AT, 0);
+        final long now = System.currentTimeMillis();
+        // a stored time in the future (clock changed) must not postpone it indefinitely
+        return last > now ? now : last + SEARCH_INDEX_OPTIMIZE_INTERVAL;
+    }
+
+    private static final String IMAGE_DISK_CACHE_PURGED = "glide_disk_cache_purged_v1";
+
+    /**
+     * Message pictures are no longer put into Glide's disk cache (a downsampled copy would outlive
+     * a disappearing or deleted message). Copies written before that are removed once.
+     */
+    private void purgeImageDiskCacheOnce() {
+        if (getPreferences().getBoolean(IMAGE_DISK_CACHE_PURGED, false)) {
+            return;
+        }
+        FILE_ATTACHMENT_EXECUTOR.execute(() -> {
+            try {
+                com.bumptech.glide.Glide.get(this).clearDiskCache();
+                getPreferences().edit().putBoolean(IMAGE_DISK_CACHE_PURGED, true).apply();
+                Log.d(Config.LOGTAG, "cleared the image disk cache");
+            } catch (final RuntimeException e) {
+                Log.w(Config.LOGTAG, "could not clear the image disk cache", e);
+            }
+        });
+    }
+
+    /** Runs on the database thread. */
+    private void optimizeSearchIndexIfDue(final DatabaseBackend backend) {
+        final long due = searchIndexOptimizeTime();
+        final long now = System.currentTimeMillis();
+        if (due == 0 || due > now) {
+            return;
+        }
+        backend.optimizeSearchIndex();
+        getPreferences()
+                .edit()
+                .putBoolean(SEARCH_INDEX_OPTIMIZE_DUE, false)
+                .putLong(SEARCH_INDEX_OPTIMIZED_AT, now)
+                .apply();
+        Log.d(Config.LOGTAG, "rewrote the search index without the words of wiped messages");
+    }
+
     public void scheduleNextExpiry() {
         final DatabaseBackend backend = databaseBackend;
         mDatabaseWriterExecutor.execute(() -> {
             if (backend == null) return;
-            final long next = backend.getNextExpiration();
+            final long expiry = backend.getNextExpiration();
+            // the same alarm also brings the search-index rewrite (it runs in expireOldMessages),
+            // so it happens even when the process was gone in between
+            final long optimize = searchIndexOptimizeTime();
+            final long next =
+                    expiry > 0 && optimize > 0
+                            ? Math.min(expiry, optimize)
+                            : Math.max(expiry, optimize);
             if (next > 0) {
                 final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                 if (alarmManager == null) {
@@ -3619,6 +3706,30 @@ public class XmppConnectionService extends Service {
         }
         final Conversation conversation = (Conversation) message.getConversation();
         account.deactivateGracePeriod();
+
+        // A disappearing message whose time ran out while it waited (offline) has been wiped:
+        // no body, deleted, encryption reset to none. Sending it would put a body-less plaintext
+        // stanza on the wire, even in a PQ OMEMO2 chat. It is not sent at all; marked failed, so
+        // it is not picked up as waiting again, but without markMessage's "could not be
+        // delivered" notification: it disappeared as intended. (Checked on the time, not on
+        // isDeleted(): a retraction legitimately goes out as a deleted message.)
+        if (message.getExpireAt() > 0 && message.getExpireAt() <= System.currentTimeMillis()) {
+            Log.d(
+                    Config.LOGTAG,
+                    account.getJid().asBareJid()
+                            + ": not sending "
+                            + message.getUuid()
+                            + ", its disappearing-message time ran out before it could be sent");
+            message.setStatus(Message.STATUS_SEND_FAILED);
+            databaseBackend.updateMessage(message, false);
+            updateConversationUi();
+            // the alarm may not have come yet (doze): wipe it now
+            expireOldMessages();
+            if (cb != null) {
+                cb.run();
+            }
+            return;
+        }
 
         // Velo 0.21: a story is this photo/video plus an encrypted <story/>, gone in 24 hours
         if (!resend && message.getRetractId() == null && !message.isDeleted() && message.isFileOrImage()) {
@@ -4595,8 +4706,11 @@ public class XmppConnectionService extends Service {
                 final long deletionDate = getAutomaticMessageDeletionDate();
                 mLastExpiryRun.set(SystemClock.elapsedRealtime());
                 if (deletionDate > 0) {
-                    Log.d(Config.LOGTAG, "deleting messages that are older than " + AbstractGenerator.getTimestamp(deletionDate));
-                    databaseBackend.expireOldMessages(deletionDate);
+                            Log.d(
+                                    Config.LOGTAG,
+                                    "deleting messages that are older than "
+                                            + AbstractGenerator.getTimestamp(deletionDate));
+                            noteMessagesWiped(databaseBackend.expireOldMessages(deletionDate));
                 }
                 Log.d(Config.LOGTAG, "restoring roster...");
                 for (final Account account : accounts) {
@@ -4624,6 +4738,11 @@ public class XmppConnectionService extends Service {
                 final long diffMessageRestore = SystemClock.elapsedRealtime() - startMessageRestore;
                 Log.d(Config.LOGTAG, "finished restoring messages in " + diffMessageRestore + "ms");
                 updateConversationUi();
+                        // A reboot or an app update clears the expiry alarm: wipe what expired
+                        // while the app was not running and set the alarm again (this also
+                        // brings a pending search-index rewrite).
+                        expireOldMessages();
+                        purgeImageDiskCacheOnce();
                 Log.d(Config.LOGTAG, "restoring stories...");
                 final List<eu.siacs.conversations.entities.Story> persistedStories = databaseBackend.getStoriesFromDatabase();
                 // Runs concurrently with onStoryReceived on the connection threads; the check-then-add
@@ -9493,8 +9612,18 @@ public class XmppConnectionService extends Service {
         for (final String relativePath : exclusiveFilePaths) {
             try {
                 final File file = getFileBackend().getFileForPath(relativePath);
+                // Storage is content addressed: a message whose file matches one of our stickers
+                // points at the sticker itself. No message owns a sticker, so it is never deleted
+                // with one - otherwise anyone could remove it by sending the same picture as a
+                // disappearing message (same rule as for retractions, see MessageParser).
+                if (FileBackend.isStickerFile(this, file)) {
+                    Log.d(Config.LOGTAG, "keeping sticker file " + file.getName());
+                    continue;
+                }
                 if (file.exists() && file.delete()) {
                     deletedCount++;
+                    // the decoded preview of a disappeared picture must not stay in memory either
+                    evictPreview(file);
                     getFileBackend().updateMediaScanner(file);
                     Log.d(Config.LOGTAG, "deleted file: " + file.getAbsolutePath());
                 }

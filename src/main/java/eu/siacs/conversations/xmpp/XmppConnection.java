@@ -177,7 +177,12 @@ public class XmppConnection implements Runnable {
             new HashSet<>();
     private final AppSettings appSettings;
     private final XmppConnectionService mXmppConnectionService;
-    private Socket socket;
+    // volatile: also read off the connection thread (getAuthenticatedDirectServerAddress)
+    private volatile Socket socket;
+    // Peer address of the current connection, set only for a direct TCP connect (never over
+    // Tor/I2P/a SOCKS proxy, where the socket's address is the proxy's). Lets OAuth reach a
+    // local identity provider only when the XMPP server itself is in the local network.
+    private volatile InetAddress directServerAddress = null;
     private XmlReader tagReader;
     private TagWriter tagWriter = new TagWriter();
     private boolean shouldAuthenticate = true;
@@ -362,6 +367,7 @@ public class XmppConnection implements Runnable {
         this.attempt++;
         this.veloTorRefused = false;
         this.dane = false;
+        this.directServerAddress = null;
         this.currentResolverResult = null;
         // will be set if user entered hostname is being used or hostname was verified with dnssec
         this.verifiedHostname = null;
@@ -650,6 +656,7 @@ public class XmppConnection implements Runnable {
                         } else {
                             localSocket = new Socket();
                             localSocket.connect(addr, timeout * 1000);
+                            this.directServerAddress = addr.getAddress();
                         }
                         localSocket.setSoTimeout(timeout * 1000);
                         if (features.encryptionEnabled) {
@@ -2198,7 +2205,7 @@ public class XmppConnection implements Runnable {
             Log.d(
                     Config.LOGTAG,
                     account.getJid().asBareJid() + ": could not prepare oauth authorization",
-                    e);
+                    com.google.common.base.Throwables.getRootCause(e));
             return new StateChangingException(Account.State.UNAUTHORIZED);
         }
     }
@@ -2209,10 +2216,27 @@ public class XmppConnection implements Runnable {
                     new OAuthAuthorization(
                             mXmppConnectionService,
                             account.getJid(),
-                            mXmppConnectionService.useTorToConnect() || account.isOnion(),
-                            mXmppConnectionService.useI2PToConnect() || account.isI2P());
+                            // read per request: this connection object survives a Tor/I2P toggle
+                            () -> mXmppConnectionService.useTorToConnect() || account.isOnion(),
+                            () -> mXmppConnectionService.useI2PToConnect() || account.isI2P(),
+                            this::getAuthenticatedDirectServerAddress);
         }
         return this.oAuthAuthorization;
+    }
+
+    /**
+     * The server's address, but only for the current, TLS-secured, directly connected socket.
+     * Null while a (re)connect attempt has not finished TLS, before STARTTLS, over Tor/I2P/a
+     * proxy, or if the socket cannot tell: every unclear case fails closed.
+     */
+    @Nullable
+    private InetAddress getAuthenticatedDirectServerAddress() {
+        final InetAddress address = this.directServerAddress;
+        final Socket current = this.socket;
+        if (address == null || !(current instanceof SSLSocket) || current.isClosed()) {
+            return null;
+        }
+        return address.equals(current.getInetAddress()) ? address : null;
     }
 
     public OAuthAuthorization.PendingAuthorization getPendingAuthorization() {

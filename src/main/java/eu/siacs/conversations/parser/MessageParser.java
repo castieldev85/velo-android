@@ -40,6 +40,7 @@ import eu.siacs.conversations.entities.Post;
 import eu.siacs.conversations.entities.Presence;
 import eu.siacs.conversations.entities.ServiceDiscoveryResult;
 import eu.siacs.conversations.entities.Story;
+import eu.siacs.conversations.entities.Transferable;
 import eu.siacs.conversations.xmpp.pep.UserTune;
 import io.ipfs.cid.Cid;
 
@@ -221,6 +222,20 @@ public class MessageParser extends AbstractParser
         return (originalStatus == Message.STATUS_RECEIVED) == (editStatus == Message.STATUS_RECEIVED);
     }
 
+    private void stopTransfer(final Message message, final String uuid, final String otherUuid) {
+        final Transferable transferable = message.getTransferable();
+        if (transferable != null) {
+            transferable.cancel();
+        }
+        for (final String id : new String[] {uuid, otherUuid}) {
+            if (id == null) continue;
+            final File partial = mXmppConnectionService.getFileBackend().getPartialFile(id);
+            if (partial.exists() && !partial.delete()) {
+                Log.w(Config.LOGTAG, "could not delete partial file of retracted message");
+            }
+        }
+    }
+
     /**
      * Removes what a retracted message still shows or stores locally (live location, file,
      * previews, cid thumbnails, payloads) and marks it retracted. The caller persists it.
@@ -242,15 +257,53 @@ public class MessageParser extends AbstractParser
         // could delete our copy of a file by sending the same content and retracting it.
         // A correction gives the message a fresh uuid before calling us while its row is still
         // stored under the previous one (previewUuid); neither row counts as "another message".
-        final List<String> ownUuids = Arrays.asList(target.getUuid(), previewUuid);
+        // A download still running would write the file (decrypted) after we are done and give
+        // the row its path back; stop it and drop what it wrote so far. Partial files are kept
+        // by message uuid (to resume), the message's current one and the one it had before a
+        // correction.
+        stopTransfer(target, target.getUuid(), previewUuid);
+        for (final Message attachment : target.getAttachments()) {
+            stopTransfer(attachment, attachment.getUuid(), null);
+        }
+        // Its extra files (a multi-file message) are part of it, so they count as its own too.
+        final List<String> ownUuids = new ArrayList<>(Arrays.asList(target.getUuid(), previewUuid));
+        for (final Message attachment : target.getAttachments()) {
+            ownUuids.add(attachment.getUuid());
+        }
         final DownloadableFile targetFile = mXmppConnectionService.getFileBackend().getFile(target);
-        if (mXmppConnectionService.databaseBackend.isFileUsedByOtherMessage(
+        // A message whose file matches one of our stickers points at the sticker itself; no
+        // message owns a sticker, so a retraction never deletes it (same as for thumbnails below).
+        if (eu.siacs.conversations.persistance.FileBackend.isStickerFile(
+                mXmppConnectionService, targetFile)) {
+            Log.d(Config.LOGTAG, "keeping sticker file of retracted message");
+        } else if (mXmppConnectionService.databaseBackend.isFileUsedByOtherMessage(
                 targetFile, ownUuids, null)) {
             Log.d(Config.LOGTAG, "keeping file of retracted message, still used elsewhere");
         } else {
             mXmppConnectionService.getFileBackend().deleteFile(target);
         }
         mXmppConnectionService.evictPreview(previewUuid);
+        // The extra files of a multi-file message go with it: they are rows of their own, which
+        // the caller (persisting only the message) would leave with their file, URL and key.
+        for (final Message attachment : target.getAttachments()) {
+            final DownloadableFile file =
+                    mXmppConnectionService.getFileBackend().getFile(attachment);
+            if (attachment.getRelativeFilePath() != null
+                    && !eu.siacs.conversations.persistance.FileBackend.isStickerFile(
+                            mXmppConnectionService, file)
+                    && !mXmppConnectionService.databaseBackend.isFileUsedByOtherMessage(
+                            file, ownUuids, null)) {
+                if (file.delete()) {
+                    mXmppConnectionService.getFileBackend().updateMediaScanner(file);
+                }
+            }
+            mXmppConnectionService.evictPreview(file);
+            attachment.clearPayloads();
+            attachment.setFileParams(null);
+            attachment.setRelativeFilePath(null);
+            attachment.setDeleted(true);
+            mXmppConnectionService.databaseBackend.updateMessage(attachment, false);
+        }
         final List<Element> thumbs =
                 target.getFileParams() != null ? target.getFileParams().getThumbnails() : null;
         if (thumbs != null && !thumbs.isEmpty()) {
@@ -282,6 +335,11 @@ public class MessageParser extends AbstractParser
 
         target.setDeleted(true);
         target.setRetractId(retractId);
+        // a pin keeps its own copy of the text (stored under either uuid, see ownUuids above)
+        mXmppConnectionService.databaseBackend.unpinMessage(target.getUuid());
+        if (previewUuid != null && !previewUuid.equals(target.getUuid())) {
+            mXmppConnectionService.databaseBackend.unpinMessage(previewUuid);
+        }
     }
 
     /**
@@ -996,7 +1054,9 @@ public class MessageParser extends AbstractParser
                 // doesn't switch on a timer for the whole chat on this side
                 try {
                     final int timer = Integer.parseInt(el.getAttribute("timer"));
+                    if (isSaneEphemeralTimer(timer)) {
                     finishedMessage.setEphemeralTimer(timer);
+                    }
                     // This is the sender's timer for this one message. It does not change
                     // the chat's setting: that takes an explicit encrypted change (the
                     // body-less form handled above) or the user. A client that only stamps
@@ -1638,11 +1698,59 @@ public class MessageParser extends AbstractParser
         return control;
     }
 
+    /**
+     * Who may change a conversation's disappearing-message timer: the contact of a 1:1 chat, or an
+     * occupant of a private, non-anonymous room. In any other room an occupant must not be able to
+     * set the timer - nor switch it off, which would leave our messages in place.
+     */
+    public static boolean mayChangeEphemeralTimer(
+            final boolean groupChat, final boolean privateAndNonAnonymous) {
+        return !groupChat || privateAndNonAnonymous;
+    }
+
+    private static boolean mayChangeEphemeralTimer(final Conversation conversation) {
+        return mayChangeEphemeralTimer(
+                conversation.getMode() == Conversation.MODE_MULTI,
+                conversation.isPrivateAndNonAnonymous());
+    }
+
+    /** {@code <i-want-out/>}: the contact (or an occupant, see above) switched the timer off. */
+    private void switchOffEphemeralTimer(final Conversation conversation) {
+        if (!mayChangeEphemeralTimer(conversation)) {
+            return;
+        }
+        conversation.setEphemeralTimer(0);
+        mXmppConnectionService.databaseBackend.updateConversation(conversation);
+    }
+
+    /** Longest disappearing-message timer taken from the wire: one year (as the desktop). */
+    static final int MAX_EPHEMERAL_TIMER = 365 * 24 * 3600;
+
+    /**
+     * Whether a timer from the wire is a usable one (0 = off). Anything else is ignored rather than
+     * stored: it would be shown as some other duration and could be saved back as that.
+     */
+    /**
+     * When one of our own messages from another device disappears: its timer after it was sent,
+     * whether it came as a carbon, from the archive or as our room reflection (XEP-0466 monocles
+     * profile, Countdown). 0 for a received message, which counts down from when it is read ({@link
+     * XmppConnectionService#markRead}), and for one without a timer.
+     */
+    static long ownMessageExpiry(final int status, final long timeSent, final int timer) {
+        if (timer <= 0 || status == Message.STATUS_RECEIVED) {
+            return 0;
+        }
+        return timeSent + timer * 1000L;
+    }
+
+    static boolean isSaneEphemeralTimer(final int timer) {
+        return timer >= 0 && timer <= MAX_EPHEMERAL_TIMER;
+    }
+
     /** A contact (or, in a private non-anonymous room, an occupant) set the timer. */
     private void applyEphemeralTimer(
             final Conversation conversation, final Jid from, final int timer) {
-        if (conversation.getMode() == Conversation.MODE_MULTI
-                && !conversation.isPrivateAndNonAnonymous()) {
+        if (!mayChangeEphemeralTimer(conversation) || !isSaneEphemeralTimer(timer)) {
             return;
         }
         conversation.setEphemeralTimer(timer);
@@ -2573,14 +2681,18 @@ public class MessageParser extends AbstractParser
             if (ephemeralElement != null) {
                 try {
                     int timer = Integer.parseInt(ephemeralElement.getAttribute("timer"));
+                    if (isSaneEphemeralTimer(timer)) {
                     message.setEphemeralTimer(timer);
+                    }
                 } catch (Exception e) {
                     // ignore invalid timer
                 }
             }
 
-            if (isCarbon && status == Message.STATUS_SEND && message.getEphemeralTimer() > 0) {
-                message.setExpireAt(message.getTimeSent() + message.getEphemeralTimer() * 1000L);
+            final long ownExpiry =
+                    ownMessageExpiry(status, message.getTimeSent(), message.getEphemeralTimer());
+            if (ownExpiry > 0) {
+                message.setExpireAt(ownExpiry);
             }
 
             // For OMEMO2 the file description arrives inside the encrypted SCE envelope and
@@ -2804,11 +2916,29 @@ public class MessageParser extends AbstractParser
                             replacedMessage.setBody(message.getBody());
                             replacedMessage.setSubject(message.getSubject());
                             replacedMessage.setThread(message.getThread());
-                            replacedMessage.putEdited(replacedMessage.getRemoteMsgId(), replacedMessage.getServerMsgId());
-                            if (replaceElement != null && !replaceElement.getName().equals("replace")) {
-                                retractLocally(replacedMessage, replaceElement, replacementId, uuid);
-                                mXmppConnectionService.updateMessage(replacedMessage, replacedMessage.getUuid());
-                                mXmppConnectionService.getNotificationService().markRetracted(replacedMessage);
+                            // The first entry names the original by its wire id, which every
+                            // later correction (ours or theirs) refers to. Our own message sent
+                            // from here has no remoteMsgId: it went out under its uuid. Only
+                            // ours: a received one without an id keeps none (dedup and markers
+                            // go by it, and our uuid is not an id its sender ever used).
+                            if (!replacedMessage.edited()) {
+                                if (replacedMessage.getRemoteMsgId() == null
+                                        && replacedMessage.getStatus() != Message.STATUS_RECEIVED) {
+                                    replacedMessage.setRemoteMsgId(uuid);
+                                }
+                                replacedMessage.putEdited(
+                                        replacedMessage.getRemoteMsgId(),
+                                        replacedMessage.getServerMsgId());
+                            }
+                            if (replaceElement != null
+                                    && !replaceElement.getName().equals("replace")) {
+                                retractLocally(
+                                        replacedMessage, replaceElement, replacementId, uuid);
+                                mXmppConnectionService.updateMessage(
+                                        replacedMessage, replacedMessage.getUuid());
+                                mXmppConnectionService
+                                        .getNotificationService()
+                                        .markRetracted(replacedMessage);
                             } else {
                                 replacedMessage.clearPayloads();
                                 for (final var p : message.getPayloads()) {
@@ -2955,6 +3085,11 @@ public class MessageParser extends AbstractParser
                 message.addPayload(pendingRetraction.element);
                 message.setDeleted(true);
                 message.setRetractId(pendingRetraction.id);
+                // its extra files (multi-file message) are retracted too: never stored, never
+                // downloaded (storeAndDownloadAttachments below would keep their URL and key)
+                for (final Message attachment : new ArrayList<>(message.getAttachments())) {
+                    message.removeAttachment(attachment);
+                }
             }
 
             if (query != null

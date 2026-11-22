@@ -2,6 +2,7 @@ package eu.siacs.conversations.ui.service;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -15,9 +16,11 @@ import eu.siacs.conversations.velo.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
 import androidx.media3.session.MediaController;
 import androidx.media3.session.SessionCommand;
@@ -27,6 +30,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import eu.siacs.conversations.Config;
@@ -52,6 +56,8 @@ public class BackgroundAudioController implements SensorEventListener {
     }
 
     private static final int REFRESH_INTERVAL = 250;
+    private static final String PREF_PLAYBACK_SPEED = "audio_playback_speed";
+    private static final float[] SPEEDS = {1f, 1.5f, 2f};
     private static BackgroundAudioController instance;
 
     public static synchronized BackgroundAudioController getInstance(final Context context) {
@@ -79,8 +85,19 @@ public class BackgroundAudioController implements SensorEventListener {
     private boolean foreground;
     private boolean earpiece;
 
+    // playback speed (global, remembered across messages and restarts)
+    private final SharedPreferences preferences;
+    private float speed;
+    // speed we asked the service for and whose echo hasn't arrived yet (NaN = none)
+    private float requestedSpeed = Float.NaN;
+    // the service coalesces player-info updates and sends none for an unchanged speed, so an
+    // echo can be missing; don't let a stuck flag block external speed sync forever
+    private final Runnable clearRequestedSpeed = () -> requestedSpeed = Float.NaN;
+
     private BackgroundAudioController(final Context appContext) {
         this.appContext = appContext;
+        this.preferences = PreferenceManager.getDefaultSharedPreferences(appContext);
+        this.speed = snapSpeed(preferences.getFloat(PREF_PLAYBACK_SPEED, 1f));
         this.sensorManager = (SensorManager) appContext.getSystemService(Context.SENSOR_SERVICE);
         this.proximitySensor =
                 sensorManager == null ? null : sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
@@ -169,6 +186,8 @@ public class BackgroundAudioController implements SensorEventListener {
                     currentMessage = message;
                     currentTitle = title;
                     controller.setMediaItem(item);
+            // re-apply on every track: the service (and its ExoPlayer) may have been recreated
+            controller.setPlaybackSpeed(speed);
                     controller.prepare();
                     controller.play();
                     notifyState();
@@ -198,6 +217,62 @@ public class BackgroundAudioController implements SensorEventListener {
                     }
                 });
     }
+
+    // region playback speed
+    public float getPlaybackSpeed() {
+        return speed;
+    }
+
+    /** Cycle 1× → 1.5× → 2× → 1×, persist it and apply it to the current playback. */
+    public void cyclePlaybackSpeed() {
+        int index = 0;
+        for (int i = 0; i < SPEEDS.length; ++i) {
+            if (SPEEDS[i] == speed) {
+                index = i;
+                break;
+            }
+        }
+        speed = SPEEDS[(index + 1) % SPEEDS.length];
+        preferences.edit().putFloat(PREF_PLAYBACK_SPEED, speed).apply();
+        final float target = speed;
+        run(() -> sendSpeedCommand(target));
+        notifyState();
+    }
+
+    /**
+     * Applied by the service rather than via {@code controller.setPlaybackSpeed}: the controller
+     * would combine the new speed with its last (up to 3 s old) position snapshot, so going from 2×
+     * back to 1× made the shown position jump back. The service publishes speed and a fresh
+     * position together.
+     */
+    private void sendSpeedCommand(final float target) {
+        requestedSpeed = target;
+        handler.removeCallbacks(clearRequestedSpeed);
+        handler.postDelayed(clearRequestedSpeed, 2000);
+        final Bundle args = new Bundle();
+        args.putFloat(AudioPlaybackService.EXTRA_SPEED, target);
+        controller.sendCustomCommand(
+                new SessionCommand(AudioPlaybackService.CMD_SET_SPEED, Bundle.EMPTY), args);
+    }
+
+    private static float snapSpeed(final float value) {
+        for (final float candidate : SPEEDS) {
+            if (candidate == value) {
+                return candidate;
+            }
+        }
+        return 1f;
+    }
+
+    /** "1×", "1.5×", "2×" — locale independent so it matches the other messengers' pill. */
+    public static String formatSpeed(final float speed) {
+        if (speed == Math.rint(speed)) {
+            return String.format(Locale.ROOT, "%d\u00d7", (int) speed);
+        }
+        return String.format(Locale.ROOT, "%s\u00d7", Float.toString(speed));
+    }
+
+    // endregion
 
     public void stop() {
         run(
@@ -236,6 +311,26 @@ public class BackgroundAudioController implements SensorEventListener {
                             && controller.getMediaItemCount() == 0) {
                         // stopped from the notification / lock screen
                         handleStopped();
+                    }
+                    notifyState();
+                }
+
+                @Override
+                public void onPlaybackParametersChanged(
+                        final PlaybackParameters playbackParameters) {
+                    // speed may also be changed by another media client (Bluetooth, Auto, ...)
+                    final float newSpeed = playbackParameters.speed;
+                    if (!Float.isNaN(requestedSpeed)) {
+                        // echo of our own command(s); with quick taps an older value can arrive
+                        // after the latest one was requested, so never adopt it
+                        if (newSpeed == requestedSpeed) {
+                            requestedSpeed = Float.NaN;
+                        }
+                    } else if (newSpeed > 0f && newSpeed != speed) {
+                        speed = newSpeed;
+                        if (snapSpeed(newSpeed) == newSpeed) {
+                            preferences.edit().putFloat(PREF_PLAYBACK_SPEED, newSpeed).apply();
+                        }
                     }
                     notifyState();
                 }

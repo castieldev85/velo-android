@@ -155,7 +155,7 @@
     <string name="velo_server_name">Servidor</string>
     <string name="velo_whats_new_title">Novedades de Velo %s</string>
     <string name="velo_whats_new_ok">Entendido</string>
-    <string name="velo_whats_new_text">Velo 0.47.0: una portada para tu perfil.\n\n• Perfil: toca la franja de arriba para añadir una portada y elige qué parte mostrar. Tócala de nuevo para cambiarla o quitarla.\n• Tus contactos la ven en tus detalles, encima de tu foto. Como la foto de perfil, pasa por el servidor y no está cifrada de extremo a extremo; solo la ven los contactos que has aceptado.\n• Elegir perfil: cada perfil tiene ahora su foto junto al nombre.\n• La página Perfil muestra \"en línea\" en cuanto llega la conexión.</string>
+    <string name="velo_whats_new_text">Velo 0.48.0: mensajes temporales y borrados más estrictos.\n\n• Los mensajes temporales ahora se llevan también sus archivos, los mensajes fijados y la copia de seguridad, y desaparecen también tus mensajes enviados desde otro dispositivo.\n• Eliminar para todos quita todos los archivos del mensaje y detiene las descargas en curso.\n• Los mensajes editados ya no aparecen como mensajes nuevos en otras apps.\n• Un archivo solo se guarda cuando ha llegado completo y verificado.\n• Mensajes de voz: un botón para escucharlos a 1x, 1,5x o 2x.\n• Correcciones de seguridad.</string>
     <string name="velo_invite_title">Invitación</string>
     <string name="velo_invite_have">Tengo una invitación</string>
     <string name="velo_invite_invalid_title">No es una invitación de Velo</string>
@@ -201,6 +201,8 @@
     <string name="velo_friend_invite_register_title">Crea tu cuenta</string>
     <string name="velo_friend_invite_offline">Velo todavía no está conectado. Inténtalo de nuevo dentro de un momento.</string>
     <string name="velo_trial_no_invite">¿No tienes invitación? Prueba Velo gratis</string>
-    <!-- Velo 0.46.6: shown on the Groups page when there are none -->
     <string name="velo_groups_empty">Todavía no hay grupos.\nCrea uno con el botón + o entra desde una invitación.</string>
+    <string name="ephemeral_messages_off">Desactivados</string>
+    <string name="ephemeral_messages_change">Cambiar</string>
+    <string name="playback_speed">Velocidad de reproducción</string>
 </resources>

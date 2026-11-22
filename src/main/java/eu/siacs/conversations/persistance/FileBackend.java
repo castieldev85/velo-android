@@ -595,6 +595,30 @@ public class FileBackend {
         return file.getAbsolutePath().equals(internalFile.getAbsolutePath());
     }
 
+    private static final String DIRECTORY_PARTIAL = "partial";
+
+    private static final java.util.regex.Pattern PARTIAL_NAME =
+            java.util.regex.Pattern.compile("[0-9a-fA-F-]{1,64}");
+
+    /**
+     * Where an incoming file (HTTP download or Jingle) is written while it arrives. Only once it
+     * is complete (and, for encrypted transfers, authenticated) it is moved to its real place, so
+     * a truncated or never verified file never shows up in the media folders, not even after the
+     * app was killed mid-transfer. Keyed by the message uuid so an HTTP download can resume.
+     *
+     * @throws IllegalArgumentException if the uuid is not a plain uuid (it ends up in a path)
+     */
+    public DownloadableFile getPartialFile(final String uuid) {
+        if (uuid == null || !PARTIAL_NAME.matcher(uuid).matches()) {
+            throw new IllegalArgumentException("not a valid message uuid for a partial file");
+        }
+        final File directory = new File(mXmppConnectionService.getCacheDir(), DIRECTORY_PARTIAL);
+        if (directory.mkdirs()) {
+            Log.d(Config.LOGTAG, "created directory " + directory.getAbsolutePath());
+        }
+        return new DownloadableFile(directory, uuid);
+    }
+
     public DownloadableFile getFile(Message message, boolean decrypted) {
         final boolean encrypted =
                 !decrypted

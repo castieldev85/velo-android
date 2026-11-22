@@ -241,7 +241,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">Novità di Velo %s</string>
     <string name="velo_whats_new_ok">Ho capito</string>
-    <string name="velo_whats_new_text">Velo 0.47.0: una copertina per il tuo profilo.\n\n• Profilo: tocca la fascia in alto per aggiungere una copertina e scegli quale parte mostrare. Toccala di nuovo per cambiarla o toglierla.\n• I tuoi contatti la vedono nei tuoi dettagli, sopra la tua foto. Come la foto profilo passa dal server e non è cifrata end-to-end; la vedono solo i contatti che hai accettato.\n• Scegli profilo: ogni profilo ora ha la sua foto accanto al nome.\n• La pagina Profilo mostra \"online\" appena arriva il collegamento.</string>
+    <string name="velo_whats_new_text">Velo 0.48.0: messaggi a tempo e cancellazioni più rigorosi.\n\n• I messaggi a tempo ora si portano via anche i file, i messaggi fissati e la copia nel backup, e spariscono anche i tuoi messaggi inviati da un altro dispositivo.\n• Elimina per tutti toglie tutti i file del messaggio e ferma i download in corso.\n• I messaggi modificati non compaiono più come messaggi nuovi nelle altre app.\n• Un file viene salvato solo quando è arrivato completo e verificato.\n• Vocali: un pulsante per ascoltarli a 1x, 1,5x o 2x.\n• Correzioni di sicurezza.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Togli e cancella dal telefono</string>
     <string name="velo_admin_action_wipe_phone">Cancella solo il telefono</string>

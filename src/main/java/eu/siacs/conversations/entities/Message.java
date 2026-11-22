@@ -864,7 +864,8 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     }
 
     public void setThread(Element thread) {
-        payloads.removeIf(el -> el.getName().equals("thread") && "jabber:client".equals(el.getNamespace()));
+        payloads.removeIf(
+                el -> "thread".equals(el.getName()) && "jabber:client".equals(el.getNamespace()));
         addPayload(thread);
     }
 
@@ -1484,6 +1485,14 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
+        // An edit or a retraction gives the message a new uuid: its extra files must follow, or
+        // they lose their message (after a restart the album shows one file, and their expiry
+        // and retraction, which go by parentUuid, never reach them). Null while constructing.
+        if (this.attachments != null) {
+            for (final Message attachment : this.attachments) {
+                attachment.setParentUuid(uuid);
+            }
+        }
     }
 
     public boolean isExpanded() {
@@ -1512,11 +1521,12 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         return ids;
     }
 
+    /** The id a correction's {@code <replace/>} names, see {@link Edit#originalId}; may be null. */
     public String getEditedIdWireFormat() {
         if (this.edits.isEmpty()) {
             throw new IllegalStateException("Attempting to access unedited message");
         }
-        return edits.get(0).getEditedId();
+        return Edit.originalId(edits);
     }
 
     public List<URI> getLinks() {

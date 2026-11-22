@@ -47,12 +47,14 @@ public class JidHelper {
         if (true) {
             return eu.siacs.conversations.velo.VeloNames.of(jid);
         }
-        if (LOCAL_PART_BLACKLIST.contains(jid.getLocal().toLowerCase(Locale.ENGLISH))) {
+        // a MUC may report an occupant's real JID as a bare domain, so the local part can be null
+        final String local = jid.getLocal();
+        if (local == null || LOCAL_PART_BLACKLIST.contains(local.toLowerCase(Locale.ENGLISH))) {
             final String domain = jid.getDomain().toString();
             final int index = domain.indexOf('.');
             return index > 1 ? domain.substring(0, index) : domain;
         } else {
-            return jid.getLocal();
+            return local;
         }
     }
 

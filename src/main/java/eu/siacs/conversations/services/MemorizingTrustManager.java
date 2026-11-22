@@ -371,7 +371,7 @@ public class MemorizingTrustManager {
      * @param alias the certificate's alias as returned by {@link #getCertificates()}.
      * @throws KeyStoreException if the certificate could not be deleted.
      */
-    public void deleteCertificate(String alias) throws KeyStoreException {
+    public synchronized void deleteCertificate(String alias) throws KeyStoreException {
         appKeyStore.deleteEntry(alias);
         keyStoreUpdated();
     }
@@ -399,7 +399,7 @@ public class MemorizingTrustManager {
         return ks;
     }
 
-    void storeCert(String alias, Certificate cert) {
+    synchronized void storeCert(String alias, Certificate cert) {
         try {
             appKeyStore.setCertificateEntry(alias, cert);
         } catch (KeyStoreException e) {
@@ -413,22 +413,27 @@ public class MemorizingTrustManager {
         storeCert(cert.getSubjectDN().toString(), cert);
     }
 
-    void keyStoreUpdated() {
-        // store KeyStore to file
-        java.io.FileOutputStream fos = null;
-        try {
-            fos = new java.io.FileOutputStream(keyStoreFile);
+    // synchronized: storeCert (decision thread) and deleteCertificate (UI) share the .tmp path
+    synchronized void keyStoreUpdated() {
+        // Write to a temporary file and rename it over the real one: writing KeyStore.bks in
+        // place would leave a truncated (unloadable) file if the app is killed mid-write, and
+        // every memorized "always" decision would be gone.
+        final File tmp = new File(keyStoreFile.getPath() + ".tmp");
+        boolean written = false;
+        try (final java.io.FileOutputStream fos = new java.io.FileOutputStream(tmp)) {
             appKeyStore.store(fos, "MTM".toCharArray());
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "storeCert(" + keyStoreFile + ")", e);
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
+            fos.flush();
+            fos.getFD().sync();
+            written = true;
+        } catch (final Exception e) {
                     LOGGER.log(Level.SEVERE, "storeCert(" + keyStoreFile + ")", e);
                 }
+        if (written && !tmp.renameTo(keyStoreFile)) {
+            LOGGER.log(Level.SEVERE, "storeCert(" + keyStoreFile + "): could not replace file");
+            written = false;
             }
+        if (!written && tmp.exists() && !tmp.delete()) {
+            LOGGER.log(Level.WARNING, "storeCert(" + tmp + "): could not delete");
         }
     }
 

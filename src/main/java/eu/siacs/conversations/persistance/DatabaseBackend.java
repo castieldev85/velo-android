@@ -3611,7 +3611,26 @@ public class DatabaseBackend extends SQLiteOpenHelper {
     public boolean updateMessage(Message message, String uuid) {
         SQLiteDatabase db = this.getWritableDatabase();
         String[] args = {uuid};
-        return db.update(Message.TABLENAME, message.getContentValues(), Message.UUID + "=?", args) == 1;
+        final boolean updated =
+                db.update(Message.TABLENAME, message.getContentValues(), Message.UUID + "=?", args)
+                        == 1;
+        if (updated && uuid != null && !uuid.equals(message.getUuid())) {
+            // An edit stores the message under its new uuid: its pin follows, so expiry,
+            // retraction and the backup still find it (and it does not stay behind for ever)...
+            final ContentValues pin = new ContentValues();
+            pin.put(PinnedMessage.MESSAGE_UUID, message.getUuid());
+            db.updateWithOnConflict(
+                    PinnedMessage.TABLENAME,
+                    pin,
+                    PinnedMessage.MESSAGE_UUID + "=?",
+                    args,
+                    SQLiteDatabase.CONFLICT_REPLACE);
+            // and so do the extra files of a multi-file message (see Message#setUuid)
+            final ContentValues parent = new ContentValues();
+            parent.put(Message.PARENT_UUID, message.getUuid());
+            db.update(Message.TABLENAME, parent, Message.PARENT_UUID + "=?", args);
+        }
+        return updated;
     }
 
 
@@ -3846,10 +3865,27 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         db.delete(PinnedMessage.TABLENAME, PinnedMessage.CONVERSATION_UUID + "=? and " + PinnedMessage.MESSAGE_UUID + "=?", new String[]{conversationUuid, messageUuid});
     }
 
-    public void expireOldMessages(long timestamp) {
+    /**
+     * Deletes messages older than {@code timestamp} and wipes the disappearing messages whose time
+     * is up.
+     *
+     * @return how many disappearing messages were wiped
+     */
+    public int expireOldMessages(long timestamp) {
         final String[] args = {String.valueOf(timestamp)};
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
+        // their pins keep a copy of the text and would outlive them (pins are not tied to the
+        // message row by a foreign key)
+        db.delete(
+                PinnedMessage.TABLENAME,
+                PinnedMessage.MESSAGE_UUID
+                        + " IN (SELECT "
+                        + Message.UUID
+                        + " FROM "
+                        + Message.TABLENAME
+                        + " WHERE timeSent<?)",
+                args);
         db.delete(Message.TABLENAME, "timeSent<?", args);
         db.delete("messages", "timeReceived<?", args);
         ContentValues values = new ContentValues();
@@ -3862,10 +3898,138 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         values.put(Message.RELATIVE_FILE_PATH, (String) null);
         values.put(Message.ENCRYPTION, Message.ENCRYPTION_NONE);
         values.put(Message.REACTIONS, (String) null);
-        // Velo 0.40.1: rows already cleared stay out, see getNextExpiration
-        db.update(Message.TABLENAME, values, Message.EXPIRE_AT + " > 0 AND " + Message.EXPIRE_AT + " < ? AND " + Message.DELETED + " = 0", new String[]{String.valueOf(System.currentTimeMillis())});
+        // what else carries the message: its XHTML copy, link previews, reply and file
+        // descriptions (an XEP-0447 element holds the file's URL and key) and the file's URL
+        values.put(Message.PAYLOADS, (String) null);
+        values.put(Message.FILE_PARAMS, (String) null);
+        final String now = String.valueOf(System.currentTimeMillis());
+        final int wiped =
+                db.update(
+                        Message.TABLENAME,
+                        values,
+                        EXPIRY_PENDING + " AND " + Message.EXPIRE_AT + " < ?",
+                        new String[] {now});
+        db.delete(PinnedMessage.TABLENAME, STALE_PIN, new String[] {now});
         db.setTransactionSuccessful();
         db.endTransaction();
+        return wiped;
+    }
+
+    /**
+     * Gives the extra-file rows of a multi-file disappearing message (XEP-0447, {@code parentUuid})
+     * their message's expiry. A received message only starts counting down when it is read, and
+     * reading sets the time on the message alone: its extra files, which are no messages of the
+     * conversation list, kept {@code expire_at = 0} and never disappeared - file, URL and key
+     * included. Run before the expiry run collects its files.
+     *
+     * @return how many rows got their time
+     */
+    public int syncAttachmentExpiry() {
+        try (final var statement =
+                getWritableDatabase()
+                        .compileStatement(
+                                "UPDATE "
+                                        + Message.TABLENAME
+                                        + " SET "
+                                        + Message.EXPIRE_AT
+                                        + " = (SELECT p."
+                                        + Message.EXPIRE_AT
+                                        + " FROM "
+                                        + Message.TABLENAME
+                                        + " p WHERE p."
+                                        + Message.UUID
+                                        + " = "
+                                        + Message.TABLENAME
+                                        + "."
+                                        + Message.PARENT_UUID
+                                        + ") WHERE "
+                                        + Message.PARENT_UUID
+                                        + " IS NOT NULL AND "
+                                        + Message.EXPIRE_AT
+                                        + " = 0 AND EXISTS (SELECT 1 FROM "
+                                        + Message.TABLENAME
+                                        + " p WHERE p."
+                                        + Message.UUID
+                                        + " = "
+                                        + Message.TABLENAME
+                                        + "."
+                                        + Message.PARENT_UUID
+                                        + " AND p."
+                                        + Message.EXPIRE_AT
+                                        + " > 0)")) {
+            return statement.executeUpdateDelete();
+        }
+    }
+
+    /**
+     * Rewrites the search index without the terms of removed text. FTS4 only marks a changed or
+     * deleted body as gone; its words and their positions stay in older index segments until those
+     * are merged, so the text of a disappeared message could still be read back from the index.
+     * With {@code secure_delete} on, the pages this frees are zeroed.
+     */
+    public void optimizeSearchIndex() {
+        try {
+            getWritableDatabase()
+                    .execSQL("INSERT INTO messages_index(messages_index) VALUES('optimize')");
+        } catch (final Exception e) {
+            Log.w(Config.LOGTAG, "could not optimize messages_index", e);
+        }
+    }
+
+    /**
+     * A disappearing message whose content is still stored. A wiped one keeps its {@code expire_at}
+     * (the chat shows it as expired), so {@code expire_at > 0} alone also matched every message
+     * that had already disappeared: {@link #getNextExpiration} then kept returning that past time,
+     * and the expiry alarm fired, wiped nothing and was set again, over and over. A message deleted
+     * locally may still hold its text, so {@code deleted} alone is not enough.
+     */
+    private static final String EXPIRY_PENDING =
+            Message.EXPIRE_AT
+                    + " > 0 AND ("
+                    + Message.DELETED
+                    + " = 0 OR "
+                    + Message.BODY
+                    + " IS NOT NULL OR "
+                    + Message.SUBJECT
+                    + " IS NOT NULL OR "
+                    + Message.RELATIVE_FILE_PATH
+                    + " IS NOT NULL OR "
+                    + Message.PAYLOADS
+                    + " IS NOT NULL OR "
+                    + Message.FILE_PARAMS
+                    + " IS NOT NULL)";
+
+    /**
+     * A pin keeps its own copy of the text: once its message is gone (disappeared, retracted or
+     * deleted) the pin has to go too, or the bar above the chat goes on showing it. Argument: now.
+     */
+    private static final String STALE_PIN =
+            PinnedMessage.MESSAGE_UUID
+                    + " IN (SELECT "
+                    + Message.UUID
+                    + " FROM "
+                    + Message.TABLENAME
+                    + " WHERE "
+                    + Message.DELETED
+                    + " = 1 OR ("
+                    + Message.EXPIRE_AT
+                    + " > 0 AND "
+                    + Message.EXPIRE_AT
+                    + " < ?))";
+
+    /**
+     * Removes the pins of a conversation whose message is gone ({@link #STALE_PIN}). Run before
+     * pins are shown, so a pinned disappearing message vanishes with the message even when the
+     * expiry alarm comes late.
+     */
+    public void deleteStalePins(final String conversationUuid) {
+        getWritableDatabase()
+                .delete(
+                        PinnedMessage.TABLENAME,
+                        PinnedMessage.CONVERSATION_UUID + "=? AND " + STALE_PIN,
+                        new String[] {
+                            conversationUuid, String.valueOf(System.currentTimeMillis())
+                        });
     }
 
     /** Velo 0.21: stories not expired yet, newest first (see velo/VeloStories). */
@@ -3921,9 +4085,13 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 
     public long getNextExpiration() {
         SQLiteDatabase db = this.getReadableDatabase();
-        // Velo 0.40.1: an expired message is cleared and marked deleted but keeps its expireAt;
-        // counting it here set the expiry alarm into the past again and again (every ~5 s, forever).
-        String query = "SELECT MIN(" + Message.EXPIRE_AT + ") FROM " + Message.TABLENAME + " WHERE " + Message.EXPIRE_AT + " > 0 AND " + Message.DELETED + " = 0";
+        String query =
+                "SELECT MIN("
+                        + Message.EXPIRE_AT
+                        + ") FROM "
+                        + Message.TABLENAME
+                        + " WHERE "
+                        + EXPIRY_PENDING;
         try (Cursor cursor = db.rawQuery(query, null)) {
             if (cursor.moveToFirst()) {
                 return cursor.getLong(0);

@@ -138,6 +138,23 @@ public class ProxyPolicyTest {
         }
     }
 
+    /**
+     * OkHttp keeps "127.1" etc. as the host and connects to any [0-9.]+ host through
+     * InetAddress.getByName (bypassing our Dns), which resolves it to 127.0.0.1. Such shorthand
+     * numeric hosts must count as local.
+     */
+    @Test
+    public void shorthandNumericHostsAreLocal() {
+        for (final String host :
+                new String[] {"127.1", "127.0.1", "2130706433", "1.2.3", "0", "10.1", "127.1."}) {
+            Assert.assertTrue(host, HttpConnectionManager.isLocalTarget(host));
+        }
+        // OkHttp really keeps the host as written, which is why the check above is needed
+        Assert.assertEquals("127.1", okhttp3.HttpUrl.get("https://127.1/x").host());
+        Assert.assertFalse(HttpConnectionManager.isLocalTarget("203.0.113.5"));
+        Assert.assertFalse(HttpConnectionManager.isLocalTarget("1password.com"));
+    }
+
     @Test
     public void previewHopIntoLocalServicesIsRefusedForRemoteLinks() throws Exception {
         // remote https link redirecting to https://127.0.0.1 - refused before any connection

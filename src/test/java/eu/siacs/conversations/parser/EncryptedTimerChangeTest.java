@@ -29,6 +29,31 @@ public class EncryptedTimerChangeTest {
     }
 
     @Test
+    public void ownMessagesFromOtherDevicesCountDownFromSending() {
+        // from the archive (no carbon) and as our room reflection: both are ours
+        Assert.assertEquals(
+                1_000L + 60_000L,
+                MessageParser.ownMessageExpiry(
+                        eu.siacs.conversations.entities.Message.STATUS_SEND, 1_000L, 60));
+        Assert.assertEquals(
+                1_000L + 60_000L,
+                MessageParser.ownMessageExpiry(
+                        eu.siacs.conversations.entities.Message.STATUS_SEND_RECEIVED, 1_000L, 60));
+    }
+
+    @Test
+    public void receivedMessagesAndNoTimerDoNotStartHere() {
+        Assert.assertEquals(
+                0L,
+                MessageParser.ownMessageExpiry(
+                        eu.siacs.conversations.entities.Message.STATUS_RECEIVED, 1_000L, 60));
+        Assert.assertEquals(
+                0L,
+                MessageParser.ownMessageExpiry(
+                        eu.siacs.conversations.entities.Message.STATUS_SEND, 1_000L, 0));
+    }
+
+    @Test
     public void bareTimerChangeIsTimerChange() {
         Assert.assertTrue(timerOnly(ephemeral()));
         Assert.assertTrue(timerOnly(body(""), new Element("i-want-out", Namespace.EPHEMERAL)));
@@ -46,6 +71,33 @@ public class EncryptedTimerChangeTest {
     @Test
     public void textWithTimerIsNotATimerChange() {
         Assert.assertFalse(timerOnly(body("hi"), ephemeral()));
+    }
+
+    @Test
+    public void onlyUsableTimersAreTakenFromTheWire() {
+        Assert.assertTrue(MessageParser.isSaneEphemeralTimer(0));
+        Assert.assertTrue(MessageParser.isSaneEphemeralTimer(7200));
+        Assert.assertTrue(MessageParser.isSaneEphemeralTimer(MessageParser.MAX_EPHEMERAL_TIMER));
+        Assert.assertFalse(MessageParser.isSaneEphemeralTimer(-1));
+        Assert.assertFalse(
+                MessageParser.isSaneEphemeralTimer(MessageParser.MAX_EPHEMERAL_TIMER + 1));
+        Assert.assertFalse(MessageParser.isSaneEphemeralTimer(Integer.MAX_VALUE));
+    }
+
+    @Test
+    public void contactOfOneToOneChatMayChangeTheTimer() {
+        Assert.assertTrue(MessageParser.mayChangeEphemeralTimer(false, false));
+    }
+
+    @Test
+    public void occupantOfPrivateNonAnonymousRoomMayChangeTheTimer() {
+        Assert.assertTrue(MessageParser.mayChangeEphemeralTimer(true, true));
+    }
+
+    /** Applies to setting the timer and to switching it off ({@code <i-want-out/>}) alike. */
+    @Test
+    public void occupantOfOtherRoomMayNotChangeTheTimer() {
+        Assert.assertFalse(MessageParser.mayChangeEphemeralTimer(true, false));
     }
 
     @Test

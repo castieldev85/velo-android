@@ -289,7 +289,7 @@ public class ExportBackupWorker extends Worker {
                 fileExport(db, uuid, jsonWriter, progress);
                 messageExport(db, uuid, jsonWriter, progress);
                 webxdcExport(db, uuid, jsonWriter, progress);
-                simpleExport(db, PinnedMessage.TABLENAME, PinnedMessage.ACCOUNT_UUID, uuid, jsonWriter);
+                pinnedMessageExport(db, uuid, jsonWriter);
                 simpleExport(db, "muted_participants", null, null, jsonWriter);
                 for (final String table :
                         Arrays.asList(
@@ -549,6 +549,40 @@ public class ExportBackupWorker extends Worker {
         final String[] selectionArgs = uuid != null ? new String[]{uuid} : null;
         try (final Cursor cursor =
                 db.query(table, null, selection, selectionArgs, null, null, null)) {
+            writeRows(cursor, table, writer);
+        }
+    }
+
+    /**
+     * The account's pins, except those of disappearing messages: a pin holds a copy of the text,
+     * and a disappearing message's content never goes into a backup (see {@link
+     * #backupColumnValue}).
+     */
+    private void pinnedMessageExport(
+            final SQLiteDatabase db, final String accountUuid, final JsonWriter writer)
+            throws IOException, WorkStoppedException {
+        try (final Cursor cursor =
+                db.rawQuery(
+                        "SELECT p.* FROM "
+                                + PinnedMessage.TABLENAME
+                                + " p WHERE p."
+                                + PinnedMessage.ACCOUNT_UUID
+                                + "=? AND NOT EXISTS (SELECT 1 FROM "
+                                + Message.TABLENAME
+                                + " m WHERE m."
+                                + Message.UUID
+                                + "=p."
+                                + PinnedMessage.MESSAGE_UUID
+                                + " AND m."
+                                + Message.EPHEMERAL_TIMER
+                                + " > 0)",
+                        new String[] {accountUuid})) {
+            writeRows(cursor, PinnedMessage.TABLENAME, writer);
+        }
+    }
+
+    private void writeRows(final Cursor cursor, final String table, final JsonWriter writer)
+            throws IOException, WorkStoppedException {
             while (cursor != null && cursor.moveToNext()) {
                 throwIfWorkStopped();
                 writer.beginObject();
@@ -566,7 +600,6 @@ public class ExportBackupWorker extends Worker {
                 writer.endObject();
             }
         }
-    }
 
     private void messageExport(
             final SQLiteDatabase db,
@@ -586,8 +619,11 @@ public class ExportBackupWorker extends Worker {
             Log.d(Config.LOGTAG, "exporting " + size + " messages for account " + uuid);
             int i = 0;
             int p = Integer.MIN_VALUE;
+            final int timerColumn =
+                    cursor == null ? -1 : cursor.getColumnIndex(Message.EPHEMERAL_TIMER);
             while (cursor != null && cursor.moveToNext()) {
                 throwIfWorkStopped();
+                final boolean disappearing = timerColumn >= 0 && cursor.getInt(timerColumn) > 0;
                 writer.beginObject();
                 writer.name("table");
                 writer.value(Message.TABLENAME);
@@ -596,7 +632,7 @@ public class ExportBackupWorker extends Worker {
                 for (int j = 0; j < cursor.getColumnCount(); ++j) {
                     final String name = cursor.getColumnName(j);
                     writer.name(name);
-                    String value = cursor.getString(j);
+                    String value = backupColumnValue(name, cursor.getString(j), disappearing);
                     if (Message.RELATIVE_FILE_PATH.equals(name)) {
                         value = toPortablePath(value);
                     }
@@ -612,6 +648,38 @@ public class ExportBackupWorker extends Worker {
                 }
                 i++;
             }
+        }
+    }
+
+    /**
+     * What a backup stores for one column of a message row. A disappearing message never goes into
+     * a backup with its content: the backup file outlives the message on the device, and a restore
+     * would bring it back. It is written as a content-free deleted row instead, which keeps its ids
+     * (so after a restore the server archive cannot deliver it again as a new message) and its
+     * {@code expire_at} (so it shows as expired). Its files are left out too (see {@link
+     * #getFilesForAccount}).
+     */
+    static String backupColumnValue(
+            final String column, final String value, final boolean disappearing) {
+        if (!disappearing) {
+            return value;
+        }
+        switch (column) {
+            case Message.BODY:
+            case Message.SUBJECT:
+            case Message.PAYLOADS:
+            case Message.FILE_PARAMS:
+            case Message.RELATIVE_FILE_PATH:
+            case Message.REACTIONS:
+            case Message.BODY_LANGUAGE:
+                return null;
+            case Message.DELETED:
+            case "file_deleted":
+                return "1";
+            case Message.ENCRYPTION:
+                return String.valueOf(Message.ENCRYPTION_NONE);
+            default:
+                return value;
         }
     }
 
@@ -799,9 +867,34 @@ public class ExportBackupWorker extends Worker {
         Set<File> files = new HashSet<>();
         final String filesDir = getApplicationContext().getFilesDir().getAbsolutePath();
         // Message attachments
-        try (Cursor cursor = db.rawQuery("select " + Message.RELATIVE_FILE_PATH + " from " + Message.TABLENAME +
-                " join " + Conversation.TABLENAME + " on " + Conversation.TABLENAME + ".uuid=" + Message.TABLENAME + "." + Message.CONVERSATION +
-                " where " + Conversation.TABLENAME + "." + Conversation.ACCOUNT + "=? and " + Message.RELATIVE_FILE_PATH + " is not null",
+        try (Cursor cursor =
+                db.rawQuery(
+                        "select "
+                                + Message.RELATIVE_FILE_PATH
+                                + " from "
+                                + Message.TABLENAME
+                                + " join "
+                                + Conversation.TABLENAME
+                                + " on "
+                                + Conversation.TABLENAME
+                                + ".uuid="
+                                + Message.TABLENAME
+                                + "."
+                                + Message.CONVERSATION
+                                + " where "
+                                + Conversation.TABLENAME
+                                + "."
+                                + Conversation.ACCOUNT
+                                + "=? and "
+                                + Message.RELATIVE_FILE_PATH
+                                + " is not null"
+                                // not the files of disappearing messages (see backupColumnValue);
+                                // a file a normal message shares is exported through that one
+                                + " and ("
+                                + Message.EPHEMERAL_TIMER
+                                + " is null or "
+                                + Message.EPHEMERAL_TIMER
+                                + " = 0)",
                 new String[]{accountUuid})) {
             while (cursor != null && cursor.moveToNext()) {
                 String path = cursor.getString(0);

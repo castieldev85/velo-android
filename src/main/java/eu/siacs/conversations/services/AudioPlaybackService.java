@@ -3,17 +3,22 @@ package eu.siacs.conversations.services;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Process;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.Player;
+import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.session.CommandButton;
 import androidx.media3.session.MediaSession;
 import androidx.media3.session.MediaSessionService;
 import androidx.media3.session.SessionCommand;
+import androidx.media3.session.SessionCommands;
+import androidx.media3.session.SessionError;
 import androidx.media3.session.SessionResult;
 
 import com.google.common.collect.ImmutableList;
@@ -40,6 +45,9 @@ import eu.siacs.conversations.ui.service.BackgroundAudioController;
  * The service is not exported and only reads the already-decrypted local cache file the in-app
  * player has always used.
  */
+// Deliberately uses media3 @UnstableApi (CommandButton slots, setMediaButtonPreferences,
+// DEFAULT_SESSION_COMMANDS): re-check this file's API usage on media3 upgrades.
+@OptIn(markerClass = UnstableApi.class)
 public class AudioPlaybackService extends MediaSessionService {
 
     /** Custom session command: route output to the earpiece (raise-to-ear) or back to the speaker. */
@@ -50,6 +58,19 @@ public class AudioPlaybackService extends MediaSessionService {
     public static final String CMD_STOP = "eu.siacs.conversations.STOP_PLAYBACK";
 
     private static final SessionCommand STOP_COMMAND = new SessionCommand(CMD_STOP, Bundle.EMPTY);
+
+    /**
+     * Custom session command: change the playback speed on the session's own player. Unlike
+     * {@code MediaController.setPlaybackSpeed}, which masks the new speed against a position
+     * snapshot that can be up to 3 s old (making the position estimate jump backwards when slowing
+     * down), the session then publishes the new speed together with a fresh position.
+     */
+    public static final String CMD_SET_SPEED = "eu.siacs.conversations.SET_PLAYBACK_SPEED";
+
+    public static final String EXTRA_SPEED = "speed";
+
+    private static final float MIN_SPEED = 0.25f;
+    private static final float MAX_SPEED = 4f;
 
     private static final AudioAttributes SPEAKER_ATTRIBUTES =
             new AudioAttributes.Builder()
@@ -166,15 +187,21 @@ public class AudioPlaybackService extends MediaSessionService {
         @Override
         public MediaSession.ConnectionResult onConnect(
                 MediaSession session, MediaSession.ControllerInfo controller) {
-            final SessionCommand earpieceCommand =
-                    new SessionCommand(CMD_SET_EARPIECE, Bundle.EMPTY);
-            return new MediaSession.ConnectionResult.AcceptedResultBuilder(session)
-                    .setAvailableSessionCommands(
+            final SessionCommands.Builder commands =
                             MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS
                                     .buildUpon()
-                                    .add(earpieceCommand)
-                                    .add(STOP_COMMAND)
-                                    .build())
+                            // the system media controls (other uid) use this for the stop button
+                            .add(STOP_COMMAND);
+            // The service isn't exported, but the platform media session is reachable by SystemUI,
+            // Bluetooth/Auto and notification-listener apps. Earpiece routing and the speed command
+            // are only for our own BackgroundAudioController; other controllers keep the standard
+            // player commands (play/pause/seek/speed, validated by media3).
+            if (controller.getUid() == Process.myUid()) {
+                commands.add(new SessionCommand(CMD_SET_EARPIECE, Bundle.EMPTY))
+                        .add(new SessionCommand(CMD_SET_SPEED, Bundle.EMPTY));
+            }
+            return new MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                    .setAvailableSessionCommands(commands.build())
                     .build();
         }
 
@@ -185,7 +212,29 @@ public class AudioPlaybackService extends MediaSessionService {
                 SessionCommand customCommand,
                 Bundle args) {
             if (CMD_SET_EARPIECE.equals(customCommand.customAction)) {
-                applyEarpiece(args.getBoolean(EXTRA_EARPIECE, false));
+                final boolean earpiece;
+                try {
+                    earpiece = args.getBoolean(EXTRA_EARPIECE, false);
+                } catch (final RuntimeException e) {
+                    // defense in depth: a malformed Bundle must not crash the app
+                    return Futures.immediateFuture(
+                            new SessionResult(SessionError.ERROR_BAD_VALUE));
+                }
+                applyEarpiece(earpiece);
+            } else if (CMD_SET_SPEED.equals(customCommand.customAction)) {
+                // never pass an unchecked value to ExoPlayer, which throws on speed <= 0, and
+                // never let a malformed Bundle crash the app
+                float speed;
+                try {
+                    speed = args.getFloat(EXTRA_SPEED, Float.NaN);
+                } catch (final RuntimeException e) {
+                    speed = Float.NaN;
+                }
+                if (Float.isNaN(speed) || speed < MIN_SPEED || speed > MAX_SPEED) {
+                    return Futures.immediateFuture(
+                            new SessionResult(SessionError.ERROR_BAD_VALUE));
+                }
+                mediaSession.getPlayer().setPlaybackSpeed(speed);
             } else if (CMD_STOP.equals(customCommand.customAction)) {
                 final Player player = mediaSession.getPlayer();
                 player.stop();

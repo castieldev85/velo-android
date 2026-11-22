@@ -139,7 +139,10 @@ public class MessageGenerator extends AbstractGenerator {
         } else if (conversation.getMode() == Conversational.MODE_SINGLE) {
             packet.addExtension(new OriginId(message.getUuid()));
         }
-        if (!omemo2Mode && message.edited() && !message.isDeleted()) {
+        if (!omemo2Mode
+                && message.edited()
+                && !message.isDeleted()
+                && message.getEditedIdWireFormat() != null) {
             packet.addExtension(new Replace(message.getEditedIdWireFormat()));
         }
 

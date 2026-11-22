@@ -150,7 +150,7 @@
     <string name="velo_server_name">Serveur</string>
     <string name="velo_whats_new_title">Nouveautés de Velo %s</string>
     <string name="velo_whats_new_ok">Compris</string>
-    <string name="velo_whats_new_text">Velo 0.47.0 : une couverture pour ton profil.\n\n• Profil : touche la bande du haut pour ajouter une couverture et choisis la partie à montrer. Touche-la à nouveau pour la changer ou la retirer.\n• Tes contacts la voient dans tes détails, au-dessus de ta photo. Comme la photo de profil, elle passe par le serveur et n\'est pas chiffrée de bout en bout ; seuls les contacts que tu as acceptés la voient.\n• Choisir un profil : chaque profil a maintenant sa photo à côté du nom.\n• La page Profil affiche \"en ligne\" dès que la connexion arrive.</string>
+    <string name="velo_whats_new_text">Velo 0.48.0 : messages éphémères et suppressions plus stricts.\n\n• Les messages éphémères emportent maintenant aussi leurs fichiers, les messages épinglés et la copie de sauvegarde, et tes messages envoyés depuis un autre appareil disparaissent aussi.\n• Supprimer pour tous retire tous les fichiers du message et arrête les téléchargements en cours.\n• Les messages modifiés n\'apparaissent plus comme de nouveaux messages dans les autres apps.\n• Un fichier n\'est enregistré qu\'une fois arrivé complet et vérifié.\n• Messages vocaux : un bouton pour les écouter à 1x, 1,5x ou 2x.\n• Corrections de sécurité.</string>
     <string name="velo_invite_title">Invitation</string>
     <string name="velo_invite_have">J\'ai une invitation</string>
     <string name="velo_invite_invalid_title">Ce n\'est pas une invitation Velo</string>
@@ -196,6 +196,8 @@
     <string name="velo_friend_invite_register_title">Créez votre compte</string>
     <string name="velo_friend_invite_offline">Velo n\'est pas encore connecté. Réessayez dans un instant.</string>
     <string name="velo_trial_no_invite">Pas d\'invitation ? Essayez Velo gratuitement</string>
-    <!-- Velo 0.46.6: shown on the Groups page when there are none -->
     <string name="velo_groups_empty">Aucun groupe pour l\'instant.\nCréez-en un avec le bouton +, ou rejoignez-en un depuis une invitation.</string>
+    <string name="ephemeral_messages_off">Désactivés</string>
+    <string name="ephemeral_messages_change">Modifier</string>
+    <string name="playback_speed">Vitesse de lecture</string>
 </resources>

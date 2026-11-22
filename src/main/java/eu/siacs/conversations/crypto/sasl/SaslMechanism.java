@@ -139,19 +139,21 @@ public abstract class SaslMechanism {
                 return new ScramSha256(account);
             } else if (mechanisms.contains(ScramSha1.MECHANISM)) {
                 return new ScramSha1(account);
+            }
+            // Mechanisms that need no password are only for accounts that have none: an
+            // account with a password is never talked into a bearer or anonymous login.
+            // OAUTHBEARER goes before PLAIN so that an account without a password on a server
+            // offering both does not send an empty PLAIN password (upstream be1da49ae9).
+            final boolean noPassword = Strings.isNullOrEmpty(account.getPassword());
+            if (noPassword && mechanisms.contains(OAuthBearer.MECHANISM)) {
+                return new OAuthBearer(account);
             } else if (mechanisms.contains(Plain.MECHANISM)) {
                 return new Plain(account);
             } else if (mechanisms.contains(DigestMd5.MECHANISM)) {
                 return new DigestMd5(account);
-            } else if (Strings.isNullOrEmpty(account.getPassword())) {
-                // Mechanisms that need no password are only for accounts that have none: an
-                // account with a password is never talked into a bearer or anonymous login.
-                if (mechanisms.contains(OAuthBearer.MECHANISM)) {
-                    return new OAuthBearer(account);
-                } else if (mechanisms.contains(Anonymous.MECHANISM)) {
+            } else if (noPassword && mechanisms.contains(Anonymous.MECHANISM)) {
                     return new Anonymous(account);
                 }
-            }
             return null;
         }
 

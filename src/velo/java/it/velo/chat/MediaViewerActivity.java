@@ -50,6 +50,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
 import com.github.chrisbanes.photoview.PhotoView;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.leinardi.android.speeddial.SpeedDialActionItem;
 
@@ -965,7 +966,12 @@ public class MediaViewerActivity extends XmppActivity implements OnMediaLoaded, 
                 holder.binding.messageVideoView.setPlayer(null);
                 holder.binding.messageVideoView.setVisibility(View.GONE);
                 holder.binding.messageImageView.setVisibility(View.VISIBLE);
-                Glide.with(MediaViewerActivity.this).load(attachment.getUri()).into(holder.binding.messageImageView);
+                // No copy in Glide's disk cache: a downsampled version of every picture viewed
+                // here would stay there after a disappearing (or deleted) message is gone.
+                Glide.with(MediaViewerActivity.this)
+                        .load(attachment.getUri())
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .into(holder.binding.messageImageView);
                 holder.binding.messageImageView.setOnPhotoTapListener((view, x, y) -> toggleFAB());
             }
         }

@@ -3,6 +3,7 @@ package eu.siacs.conversations.xmpp;
 import android.content.Context;
 import android.net.Uri;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
@@ -35,6 +36,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import javax.net.ssl.X509TrustManager;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -153,24 +156,105 @@ public class OAuthAuthorization {
 
     private final Context context;
     private final Jid account;
-    private final boolean tor;
-    private final boolean i2p;
+    // Read per request: the XmppConnection (and with it this object) outlives a Tor/I2P toggle.
+    private final BooleanSupplier tor;
+    private final BooleanSupplier i2p;
+    // Peer address of the current XMPP connection, only for direct (unproxied) TCP connections.
+    private final Supplier<InetAddress> serverAddress;
     // Insertion ordered. A reconnect while the browser is open prepares another authorization;
     // the one the user is completing has to stay redeemable, so several can be pending.
     private final Map<String, PendingAuthorization> pendingAuthorizations = new LinkedHashMap<>();
 
     public OAuthAuthorization(
-            final Context context, final Jid account, final boolean tor, final boolean i2p) {
+            final Context context,
+            final Jid account,
+            final BooleanSupplier tor,
+            final BooleanSupplier i2p,
+            final Supplier<InetAddress> serverAddress) {
         this.context = context.getApplicationContext();
         this.account = account.asBareJid();
         this.tor = tor;
         this.i2p = i2p;
+        this.serverAddress = serverAddress;
+    }
+
+    /**
+     * The XMPP server's address if (and only if) we are connected to it directly and it is in
+     * the local network. Read per request, so a reconnect over another network decides anew.
+     */
+    @Nullable
+    private InetAddress localServer() {
+        if (tor.getAsBoolean() || i2p.getAsBoolean() || serverAddress == null) {
+            return null;
+        }
+        final InetAddress address = serverAddress.get();
+        return address != null && HttpConnectionManager.isLocalAddress(address) ? address : null;
     }
 
     // ---- pure helpers (unit tested) ----
 
+    /**
+     * Whether OAuth may talk to {@code target}. Public addresses always; local ones (loopback,
+     * private, link-local, ULA, CGNAT) only while we are directly connected to an XMPP server
+     * that is itself in the local network (upstream b1c81fdc0c, self-hosted IdP use case): such a
+     * server can reach that network anyway, so sending our requests there gives it nothing new.
+     * The device's own loopback is only for a server on loopback, since a LAN server could not
+     * reach it; multicast and the unspecified address never.
+     *
+     * @param server the XMPP server's address, null when connected over Tor/I2P/a proxy
+     */
+    static boolean isAllowedTarget(final InetAddress target, @Nullable final InetAddress server) {
+        if (!HttpConnectionManager.isLocalAddress(target)) {
+            return true;
+        }
+        if (server == null || !HttpConnectionManager.isLocalAddress(server)) {
+            return false;
+        }
+        if (target.isAnyLocalAddress() || target.isMulticastAddress()) {
+            return false;
+        }
+        if (target.isLoopbackAddress()) {
+            return server.isLoopbackAddress();
+        }
+        return true;
+    }
+
+    /** Same policy as {@link #isAllowedTarget} for a URL host (name or literal address). */
+    static boolean isAllowedHost(final String rawHost, @Nullable final InetAddress server) {
+        if (!HttpConnectionManager.isLocalTarget(rawHost)) {
+            return true;
+        }
+        String host = rawHost.trim().toLowerCase(Locale.ROOT);
+        if (host.startsWith("[") && host.endsWith("]")) host = host.substring(1, host.length() - 1);
+        while (host.endsWith(".")) host = host.substring(0, host.length() - 1);
+        if (com.google.common.net.InetAddresses.isInetAddress(host)) {
+            return isAllowedTarget(com.google.common.net.InetAddresses.forString(host), server);
+        }
+        if (host.matches("[0-9.]+")) {
+            // shorthand numeric IPv4 ("127.1"): no canonical address to check, never allowed
+            return false;
+        }
+        if (server == null || !HttpConnectionManager.isLocalAddress(server)) {
+            return false;
+        }
+        if (host.equals("localhost") || host.endsWith(".localhost")) {
+            return server.isLoopbackAddress();
+        }
+        // .local (mDNS); what it resolves to is checked again by the DNS guard
+        return true;
+    }
+
     /** An endpoint we are willing to talk to or send the user to: https and not local. */
     static HttpUrl requireEndpoint(final String url, final String what) {
+        return requireEndpoint(url, what, null);
+    }
+
+    /**
+     * An endpoint we are willing to talk to or send the user to: https, and not local unless
+     * {@link #isAllowedHost} allows it for this XMPP server.
+     */
+    static HttpUrl requireEndpoint(
+            final String url, final String what, @Nullable final InetAddress server) {
         final HttpUrl parsed = Strings.isNullOrEmpty(url) ? null : HttpUrl.parse(url);
         if (parsed == null) {
             throw new IllegalStateException("Missing or invalid " + what);
@@ -178,7 +262,7 @@ public class OAuthAuthorization {
         if (!parsed.isHttps()) {
             throw new IllegalStateException(what + " is not https");
         }
-        if (HttpConnectionManager.isLocalTarget(parsed.host())) {
+        if (!isAllowedHost(parsed.host(), server)) {
             throw new IllegalStateException(what + " points to a local address");
         }
         if (!parsed.username().isEmpty() || !parsed.password().isEmpty()) {
@@ -252,6 +336,17 @@ public class OAuthAuthorization {
             final ClientRegistrationResponse registration,
             final byte[] stateBytes,
             final byte[] verifierBytes) {
+        return buildPendingAuthorization(
+                account, configuration, registration, stateBytes, verifierBytes, null);
+    }
+
+    static PendingAuthorization buildPendingAuthorization(
+            final Jid account,
+            final OpenIdConfiguration configuration,
+            final ClientRegistrationResponse registration,
+            final byte[] stateBytes,
+            final byte[] verifierBytes,
+            @Nullable final InetAddress server) {
         if (registration == null || Strings.isNullOrEmpty(registration.clientId)) {
             throw new IllegalStateException("Invalid client id in registration");
         }
@@ -262,9 +357,10 @@ public class OAuthAuthorization {
             throw new IllegalStateException("Registration changed the redirect URI");
         }
         final HttpUrl authorizationEndpoint =
-                requireEndpoint(configuration.authorizationEndpoint, "authorization endpoint");
+                requireEndpoint(
+                        configuration.authorizationEndpoint, "authorization endpoint", server);
         final HttpUrl tokenEndpoint =
-                requireEndpoint(configuration.tokenEndpoint, "token endpoint");
+                requireEndpoint(configuration.tokenEndpoint, "token endpoint", server);
         final String state = buildState(account, stateBytes);
         final String codeVerifier = BaseEncoding.base64Url().omitPadding().encode(verifierBytes);
         final HttpUrl authorizationUrl =
@@ -306,7 +402,9 @@ public class OAuthAuthorization {
             final OAuthBearer.Response response) {
         final HttpUrl configurationUrl;
         try {
-            configurationUrl = requireEndpoint(response.openIdConfiguration, "OpenID configuration");
+            configurationUrl =
+                    requireEndpoint(
+                            response.openIdConfiguration, "OpenID configuration", localServer());
         } catch (final IllegalStateException e) {
             return Futures.immediateFailedFuture(e);
         }
@@ -317,11 +415,15 @@ public class OAuthAuthorization {
                 configuration -> {
                     Objects.requireNonNull(configuration);
                     // validated before anything is sent to them
-                    requireEndpoint(configuration.authorizationEndpoint, "authorization endpoint");
-                    requireEndpoint(configuration.tokenEndpoint, "token endpoint");
+                    final InetAddress server = localServer();
+                    requireEndpoint(
+                            configuration.authorizationEndpoint, "authorization endpoint", server);
+                    requireEndpoint(configuration.tokenEndpoint, "token endpoint", server);
                     final HttpUrl registrationEndpoint =
                             requireEndpoint(
-                                    configuration.registrationEndpoint, "registration endpoint");
+                                    configuration.registrationEndpoint,
+                                    "registration endpoint",
+                                    server);
                     final var request =
                             new Request.Builder()
                                     .url(registrationEndpoint)
@@ -343,7 +445,8 @@ public class OAuthAuthorization {
                                                 configuration,
                                                 registration,
                                                 stateBytes,
-                                                verifierBytes);
+                                                verifierBytes,
+                                                server);
                                 synchronized (this.pendingAuthorizations) {
                                     while (this.pendingAuthorizations.size() >= MAX_PENDING) {
                                         final String eldest =
@@ -453,6 +556,8 @@ public class OAuthAuthorization {
     }
 
     private OkHttpClient client() throws Exception {
+        final boolean tor = this.tor.getAsBoolean();
+        final boolean i2p = this.i2p.getAsBoolean();
         final OkHttpClient.Builder builder = HttpConnectionManager.newBuilder(tor, i2p);
         final X509TrustManager trustManager = TrustManagers.createDefaultTrustManager();
         builder.sslSocketFactory(
@@ -471,8 +576,9 @@ public class OAuthAuthorization {
                                 "refusing local DNS lookup for " + hostname);
                     }
                     final List<InetAddress> addresses = Dns.SYSTEM.lookup(hostname);
+            final InetAddress server = localServer();
                     for (final InetAddress address : addresses) {
-                        if (HttpConnectionManager.isLocalTarget(address.getHostAddress())) {
+                if (!isAllowedTarget(address, server)) {
                             throw new UnknownHostException(
                                     "Not connecting to local address for " + hostname);
                         }

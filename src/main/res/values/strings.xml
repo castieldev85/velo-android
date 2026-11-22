@@ -1611,6 +1611,8 @@
     <string name="disable_voice_and_video_calls">Disable voice and video calls</string>
     <string name="ephemeral_messages">Ephemeral messages</string>
     <string name="ephemeral_messages_duration">Duration</string>
+    <string name="ephemeral_messages_off">Off</string>
+    <string name="ephemeral_messages_change">Change</string>
     <string name="ephemeral_messages_30_seconds">30 seconds</string>
     <string name="ephemeral_messages_1_minute">1 minute</string>
     <string name="ephemeral_messages_5_minutes">5 minutes</string>
@@ -1741,4 +1743,5 @@
     <!-- Spoken for a file of a message that shares several files. -->
     <string name="shared_file_download_description">%1$s, %2$s. Download</string>
     <string name="shared_file_open_description">%1$s, %2$s. Open</string>
+    <string name="playback_speed">Playback speed</string>
 </resources>

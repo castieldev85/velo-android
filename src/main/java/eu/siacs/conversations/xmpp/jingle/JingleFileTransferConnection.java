@@ -24,6 +24,7 @@ import eu.siacs.conversations.entities.Transferable;
 import eu.siacs.conversations.entities.TransferablePlaceholder;
 import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.AbstractConnectionManager;
+import eu.siacs.conversations.utils.PartialFiles;
 import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.XmppConnection;
@@ -1077,6 +1078,10 @@ public class JingleFileTransferConnection extends AbstractJingleConnection
     private void onFileTransmissionComplete(final List<FileTransferDescription.Hash> hashes) {
         // TODO if we ever support receiving files this should become isSending(); isReceiving()
         if (isInitiator()) {
+            final var transport = this.transport;
+            if (transport != null) {
+                transport.finishSending();
+            }
             sendSessionInfoChecksum(hashes);
         } else {
             Log.d(Config.LOGTAG, "file transfer complete " + hashes);
@@ -1188,7 +1193,17 @@ public class JingleFileTransferConnection extends AbstractJingleConnection
         final File file = transferFile();
         final Runnable updateRunnable = () -> jingleConnectionManager.updateConversationUi(false);
         if (receiving) {
+            // received bytes go to the cache first and are only moved to the real file once the
+            // transfer is complete (and for encrypted transfers the GCM tag verified)
+            final File partial;
+            try {
+                partial =
+                        xmppConnectionService.getFileBackend().getPartialFile(message.getUuid());
+            } catch (final IllegalArgumentException e) {
+                throw new IOException(e);
+            }
             return new FileReceiver(
+                    partial,
                     file,
                     this.transportSecurity,
                     transport.getInputStream(),
@@ -1646,8 +1661,10 @@ public class JingleFileTransferConnection extends AbstractJingleConnection
     private static class FileReceiver extends AbstractFileTransceiver {
 
         private final InputStream inputStream;
+        private final File partial;
 
         private FileReceiver(
+                final File partial,
                 final File file,
                 final TransportSecurity transportSecurity,
                 final InputStream inputStream,
@@ -1655,15 +1672,12 @@ public class JingleFileTransferConnection extends AbstractJingleConnection
                 final long total,
                 final Runnable updateRunnable) {
             super(file, transportSecurity, transportTerminationLatch, total, updateRunnable);
+            this.partial = partial;
             this.inputStream = inputStream;
         }
 
         private OutputStream openFileOutputStream() throws FileNotFoundException {
-            final var directory = this.file.getParentFile();
-            if (directory != null && directory.mkdirs()) {
-                Log.d(Config.LOGTAG, "created directory " + directory.getAbsolutePath());
-            }
-            final var fileOutputStream = new FileOutputStream(this.file);
+            final var fileOutputStream = new FileOutputStream(this.partial);
             if (this.transportSecurity == null) {
                 return fileOutputStream;
             } else {
@@ -1705,7 +1719,8 @@ public class JingleFileTransferConnection extends AbstractJingleConnection
                 toClose.close();
                 Log.d(
                         Config.LOGTAG,
-                        "written " + transmitted + " bytes to " + file.getAbsolutePath());
+                        "written " + transmitted + " bytes to " + partial.getAbsolutePath());
+                PartialFiles.move(partial, file);
                 final List<FileTransferDescription.Hash> hashes =
                         ImmutableList.of(
                                 new FileTransferDescription.Hash(
@@ -1718,8 +1733,8 @@ public class JingleFileTransferConnection extends AbstractJingleConnection
             } catch (final Exception e) {
                 // do not leave a partial (or never authenticated) file behind
                 FileBackend.close(fileOutputStream);
-                if (file.exists() && !file.delete()) {
-                    Log.w(Config.LOGTAG, "could not delete " + file.getAbsolutePath());
+                if (partial.exists() && !partial.delete()) {
+                    Log.w(Config.LOGTAG, "could not delete " + partial.getAbsolutePath());
                 }
                 complete.setException(e);
             }

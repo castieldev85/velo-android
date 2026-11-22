@@ -127,4 +127,104 @@ public class OAuthAuthorizationTest {
         OAuthAuthorization.buildPendingAuthorization(
                 ALICE, configuration(), registration, new byte[32], new byte[32]);
     }
+
+    private static java.net.InetAddress ip(final String address) {
+        return com.google.common.net.InetAddresses.forString(address);
+    }
+
+    private static final java.net.InetAddress LAN_SERVER = ip("192.168.1.10");
+
+    @Test
+    public void publicTargetsAreAlwaysAllowed() {
+        Assert.assertTrue(OAuthAuthorization.isAllowedTarget(ip("203.0.113.5"), null));
+        Assert.assertTrue(OAuthAuthorization.isAllowedTarget(ip("203.0.113.5"), LAN_SERVER));
+        Assert.assertTrue(OAuthAuthorization.isAllowedHost("idp.example.com", null));
+    }
+
+    @Test
+    public void localTargetsNeedALocalServer() {
+        // no server (proxied connection) or a public server: nothing local
+        for (final var server : new java.net.InetAddress[] {null, ip("203.0.113.5")}) {
+            Assert.assertFalse(OAuthAuthorization.isAllowedTarget(ip("192.168.1.20"), server));
+            Assert.assertFalse(OAuthAuthorization.isAllowedTarget(ip("10.0.0.5"), server));
+            Assert.assertFalse(OAuthAuthorization.isAllowedTarget(ip("fd00::5"), server));
+            Assert.assertFalse(OAuthAuthorization.isAllowedHost("idp.local", server));
+            Assert.assertFalse(OAuthAuthorization.isAllowedHost("[fd00::5]", server));
+        }
+    }
+
+    @Test
+    public void localServerUnlocksTheLocalNetwork() {
+        Assert.assertTrue(OAuthAuthorization.isAllowedTarget(ip("192.168.1.20"), LAN_SERVER));
+        Assert.assertTrue(OAuthAuthorization.isAllowedTarget(ip("10.0.0.5"), LAN_SERVER));
+        Assert.assertTrue(OAuthAuthorization.isAllowedTarget(ip("fd00::5"), LAN_SERVER));
+        Assert.assertTrue(OAuthAuthorization.isAllowedTarget(ip("100.64.1.2"), LAN_SERVER));
+        Assert.assertTrue(OAuthAuthorization.isAllowedTarget(ip("100.64.1.2"), ip("100.100.1.1")));
+        Assert.assertTrue(OAuthAuthorization.isAllowedHost("idp.local", LAN_SERVER));
+        Assert.assertTrue(OAuthAuthorization.isAllowedHost("192.168.1.20", LAN_SERVER));
+        Assert.assertEquals(
+                "192.168.1.20",
+                OAuthAuthorization.requireEndpoint("https://192.168.1.20/x", "endpoint", LAN_SERVER)
+                        .host());
+    }
+
+    @Test
+    public void deviceLoopbackOnlyForALoopbackServer() {
+        Assert.assertFalse(OAuthAuthorization.isAllowedTarget(ip("127.0.0.1"), LAN_SERVER));
+        Assert.assertFalse(OAuthAuthorization.isAllowedTarget(ip("::1"), LAN_SERVER));
+        Assert.assertFalse(OAuthAuthorization.isAllowedTarget(ip("::ffff:127.0.0.1"), LAN_SERVER));
+        Assert.assertFalse(OAuthAuthorization.isAllowedHost("localhost", LAN_SERVER));
+        Assert.assertTrue(OAuthAuthorization.isAllowedTarget(ip("127.0.0.1"), ip("127.0.0.1")));
+        Assert.assertTrue(OAuthAuthorization.isAllowedHost("localhost", ip("::1")));
+    }
+
+    @Test
+    public void shorthandNumericHostsNeverAllowed() {
+        for (final String host : new String[] {"127.1", "127.0.1", "2130706433", "1.2.3"}) {
+            Assert.assertFalse(host, OAuthAuthorization.isAllowedHost(host, null));
+            Assert.assertFalse(host, OAuthAuthorization.isAllowedHost(host, LAN_SERVER));
+            Assert.assertFalse(host, OAuthAuthorization.isAllowedHost(host, ip("127.0.0.1")));
+        }
+        assertRefused("https://127.1/x");
+        assertRefused("https://2130706433/x");
+        Assert.assertTrue(OAuthAuthorization.isAllowedHost("192.168.1.20", LAN_SERVER));
+    }
+
+    @Test
+    public void multicastAndUnspecifiedNeverAllowed() {
+        Assert.assertFalse(OAuthAuthorization.isAllowedTarget(ip("0.0.0.0"), LAN_SERVER));
+        Assert.assertFalse(OAuthAuthorization.isAllowedTarget(ip("224.0.0.1"), LAN_SERVER));
+        Assert.assertFalse(OAuthAuthorization.isAllowedTarget(ip("ff02::1"), LAN_SERVER));
+    }
+
+    @Test
+    public void localServerDoesNotRelaxHttpsOrCredentials() {
+        for (final String url :
+                new String[] {"http://192.168.1.20/x", "https://user:pw@192.168.1.20/x"}) {
+            try {
+                OAuthAuthorization.requireEndpoint(url, "endpoint", LAN_SERVER);
+                Assert.fail(url + " should be refused");
+            } catch (final IllegalStateException expected) {
+                // refused
+            }
+        }
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void lanAuthorizationEndpointRefusedWithoutLocalServer() {
+        final var configuration = configuration();
+        configuration.authorizationEndpoint = "https://192.168.1.20/authorize";
+        OAuthAuthorization.buildPendingAuthorization(
+                ALICE, configuration, registration(), new byte[32], new byte[32], null);
+    }
+
+    @Test
+    public void lanAuthorizationEndpointAllowedWithLocalServer() {
+        final var configuration = configuration();
+        configuration.authorizationEndpoint = "https://192.168.1.20/authorize";
+        final var pending =
+                OAuthAuthorization.buildPendingAuthorization(
+                        ALICE, configuration, registration(), new byte[32], new byte[32], LAN_SERVER);
+        Assert.assertEquals("192.168.1.20", pending.authorizationUrl.host());
+    }
 }

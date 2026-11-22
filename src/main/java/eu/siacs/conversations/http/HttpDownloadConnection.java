@@ -29,6 +29,7 @@ import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.FileWriterException;
 import eu.siacs.conversations.utils.MimeUtils;
+import eu.siacs.conversations.utils.PartialFiles;
 import okhttp3.Call;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -50,7 +51,20 @@ public class HttpDownloadConnection implements Transferable {
     private Call mostRecentCall;
     final private Consumer<DownloadableFile> cb;
 
-    HttpDownloadConnection(Message message, HttpConnectionManager manager, Consumer<DownloadableFile> cb) {
+    /**
+     * {@link #cancel} sets {@link #canceled} under it; whatever writes the download's result into
+     * the message (its URL after the size check, the file and its path when done) does so under it
+     * and only if not canceled. A cancel (e.g. the message was retracted) therefore either comes
+     * after the whole result is in place, which the canceller then removes as usual, or nothing of
+     * it is written at all: the network call is not the only thing still running, decrypting a
+     * large file takes a while.
+     */
+    private final Object commitLock = new Object();
+
+    private boolean canceled = false;
+
+    HttpDownloadConnection(
+            Message message, HttpConnectionManager manager, Consumer<DownloadableFile> cb) {
         this.message = message;
         this.mHttpConnectionManager = manager;
         this.mXmppConnectionService = manager.getXmppConnectionService();
@@ -146,12 +160,45 @@ public class HttpDownloadConnection implements Transferable {
     private void setupFile() {
         final String reference = mUrl.fragment();
         if (reference != null && AesGcmURL.IV_KEY.matcher(reference).matches()) {
-            this.file = new DownloadableFile(mXmppConnectionService.getCacheDir(), message.getUuid());
+            this.file = mXmppConnectionService.getFileBackend().getPartialFile(message.getUuid());
             this.file.setKeyAndIv(CryptoHelper.hexToBytes(reference));
-            Log.d(Config.LOGTAG, "create temporary OMEMO encrypted file: " + this.file.getAbsolutePath() + "(" + message.getMimeType() + ")");
-        } else {
+            Log.d(
+                    Config.LOGTAG,
+                    "create temporary OMEMO encrypted file: "
+                            + this.file.getAbsolutePath()
+                            + "("
+                            + message.getMimeType()
+                            + ")");
+        } else if (isPgp()) {
+            // already a cache file (<name>.pgp) that PgpDecryptionService picks up
             this.file = mXmppConnectionService.getFileBackend().getFile(message, false);
+        } else {
+            // never write an unfinished download to the media folders (see getPartialFile)
+            this.file = mXmppConnectionService.getFileBackend().getPartialFile(message.getUuid());
         }
+    }
+
+    private boolean isPgp() {
+        return message.getEncryption() == Message.ENCRYPTION_PGP
+                || message.getEncryption() == Message.ENCRYPTION_DECRYPTED;
+    }
+
+    /**
+     * A plaintext download is complete: move it from the cache to where the message keeps it.
+     * finish() then renames it to its content-addressed name in the same directory.
+     */
+    private void moveCompletedDownload() throws FileWriterException {
+        final DownloadableFile target =
+                mXmppConnectionService.getFileBackend().getFile(message, false);
+        try {
+            PartialFiles.move(file, target);
+        } catch (final IOException e) {
+            if (file.exists() && !file.delete()) {
+                Log.w(Config.LOGTAG, "unable to delete " + file.getAbsolutePath());
+            }
+            throw new FileWriterException(target);
+        }
+        file = target;
     }
 
     private void download(final boolean interactive) {
@@ -164,6 +211,9 @@ public class HttpDownloadConnection implements Transferable {
 
     @Override
     public void cancel() {
+        synchronized (commitLock) {
+            canceled = true;
+        }
         final Call call = this.mostRecentCall;
         if (call != null && !call.isCanceled()) {
             call.cancel();
@@ -216,9 +266,15 @@ public class HttpDownloadConnection implements Transferable {
             discardDecryption(partFile);
             throw new InvalidFileException("decryption failed");
         }
+        synchronized (commitLock) {
+            if (canceled) {
+                discardDecryption(partFile);
+                throw new java.io.InterruptedIOException("download canceled");
+            }
         if (!partFile.renameTo(outputFile)) {
             discardDecryption(partFile);
             throw new IOException("unable to move decrypted file to " + outputFile.getAbsolutePath());
+        }
         }
 
         if (!file.delete()) {
@@ -242,31 +298,63 @@ public class HttpDownloadConnection implements Transferable {
         if (message.getEncryption() == Message.ENCRYPTION_PGP) {
             // Let PgpDecryptionService handle file placement: it reads from getFile(message,false)
             // (cacheDir/<uuid>.jpg.pgp) and writes decrypted output to getFile(message,true).
-            // Renaming here would move the encrypted file to the wrong location and break that lookup.
-            message.getConversation().getAccount().getPgpDecryptionService().decrypt(message, notify);
+            // Renaming here would move the encrypted file to the wrong location and break that
+            // lookup.
+            synchronized (commitLock) {
+                if (canceled) {
+                    discardCanceled(file);
+                    return;
+                }
+                message.getConversation()
+                        .getAccount()
+                        .getPgpDecryptionService()
+                        .decrypt(message, notify);
             message.setTransferable(null);
             mXmppConnectionService.updateMessage(message);
+            }
             mHttpConnectionManager.finishConnection(this);
             return;
         }
         final DownloadableFile tmp = file;
         final String extension = MimeUtils.extractRelevantExtension(tmp.getName());
+        // hashing a large file takes a while: outside the lock, so a cancel never waits for it
+        String hashedPath = null;
+        boolean blocked = false;
         try {
-            mXmppConnectionService.getFileBackend().setupRelativeFilePath(message, new FileInputStream(tmp), extension);
-            file = mXmppConnectionService.getFileBackend().getFile(message);
-            boolean didRename = tmp.renameTo(file);
-            if (!didRename) throw new IOException("rename failed");
+            mXmppConnectionService
+                    .getFileBackend()
+                    .setupRelativeFilePath(message, new FileInputStream(tmp), extension);
+            hashedPath = message.getRelativeFilePath();
         } catch (final IOException e) {
-            Log.w(Config.LOGTAG, "Failed to rename downloaded file: " + e);
-            file = tmp;
-            message.setRelativeFilePath(file.getAbsolutePath());
+            Log.w(Config.LOGTAG, "Failed to hash downloaded file: " + e);
         } catch (final XmppConnectionService.BlockedMediaException e) {
-            file = tmp;
-            tmp.delete();
-            message.setDeleted(true);
+            blocked = true;
         }
-        message.setTransferable(null);
-        mXmppConnectionService.updateMessage(message);
+        synchronized (commitLock) {
+            if (canceled) {
+                // the canceller already cleared the message; leave neither file behind
+                discardCanceled(tmp);
+                return;
+            }
+            if (blocked) {
+                file = tmp;
+                tmp.delete();
+                message.setDeleted(true);
+            } else {
+                try {
+                    if (hashedPath == null) throw new IOException("no file path");
+                    file = mXmppConnectionService.getFileBackend().getFile(message);
+                    boolean didRename = tmp.renameTo(file);
+                    if (!didRename) throw new IOException("rename failed");
+                } catch (final IOException e) {
+                    Log.w(Config.LOGTAG, "Failed to rename downloaded file: " + e);
+                    file = tmp;
+                    message.setRelativeFilePath(file.getAbsolutePath());
+                }
+            }
+            message.setTransferable(null);
+            mXmppConnectionService.updateMessage(message);
+        }
         mHttpConnectionManager.finishConnection(this);
         final boolean notifyAfterScan = notify;
         mXmppConnectionService.getFileBackend().updateMediaScanner(file, () -> {
@@ -276,9 +364,20 @@ public class HttpDownloadConnection implements Transferable {
         });
     }
 
-    private void decryptIfNeeded() throws IOException {
+    /** A download canceled after it completed: its (decrypted) file goes, nothing is stored. */
+    private void discardCanceled(final File downloaded) {
+        if (downloaded != null && downloaded.exists() && !downloaded.delete()) {
+            Log.w(
+                    Config.LOGTAG,
+                    "unable to delete canceled download " + downloaded.getAbsolutePath());
+        }
+    }
+
+    private void decryptIfNeeded() throws IOException, FileWriterException {
         if (file.getKey() != null && file.getIv() != null) {
             decryptFile();
+        } else if (!isPgp()) {
+            moveCompletedDownload();
         }
     }
 
@@ -368,9 +467,15 @@ public class HttpDownloadConnection implements Transferable {
                 retrieveFailed(e);
                 return;
             }
+            synchronized (commitLock) {
+                // retracted meanwhile: its URL (and key) must not be written back
+                if (canceled) {
+                    return;
+                }
             final Message.FileParams fileParams = message.getFileParams();
             FileBackend.updateFileParams(message, fileParams.url, size);
             mXmppConnectionService.databaseBackend.updateMessage(message, true);
+            }
             file.setExpectedSize(size);
             message.setFileParams(null);
             if (mHttpConnectionManager.hasStoragePermission()
@@ -403,8 +508,7 @@ public class HttpDownloadConnection implements Transferable {
                     .head()
                     .build();
             mostRecentCall = client.newCall(request);
-            try {
-                final Response response = mostRecentCall.execute();
+            try (final Response response = mostRecentCall.execute()) {
                 throwOnInvalidCode(response);
                 final String contentLength = response.header("Content-Length");
                 final String contentType = response.header("Content-Type");
@@ -495,7 +599,8 @@ public class HttpDownloadConnection implements Transferable {
             }
             final Request request = requestBuilder.build();
             mostRecentCall = client.newCall(request);
-            final Response response = mostRecentCall.execute();
+            // closing the response also closes its body stream
+            try (final Response response = mostRecentCall.execute()) {
             throwOnInvalidCode(response);
             final String contentRange = response.header("Content-Range");
             final boolean serverResumed = tryResume && contentRange != null && contentRange.startsWith("bytes " + resumeSize + "-");
@@ -509,7 +614,12 @@ public class HttpDownloadConnection implements Transferable {
                 outputStream = AbstractConnectionManager.createOutputStream(file, true, false);
             } else {
                 final String contentLength = response.header("Content-Length");
-                final long size = Strings.isNullOrEmpty(contentLength) ? 0 : Longs.tryParse(contentLength);
+                    // only logged; a malformed header must not fail the download
+                    final Long parsed =
+                            Strings.isNullOrEmpty(contentLength)
+                                    ? null
+                                    : Longs.tryParse(contentLength);
+                    final long size = parsed == null ? 0 : parsed;
                 if (expected != size) {
                     Log.d(Config.LOGTAG, "content-length reported on GET (" + size + ") did not match Content-Length reported on HEAD (" + expected + ")");
                 }
@@ -520,12 +630,16 @@ public class HttpDownloadConnection implements Transferable {
                 }
                 outputStream = AbstractConnectionManager.createOutputStream(file, false, false);
             }
+                if (outputStream == null) {
+                    throw new FileWriterException(file);
+                }
+                try (final OutputStream os = outputStream) {
             int count;
             final byte[] buffer = new byte[4096];
             while ((count = inputStream.read(buffer)) != -1) {
                 transmitted += count;
                 try {
-                    outputStream.write(buffer, 0, count);
+                            os.write(buffer, 0, count);
                 } catch (final IOException e) {
                     throw new FileWriterException(file);
                 }
@@ -534,7 +648,9 @@ public class HttpDownloadConnection implements Transferable {
                 }
                 updateProgress(Math.round(((double) transmitted / expected) * 100));
             }
-            outputStream.flush();
+                    os.flush();
+                }
+            }
         }
 
         private void updateImageBounds() {

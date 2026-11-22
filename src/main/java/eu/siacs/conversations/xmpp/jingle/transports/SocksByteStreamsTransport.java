@@ -892,8 +892,7 @@ public class SocksByteStreamsTransport implements Transport {
                     || Strings.isNullOrEmpty(host)
                     || Strings.isNullOrEmpty(jid)
                     || Strings.isNullOrEmpty(port)
-                    || Strings.isNullOrEmpty(priority)
-                    || Strings.isNullOrEmpty(type)) {
+                    || Strings.isNullOrEmpty(priority)) {
                 throw new IllegalArgumentException("Candidate is missing non optional attribute");
             }
             return new Candidate(
@@ -902,7 +901,11 @@ public class SocksByteStreamsTransport implements Transport {
                     Jid.of(jid),
                     Integer.parseInt(port),
                     Integer.parseInt(priority),
-                    CandidateType.valueOf(type.toUpperCase(Locale.ROOT)));
+                    // XEP-0260: type is optional and defaults to direct. An unknown value still
+                    // throws.
+                    Strings.isNullOrEmpty(type)
+                            ? CandidateType.DIRECT
+                            : CandidateType.valueOf(type.toUpperCase(Locale.ROOT)));
         }
 
         @Override

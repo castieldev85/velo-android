@@ -25,6 +25,22 @@ public class Edit {
         return jsonArray.toString();
     }
 
+    /**
+     * The id a correction names the original message by (XEP-0308: always the original, never a
+     * later correction): the first edit's. A message stored before that id was recorded reliably
+     * may hold none there; its archive id is then the best left (null if none either).
+     */
+    static String originalId(final List<Edit> edits) {
+        if (edits.isEmpty()) {
+            return null;
+        }
+        final Edit first = edits.get(0);
+        if (first.editedId != null && !first.editedId.isEmpty()) {
+            return first.editedId;
+        }
+        return first.serverMsgId;
+    }
+
     static boolean wasPreviouslyEditedRemoteMsgId(List<Edit> edits, String remoteMsgId) {
         for (Edit edit : edits) {
             if (edit.editedId != null && edit.editedId.equals(remoteMsgId)) {

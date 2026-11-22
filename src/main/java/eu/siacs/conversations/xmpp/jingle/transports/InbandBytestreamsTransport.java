@@ -34,7 +34,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class InbandBytestreamsTransport implements Transport {
 
-    private static final int DEFAULT_BLOCK_SIZE = 8192;
+    // Largest base64 payload we put into (or accept in) one <data/>; ~30 KiB keeps the stanza
+    // well below common server stanza size limits (cheogram 0362f772b1).
+    private static final int MAX_ENCODED_BLOCK_SIZE = 30 * 1024 - 4;
+    // Also the largest block size we ever announce or accept from a peer.
+    private static final int DEFAULT_BLOCK_SIZE = (MAX_ENCODED_BLOCK_SIZE / 4) * 3;
+    // Number of data IQs that may be in flight at the same time.
+    private static final int MAX_IN_FLIGHT = 3;
     // A peer asking for tiny blocks would turn a transfer into one IQ per few bytes.
     public static final int MINIMUM_BLOCK_SIZE = 512;
 
@@ -57,6 +63,8 @@ public class InbandBytestreamsTransport implements Transport {
     private final Thread blockSenderThread;
 
     private final AtomicBoolean isReceiving = new AtomicBoolean(false);
+
+    private volatile OutputStream sendingOutputStream;
 
     public InbandBytestreamsTransport(
             final XmppConnection xmppConnection, final Jid with, final boolean initiator) {
@@ -141,7 +149,23 @@ public class InbandBytestreamsTransport implements Transport {
         if (Strings.isNullOrEmpty(encoded)) {
             buffer = new byte[0];
         } else {
+            if (encoded.length() > MAX_ENCODED_BLOCK_SIZE + 64) {
+                // cheap pre-check (whitespace slack) before decoding
+                Log.d(Config.LOGTAG, "ibb data block exceeds maximum block size");
+                return false;
+            }
+            try {
             buffer = BaseEncoding.base64().decode(encoded);
+            } catch (final IllegalArgumentException e) {
+                // malformed base64 from the peer: answer with an error instead of no reply
+                Log.d(Config.LOGTAG, "ibb data block is not valid base64");
+                return false;
+            }
+        }
+        if (buffer.length > DEFAULT_BLOCK_SIZE) {
+            // no block size above DEFAULT_BLOCK_SIZE is ever negotiated
+            Log.d(Config.LOGTAG, "ibb data block of " + buffer.length + " bytes is too large");
+            return false;
         }
         Log.d(Config.LOGTAG, "ibb received " + buffer.length + " bytes");
         try {
@@ -201,7 +225,24 @@ public class InbandBytestreamsTransport implements Transport {
     public OutputStream getOutputStream() throws IOException {
         final var outputStream = new PipedOutputStream();
         this.pipedInputStream.connect(outputStream);
+        this.sendingOutputStream = outputStream;
         return outputStream;
+    }
+
+    @Override
+    public void finishSending() {
+        // The file transmitter keeps its end of the pipe open until the transport terminates;
+        // closing it here lets the block sender see EOF and close the IBB stream (cheogram
+        // e372bc61bc).
+        final var outputStream = this.sendingOutputStream;
+        if (outputStream != null) {
+            this.sendingOutputStream = null;
+            try {
+                outputStream.close();
+            } catch (final IOException ignored) {
+                // nothing to do
+            }
+        }
     }
 
     @Override
@@ -242,9 +283,10 @@ public class InbandBytestreamsTransport implements Transport {
         private final Jid with;
         private final String streamId;
 
-        private int blockSize;
+        // can be lowered by the peer while we are sending
+        private volatile int blockSize;
         private final PipedInputStream inputStream;
-        private final Semaphore semaphore = new Semaphore(3);
+        private final Semaphore semaphore = new Semaphore(MAX_IN_FLIGHT);
         private final AtomicInteger sequencer = new AtomicInteger();
         private final AtomicBoolean isSending = new AtomicBoolean(true);
 
@@ -266,9 +308,18 @@ public class InbandBytestreamsTransport implements Transport {
             final var buffer = new byte[blockSize];
             try {
                 while (isSending.get()) {
-                    final int count = this.inputStream.read(buffer);
+                    // never more than the currently negotiated block size, even if the peer
+                    // lowered it after we started
+                    final int count =
+                            this.inputStream.read(buffer, 0, Math.min(buffer.length, blockSize));
                     if (count < 0) {
                         Log.d(Config.LOGTAG, "block sender reached EOF");
+                        // Close only after every data block was acknowledged; an error response
+                        // (or termination) clears isSending and then no close is sent.
+                        this.semaphore.acquire(MAX_IN_FLIGHT);
+                        if (isSending.get()) {
+                            sendClose();
+                        }
                         return;
                     }
                     this.semaphore.acquire();
@@ -306,6 +357,15 @@ public class InbandBytestreamsTransport implements Transport {
                         }
                         semaphore.release();
                     });
+        }
+
+        private void sendClose() {
+            Log.d(Config.LOGTAG, "sending ibb close");
+            final var iqPacket = new Iq(Iq.Type.SET);
+            iqPacket.setTo(with);
+            final var close = iqPacket.addChild("close", Namespace.IBB);
+            close.setAttribute("sid", this.streamId);
+            this.xmppConnection.sendIqPacket(iqPacket, null);
         }
 
         @Override

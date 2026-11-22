@@ -36,4 +36,20 @@ public class SocksCandidateTest {
             }
         }
     }
+
+    @Test
+    public void missingTypeDefaultsToDirect() {
+        final var element = candidate("5222");
+        element.removeAttribute("type");
+        Assert.assertEquals(
+                SocksByteStreamsTransport.CandidateType.DIRECT,
+                SocksByteStreamsTransport.Candidate.of(element).type);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void unknownTypeIsRejected() {
+        final var element = candidate("5222");
+        element.setAttribute("type", "assisted");
+        SocksByteStreamsTransport.Candidate.of(element);
+    }
 }

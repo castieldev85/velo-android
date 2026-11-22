@@ -194,6 +194,7 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:background="@drawable/bg_floating_bar"
+                    android:foreground="?attr/selectableItemBackground"
                     android:visibility="gone"
                     tools:visibility="visible">
 
@@ -210,6 +211,15 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:textAppearance="?textAppearanceCaption" />
+
+                    <ImageView
+                        android:id="@+id/ephemeral_hint_chevron"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="8dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_navigate_next_24dp"
+                        app:tint="?colorOnSurfaceVariant" />
 
                 </LinearLayout>
 

@@ -674,6 +674,9 @@
     <string name="velo_connect_first_wait">Collegamento tramite Tor. La prima volta può richiedere qualche minuto: attendi e non chiudere Velo.</string>
     <string name="velo_connect_unreachable">Server non raggiungibile. Controlla la connessione e riprova più tardi.</string>
     <string name="velo_trial_no_invite">Non hai un invito? Prova Velo gratis</string>
+    <string name="ephemeral_messages_off">Disattivati</string>
+    <string name="ephemeral_messages_change">Cambia</string>
+    <string name="playback_speed">Velocità di riproduzione</string>
     <plurals name="album_more_description">
         <item quantity="one">%1$d altra foto</item>
         <item quantity="other">%1$d altre foto</item>

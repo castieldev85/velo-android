@@ -61,6 +61,22 @@
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/miniplayer_speed"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:minHeight="48dp"
+            android:insetTop="10dp"
+            android:insetBottom="10dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp"
+            android:contentDescription="@string/playback_speed"
+            android:textAppearance="?attr/textAppearanceLabelSmall" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/miniplayer_close"
             style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="wrap_content"

@@ -467,9 +467,13 @@ public class Conversation extends AbstractEntity
 
     public int countFailedDeliveries() {
         int count = 0;
+        final long now = System.currentTimeMillis();
         synchronized (this.messages) {
             for (final Message message : this.messages) {
-                if (message.getStatus() == Message.STATUS_SEND_FAILED) {
+                // a disappearing message whose time ran out before it could be sent was not
+                // sent on purpose (XmppConnectionService.sendMessage); it is no failed delivery
+                if (message.getStatus() == Message.STATUS_SEND_FAILED
+                        && !(message.getExpireAt() > 0 && message.getExpireAt() <= now)) {
                     ++count;
                 }
             }
@@ -2059,18 +2063,28 @@ public class Conversation extends AbstractEntity
                 if (message.getTimeSent() < timestamp) {
                     iterator.remove();
                 } else if (message.getExpireAt() > 0 && message.getExpireAt() < now) {
-                    message.setBody((String) null);
-                    message.setSubject(null);
-                    message.setDeleted(true);
-                    message.setRelativeFilePath(null);
-                    message.setFileParams(null);
-                    message.setEncryption(Message.ENCRYPTION_NONE);
-                    message.setReactions(Collections.emptyList());
+                    wipeExpired(message);
+                    // its extra files are no entries of this list (the database wipes them too)
+                    for (final Message attachment : message.getAttachments()) {
+                        wipeExpired(attachment);
+                    }
                 }
             }
             untieMessages();
         }
     }
+
+    /** In memory, what the database's expiry wipe does to a disappeared message's row. */
+    private static void wipeExpired(final Message message) {
+                    message.setBody((String) null);
+                    message.setSubject(null);
+                    message.setDeleted(true);
+                    message.setRelativeFilePath(null);
+                    message.setFileParams(null);
+        message.clearPayloads();
+                    message.setEncryption(Message.ENCRYPTION_NONE);
+                    message.setReactions(Collections.emptyList());
+                }
 
     public void sort() {
         synchronized (this.messages) {

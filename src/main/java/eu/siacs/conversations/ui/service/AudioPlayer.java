@@ -109,6 +109,9 @@ public class AudioPlayer
         viewHolder.progress.setThumbTintList(color);
         viewHolder.progress.setProgressTintList(color);
         viewHolder.playPause.setOnClickListener(this);
+        viewHolder.playbackSpeed.setTextColor(color);
+        viewHolder.playbackSpeed.setStrokeColor(color);
+        viewHolder.playbackSpeed.setOnClickListener(this);
         applyState(viewHolder, message);
     }
 
@@ -131,7 +134,11 @@ public class AudioPlayer
                 viewHolder.runtime.setText(
                         String.format("%s / %s", formatTime(current), formatTime(duration)));
             }
+            applySpeed(viewHolder.playbackSpeed, controller.getPlaybackSpeed());
+            viewHolder.playbackSpeed.setVisibility(View.VISIBLE);
         } else {
+            // INVISIBLE, not GONE: keep the space so the bubble doesn't resize on play/stop
+            viewHolder.playbackSpeed.setVisibility(View.INVISIBLE);
             viewHolder.playPause.setIconResource(R.drawable.rounded_play_arrow_36);
             viewHolder.playPause.setContentDescription(context.getString(R.string.play_audio));
             viewHolder.runtime.setText(formatTime(message.getFileParams().runtime));
@@ -140,10 +147,21 @@ public class AudioPlayer
         }
     }
 
+    /** Shared by the bubble and the mini-player so both pills look and read the same. */
+    static void applySpeed(final MaterialButton button, final float speed) {
+        final String label = BackgroundAudioController.formatSpeed(speed);
+        button.setText(label);
+        button.setContentDescription(
+                String.format(
+                        "%s, %s", button.getContext().getString(R.string.playback_speed), label));
+    }
+
     @Override
     public void onClick(final View v) {
         if (v.getId() == R.id.play_pause) {
             startStop((MaterialButton) v);
+        } else if (v.getId() == R.id.playback_speed) {
+            controller.cyclePlaybackSpeed();
         }
     }
 
@@ -264,6 +282,7 @@ public class AudioPlayer
         private TextView title;
         private SeekBar progress;
         private MaterialButton playPause;
+        private MaterialButton playbackSpeed;
         private MessageAdapter.BubbleColor bubbleColor = MessageAdapter.BubbleColor.SURFACE;
 
         public static ViewHolder get(final RelativeLayout audioPlayer) {
@@ -277,6 +296,7 @@ public class AudioPlayer
             viewHolder.title = audioPlayer.findViewById(R.id.title);
             viewHolder.progress = audioPlayer.findViewById(R.id.progress);
             viewHolder.playPause = audioPlayer.findViewById(R.id.play_pause);
+            viewHolder.playbackSpeed = audioPlayer.findViewById(R.id.playback_speed);
             audioPlayer.setTag(R.id.TAG_AUDIO_PLAYER_VIEW_HOLDER, viewHolder);
             return viewHolder;
         }

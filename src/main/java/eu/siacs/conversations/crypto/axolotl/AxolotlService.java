@@ -4986,7 +4986,7 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
             subject.setContent(message.getSubject());
             extraContent.add(subject);
         }
-        if (message.edited() && !message.isDeleted()) {
+        if (message.edited() && !message.isDeleted() && message.getEditedIdWireFormat() != null) {
             final Element replace = new Element("replace", "urn:xmpp:message-correct:0");
             replace.setAttribute("id", message.getEditedIdWireFormat());
             extraContent.add(replace);
