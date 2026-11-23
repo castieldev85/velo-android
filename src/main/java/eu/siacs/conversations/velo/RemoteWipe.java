@@ -97,9 +97,11 @@ public final class RemoteWipe {
             element = find(message);
         } else if (message.getEncryption() == Message.ENCRYPTION_AXOLOTL) {
             final String body = message.getRawBody();
-            if (WIPE_BODY.equals(body)) {
-                element = stanza.findChild(WIPE, NAMESPACE);
-            } else if (WIPED_BODY.equals(body)) {
+            // W1 (sotto-punto): con OMEMO legacy "issued"/"mode" stanno sulla stanza ESTERNA in
+            // chiaro, che il server puo' manomettere. Il wipe (distruttivo) e' accettato solo via
+            // OMEMO2, dove quegli attributi viaggiano cifrati e autenticati nell'envelope SCE.
+            // La risposta "wiped" (non distruttiva, lato admin) resta accettata anche su legacy.
+            if (WIPED_BODY.equals(body)) {
                 element = stanza.findChild(WIPED, NAMESPACE);
             } else {
                 element = null;
@@ -138,7 +140,67 @@ public final class RemoteWipe {
      */
     public static boolean issuedForThisPhone(final Context context, final Account account, final long issued) {
         final long added = VeloDeviceAlert.addedAt(context, account);
-        return added == 0 || issued >= added;
+        // W1 (sotto-punto): se non sappiamo quando l'account fu aggiunto (added==0, prima che Velo
+        // registrasse il tempo) NON onoriamo un wipe: un "issued" qualsiasi non deve valere. Solo
+        // gli account con un tempo d'aggiunta noto possono essere cancellati a distanza.
+        return added != 0 && issued >= added;
+    }
+
+    /**
+     * Velo 0.49.1 (W1): le impronte OMEMO del dispositivo admin inchiodate nell'app
+     * (velo.admin.omemo in velo-local.properties, separate da virgola). Come la chiave TLS del
+     * server, la chiave admin e' nell'app, non appresa dal server: un server ostile che pubblica
+     * una chiave "admin" falsa (e il telefono la fida alla cieca) non puo' cancellare nulla.
+     * Nessuna impronta inchiodata -> il wipe a distanza e' disattivato.
+     */
+    public static Set<String> adminKeys() {
+        return parseAdminKeys(eu.siacs.conversations.Config.VELO_ADMIN_OMEMO);
+    }
+
+    /** Parses and normalizes a comma-separated list of admin fingerprints (testable, no Config). */
+    static Set<String> parseAdminKeys(@Nullable final String raw) {
+        final Set<String> keys = new HashSet<>();
+        if (raw == null) {
+            return keys;
+        }
+        for (final String part : raw.split(",")) {
+            final String normalized = normalizeFingerprint(part);
+            if (normalized != null) {
+                keys.add(normalized);
+            }
+        }
+        return keys;
+    }
+
+    /** Whether the device whose OMEMO fingerprint this is is a pinned admin device. */
+    public static boolean isFromPinnedAdminKey(@Nullable final String fingerprint) {
+        return matchesAdminKey(eu.siacs.conversations.Config.VELO_ADMIN_OMEMO, fingerprint);
+    }
+
+    /** The same, with the pinned list passed in (testable, no Config). */
+    static boolean matchesAdminKey(@Nullable final String raw, @Nullable final String fingerprint) {
+        final Set<String> pinned = parseAdminKeys(raw);
+        if (pinned.isEmpty()) {
+            return false; // nessuna chiave admin nell'app -> non si cancella mai a distanza
+        }
+        final String normalized = normalizeFingerprint(fingerprint);
+        return normalized != null && pinned.contains(normalized);
+    }
+
+    /** Solo le cifre esadecimali, minuscole (via spazi, due punti, ecc.), per confrontare le impronte. */
+    @Nullable
+    static String normalizeFingerprint(@Nullable final String fingerprint) {
+        if (fingerprint == null) {
+            return null;
+        }
+        final StringBuilder sb = new StringBuilder(fingerprint.length());
+        for (int i = 0; i < fingerprint.length(); i++) {
+            final char c = Character.toLowerCase(fingerprint.charAt(i));
+            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+                sb.append(c);
+            }
+        }
+        return sb.length() == 0 ? null : sb.toString();
     }
 
     @Nullable

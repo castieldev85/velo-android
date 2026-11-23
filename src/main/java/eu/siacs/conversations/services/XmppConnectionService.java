@@ -9343,10 +9343,18 @@ public class XmppConnectionService extends Service {
 
     /** Velo 0.41: a remote wipe for this phone, or a phone's answer to the admin. */
     public void onVeloRemoteWipe(
-            final Account account, final Jid from, final eu.siacs.conversations.velo.RemoteWipe.Command command) {
+            final Account account, final Jid from, final eu.siacs.conversations.velo.RemoteWipe.Command command,
+            final String fingerprint) {
         if (command.isWipe()) {
             if (!eu.siacs.conversations.velo.RemoteWipe.isFromAdmin(account, from)) {
                 Log.w(Config.LOGTAG, account.getJid().asBareJid() + ": remote wipe not from the admin, ignored");
+                return;
+            }
+            // Velo 0.49.1 (W1): la chiave che ha decifrato il wipe deve combaciare con l'impronta
+            // admin inchiodata nell'app. Una chiave "admin" falsa iniettata dal server (fidata alla
+            // cieca) non passa; senza impronta inchiodata il wipe a distanza e' disattivato.
+            if (!eu.siacs.conversations.velo.RemoteWipe.isFromPinnedAdminKey(fingerprint)) {
+                Log.w(Config.LOGTAG, account.getJid().asBareJid() + ": remote wipe key is not the pinned admin key, ignored");
                 return;
             }
             if (!eu.siacs.conversations.velo.RemoteWipe.issuedForThisPhone(this, account, command.issued)) {

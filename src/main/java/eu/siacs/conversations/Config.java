@@ -59,6 +59,10 @@ public final class Config {
     // nodo d'uscita. Se null, si resta sul clearnet (via Tor exit).
     public static final String VELO_ONION_HOST = BuildConfig.VELO_ONION_HOST; // da velo-local.properties
     public static final int VELO_ONION_PORT = 5222;
+    // Velo 0.49.1 (W1): impronta/e OMEMO del dispositivo admin, inchiodata/e nell'app (come i pin
+    // TLS). Il wipe a distanza e' onorato solo se la chiave che lo decifra combacia con questa.
+    // Se null/vuota, il wipe a distanza e' disattivato (nessun server ostile puo' falsificare admin).
+    public static final String VELO_ADMIN_OMEMO = BuildConfig.VELO_ADMIN_OMEMO; // da velo-local.properties
     // Velo: Webxdc widgets run a contact's JavaScript inside the app and can open links outside
     // Tor. Off: a received .xdc is shown as a plain file.
     public static final boolean VELO_WEBXDC = false;

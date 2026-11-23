@@ -2640,7 +2640,7 @@ public class MessageParser extends AbstractParser
                 if (status == Message.STATUS_RECEIVED
                         && !conversationMultiMode && !isTypeGroupChat && mucUserElement == null
                         && message.isTrusted()) {
-                    mXmppConnectionService.onVeloRemoteWipe(account, counterpart, wipe);
+                    mXmppConnectionService.onVeloRemoteWipe(account, counterpart, wipe, message.getFingerprint());
                 }
                 return;
             }
