@@ -6,6 +6,7 @@
     <string name="message_retracted">Message deleted for everyone</string>
     <string name="velo_clear_history_for_both">Also delete for %s</string>
     <string name="velo_only_own_server">Velo only works with contacts and group chats on your own server</string>
+    <string name="velo_contact_name_hint">Username</string>
     <string name="velo_timer">Disappearing messages</string>
     <string name="velo_timer_message">What you send in this chat disappears after this time: on your phone from when you send it, on the other one from when it is read. Other apps (Monal) delete it when it expires on your phone.</string>
     <string name="velo_timer_seconds">Seconds</string>

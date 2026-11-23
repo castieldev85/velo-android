@@ -6,6 +6,7 @@
     <string name="message_retracted">Messaggio eliminato per tutti</string>
     <string name="velo_clear_history_for_both">Cancella anche per %s</string>
     <string name="velo_only_own_server">Velo funziona solo con contatti e gruppi del tuo server</string>
+    <string name="velo_contact_name_hint">Nome utente</string>
     <string name="velo_timer">Messaggi a tempo</string>
     <string name="velo_timer_message">Quello che invii in questa chat sparisce dopo questo tempo: dal tuo telefono da quando lo mandi, dall\'altro da quando lo legge. Le altre app (Monal) lo cancellano quando scade sul tuo telefono.</string>
     <string name="velo_timer_seconds">Secondi</string>

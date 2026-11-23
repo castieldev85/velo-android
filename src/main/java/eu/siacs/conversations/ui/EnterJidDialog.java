@@ -142,7 +142,8 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                         null,
                         false);
         this.knownHostsAdapter = new KnownHostsAdapter(getActivity(), R.layout.item_autocomplete);
-        binding.jid.setAdapter(this.knownHostsAdapter);
+        // Velo 0.49.4: no "name@domain" suggestions, the server's domain is never shown and only
+        // contacts on the own server are allowed; the adapter stays only to feed whitelistedDomains
         binding.jid.addTextChangedListener(this);
         final String prefilledJid = arguments.getString(PREFILLED_JID_KEY);
         if (prefilledJid != null) {
@@ -160,7 +161,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
             binding.bookmark.setVisibility(View.GONE);
         }
 
-        DelayedHintHelper.setHint(R.string.account_settings_example_jabber_id, binding.jid);
+        DelayedHintHelper.setHint(R.string.velo_contact_name_hint, binding.jid);
 
         final String account = getArguments().getString(ACCOUNT_KEY);
         if (Strings.isNullOrEmpty(account)) {
@@ -551,9 +552,9 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                 binding.jidLayout.setHint(R.string.account_settings_jabber_id);
 
                 if(binding.jid.hasFocus()) {
-                    binding.jid.setHint(R.string.account_settings_example_jabber_id);
+                    binding.jid.setHint(R.string.velo_contact_name_hint);
                 } else {
-                    DelayedHintHelper.setHint(R.string.account_settings_example_jabber_id, binding.jid);
+                    DelayedHintHelper.setHint(R.string.velo_contact_name_hint, binding.jid);
                 }
             } else {
                 binding.jid.setThreshold(999999); // do not autocomplete

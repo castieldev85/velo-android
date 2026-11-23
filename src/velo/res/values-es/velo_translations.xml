@@ -31,6 +31,7 @@
     <string name="message_retracted">Mensaje eliminado para todos</string>
     <string name="magic_create_text">Crea tu cuenta en tu propio servidor XMPP y da tu dirección completa a tus contactos.</string>
     <string name="velo_only_own_server">Velo solo funciona con contactos y grupos de tu propio servidor</string>
+    <string name="velo_contact_name_hint">Nombre de usuario</string>
     <string name="velo_no_plaintext">Este chat no se puede cifrar, así que Velo no enviará nada aquí</string>
     <string name="velo_new_device">⚠ %s usa un dispositivo nuevo. Toca aquí para verificarlo</string>
     <string name="velo_server_key_mismatch">La clave del servidor no es la incorporada en Velo: conexión rechazada</string>
