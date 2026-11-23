@@ -596,6 +596,31 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
     }
 
     /**
+     * Velo 0.49.2 (W1): the user-verifiable hybrid PQ OMEMO2 fingerprint of a REMOTE device —
+     * the same value shown in the contact's details and pinned via {@code velo.admin.omemo} —
+     * built from the device's classical identity fingerprint and its pinned post-quantum identity.
+     * Null when no PQ identity is pinned for that device. Lets the remote-wipe gate compare the
+     * admin pin against the fingerprint the operator actually reads in the app, instead of the raw
+     * classical fingerprint that {@link XmppAxolotlSession#getFingerprint()} returns.
+     */
+    public String hybridFingerprintForDevice(final String owner, final String classicalFingerprint) {
+        if (owner == null || classicalFingerprint == null) {
+            return null;
+        }
+        final byte[] pqIk = mXmppConnectionService.databaseBackend
+                .getPinnedOmemo2PqIdentity(account, owner, classicalFingerprint);
+        if (pqIk == null) {
+            return null;
+        }
+        try {
+            return CryptoHelper.hybridOmemo2Fingerprint(
+                    CryptoHelper.hexToBytes(classicalFingerprint), pqIk);
+        } catch (final RuntimeException e) {
+            return null;
+        }
+    }
+
+    /**
      * Out-of-band verification of a PQ OMEMO2 device's hybrid fingerprint (a scanned
      * {@code omemo-pq-hfp-} parameter, proto-XEP §10.1) — the one input allowed to replace a
      * pinned post-quantum identity, because it authenticates the post-quantum half the

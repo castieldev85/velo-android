@@ -9353,7 +9353,13 @@ public class XmppConnectionService extends Service {
             // Velo 0.49.1 (W1): la chiave che ha decifrato il wipe deve combaciare con l'impronta
             // admin inchiodata nell'app. Una chiave "admin" falsa iniettata dal server (fidata alla
             // cieca) non passa; senza impronta inchiodata il wipe a distanza e' disattivato.
-            if (!eu.siacs.conversations.velo.RemoteWipe.isFromPinnedAdminKey(fingerprint)) {
+            // 0.49.2: si confronta l'impronta IBRIDA PQ OMEMO2 (quella che l'operatore legge e
+            // inchioda), non l'impronta classica grezza che message.getFingerprint() restituisce.
+            final eu.siacs.conversations.crypto.axolotl.AxolotlService axolotlService =
+                    account.getAxolotlService();
+            final String hybridFingerprint = axolotlService == null ? null
+                    : axolotlService.hybridFingerprintForDevice(from.asBareJid().toString(), fingerprint);
+            if (!eu.siacs.conversations.velo.RemoteWipe.isFromPinnedAdminKey(hybridFingerprint)) {
                 Log.w(Config.LOGTAG, account.getJid().asBareJid() + ": remote wipe key is not the pinned admin key, ignored");
                 return;
             }

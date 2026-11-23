@@ -147,11 +147,13 @@ public final class RemoteWipe {
     }
 
     /**
-     * Velo 0.49.1 (W1): le impronte OMEMO del dispositivo admin inchiodate nell'app
-     * (velo.admin.omemo in velo-local.properties, separate da virgola). Come la chiave TLS del
-     * server, la chiave admin e' nell'app, non appresa dal server: un server ostile che pubblica
-     * una chiave "admin" falsa (e il telefono la fida alla cieca) non puo' cancellare nulla.
-     * Nessuna impronta inchiodata -> il wipe a distanza e' disattivato.
+     * Velo 0.49.1 (W1): le impronte IBRIDE PQ OMEMO2 del dispositivo admin inchiodate nell'app
+     * (velo.admin.omemo in velo-local.properties, separate da virgola) — quelle mostrate come
+     * "Impronta PQ OMEMO2" nei dettagli del contatto. Come la chiave TLS del server, la chiave
+     * admin e' nell'app, non appresa dal server: un server ostile che pubblica una chiave "admin"
+     * falsa (e il telefono la fida alla cieca) non puo' cancellare nulla. 0.49.2: il confronto usa
+     * l'impronta ibrida del mittente (vedi AxolotlService.hybridFingerprintForDevice), non quella
+     * classica grezza. Nessuna impronta inchiodata -> il wipe a distanza e' disattivato.
      */
     public static Set<String> adminKeys() {
         return parseAdminKeys(eu.siacs.conversations.Config.VELO_ADMIN_OMEMO);
