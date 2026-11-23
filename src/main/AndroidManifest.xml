@@ -298,27 +298,8 @@
                 <data android:scheme="sgnl" />
                 <data android:pathPrefix="/addstickers/" />
             </intent-filter>
-            <intent-filter android:label="Import Sticker Pack">
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="https" />
-                <data android:host="signal.art" />
-                <data android:pathPrefix="/addstickers/" />
-            </intent-filter>
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="https" />
-                <data android:host="conversations.im" />
-                <data android:pathPrefix="/i/" />
-                <data android:pathPrefix="/j/" />
-            </intent-filter>
+            <!-- Velo 0.49.3: removed the https deep links inherited from Conversations/monocles
+                 (signal.art/addstickers, conversations.im/i and /j): not our domains, Play flags them unverified -->
             <intent-filter>
                 <action android:name="android.intent.action.SENDTO" />
 
