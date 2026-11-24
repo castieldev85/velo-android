@@ -480,8 +480,17 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
             viewHolder.indicatorEphemeral().setVisibility(View.GONE);
         }
 
-        final String formattedTime =
-                UIHelper.readableTimeDifferenceFull(getContext(), message.getTimeSent(), allowRelativeTimestamps);
+        // Velo 0.50: a message held for later shows when it goes, not "now"
+        final boolean scheduled = (message.getStatus() == Message.STATUS_WAITING
+                        || message.getStatus() == Message.STATUS_UNSEND)
+                && message.getTimeSent() > System.currentTimeMillis();
+        final String formattedTime = scheduled
+                ? getContext().getString(R.string.velo_send_later_at,
+                        android.text.format.DateUtils.formatDateTime(getContext(), message.getTimeSent(),
+                                android.text.format.DateUtils.FORMAT_SHOW_TIME
+                                        | android.text.format.DateUtils.FORMAT_SHOW_DATE
+                                        | android.text.format.DateUtils.FORMAT_ABBREV_MONTH))
+                : UIHelper.readableTimeDifferenceFull(getContext(), message.getTimeSent(), allowRelativeTimestamps);
         final String bodyLanguage = message.getBodyLanguage();
         final ImmutableList.Builder<String> timeInfoBuilder = new ImmutableList.Builder<>();
 
@@ -1190,6 +1199,34 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
         hide.setOnClickListener(v -> veloHideTranslation(uuid));
     }
 
+    // Velo 0.50: Presa visione (VeloAck), the line under a 📋 message
+    private void veloBindAck(final BubbleMessageItemViewHolder viewHolder, final Message message,
+            final BubbleColor bubbleColor) {
+        final TextView ack = viewHolder.veloAck();
+        if (ack == null) {
+            return;
+        }
+        if (!eu.siacs.conversations.velo.VeloAck.isRequest(message)) {
+            ack.setVisibility(GONE);
+            ack.setOnClickListener(null);
+            ack.setClickable(false);
+            return;
+        }
+        ack.setText(eu.siacs.conversations.velo.VeloAck.line(activity, message));
+        ack.setVisibility(View.VISIBLE);
+        if (eu.siacs.conversations.velo.VeloAck.canConfirm(message)) {
+            ack.setTextColor(com.google.android.material.color.MaterialColors.getColor(
+                    ack, androidx.appcompat.R.attr.colorPrimary));
+            ack.setBackgroundResource(android.R.drawable.list_selector_background);
+            ack.setOnClickListener(v -> eu.siacs.conversations.velo.VeloAck.askAndConfirm(activity, message));
+        } else {
+            setTextColor(ack, bubbleColor);
+            ack.setBackground(null);
+            ack.setOnClickListener(null);
+            ack.setClickable(false);
+        }
+    }
+
     private void displayTextMessage(
             final BubbleMessageItemViewHolder viewHolder,
             final Message message,
@@ -1244,6 +1281,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
             viewHolder.messageBody().setTextIsSelectable(false);
             toggleWhisperInfo(viewHolder, message, bubbleColor);
             veloBindTranslation(viewHolder, message, bubbleColor);
+            veloBindAck(viewHolder, message, bubbleColor);
             return;
         }
         viewHolder.messageBody().setTextIsSelectable(true);
@@ -1441,6 +1479,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
         BetterLinkMovementMethod method = getBetterLinkMovementMethod();
         viewHolder.messageBody().setMovementMethod(method);
         veloBindTranslation(viewHolder, message, bubbleColor);
+        veloBindAck(viewHolder, message, bubbleColor);
     }
 
     private final BetterLinkMovementMethod mBetterLinkMovementMethod = new BetterLinkMovementMethod() {
@@ -3470,6 +3509,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
 
         protected abstract TextView veloTranslationHide();
 
+        protected abstract TextView veloAck();
+
         protected abstract AlbumLayout album();
 
         protected abstract LinearLayout attachments();
@@ -3622,6 +3663,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
         }
 
         @Override
+        protected TextView veloAck() {
+            return this.binding.messageContent.veloAck;
+        }
+
+        @Override
         protected AlbumLayout album() {
             return this.binding.messageContent.album;
         }
@@ -3679,6 +3725,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
         @Override
         protected TextView veloTranslationHide() {
             return this.binding.messageContent.veloTranslationHide;
+        }
+
+        @Override
+        protected TextView veloAck() {
+            return this.binding.messageContent.veloAck;
         }
 
         @Override

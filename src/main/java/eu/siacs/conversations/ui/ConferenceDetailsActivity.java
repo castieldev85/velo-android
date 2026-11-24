@@ -323,11 +323,16 @@ public class ConferenceDetailsActivity extends XmppActivity
                             .getSelf()
                             .getAffiliation()
                             .ranks(MucOptions.Affiliation.OWNER)) {
-                        Toast.makeText(
-                                        this,
-                                        R.string.only_the_owner_can_change_group_chat_avatar,
-                                        Toast.LENGTH_SHORT)
-                                .show();
+                        // Velo: who cannot change the picture gets it big, like a contact's
+                        if (hasRealAvatar(mConversation)) {
+                            ShowAvatarPopup(mConversation);
+                        } else {
+                            Toast.makeText(
+                                            this,
+                                            R.string.only_the_owner_can_change_group_chat_avatar,
+                                            Toast.LENGTH_SHORT)
+                                    .show();
+                        }
                         return;
                     }
                     final Intent intent =

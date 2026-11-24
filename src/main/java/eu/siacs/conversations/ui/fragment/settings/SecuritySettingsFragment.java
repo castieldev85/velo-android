@@ -135,6 +135,15 @@ public class SecuritySettingsFragment extends XmppPreferenceFragment {
             });
         }
 
+        // Velo 0.50: "Messaggio se non torno"
+        final Preference comeback = findPreference("velo_comeback");
+        if (comeback != null) {
+            comeback.setOnPreferenceClickListener(preference -> {
+                eu.siacs.conversations.velo.VeloComebackUi.show(requireActivity(), () -> updateComebackSummary(preference));
+                return true;
+            });
+        }
+
         final Preference databaseEncryption = findPreference("database_encryption");
         if (databaseEncryption != null) {
             databaseEncryption.setOnPreferenceClickListener(preference -> {
@@ -172,6 +181,13 @@ public class SecuritySettingsFragment extends XmppPreferenceFragment {
         }
         updatePanicPinSummary(findPreference("velo_panic_pin"));
         updateAutoWipeSummary(findPreference("velo_autowipe"));
+        updateComebackSummary(findPreference("velo_comeback"));
+    }
+
+    private void updateComebackSummary(final Preference preference) {
+        if (preference != null) {
+            preference.setSummary(eu.siacs.conversations.velo.VeloComebackUi.summary(requireContext()));
+        }
     }
 
     private void showAutoWipeChoice(final Preference preference) {

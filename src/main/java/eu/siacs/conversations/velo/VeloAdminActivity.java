@@ -200,8 +200,15 @@ public class VeloAdminActivity extends XmppActivity
         final Button add = new com.google.android.material.button.MaterialButton(this);
         add.setText(R.string.velo_admin_new_user);
         add.setAllCaps(false);
-        add.setOnClickListener(v -> askNewUser());
+        add.setOnClickListener(v -> askNewUser(0));
         body.addView(add, margins(new LinearLayout.LayoutParams(-1, -2)));
+        // Velo 0.50: an account for an outsider that ends by itself (VeloGuest)
+        final Button guest = new com.google.android.material.button.MaterialButton(
+                this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+        guest.setText(R.string.velo_guest_new);
+        guest.setAllCaps(false);
+        guest.setOnClickListener(v -> askGuestDays());
+        body.addView(guest, margins(new LinearLayout.LayoutParams(-1, -2)));
         // Velo 0.39: QR code that brings a new phone to this server (never a password)
         final VeloServers.Server server = VeloServers.forAccount(account);
         if (server != null && server.onion != null && !server.pins.isEmpty()) {
@@ -273,6 +280,11 @@ public class VeloAdminActivity extends XmppActivity
         if (account != null && RemoteWipe.findPending(this, account, user) != null) {
             parts.add(getString(R.string.velo_admin_wipe_waiting));
         }
+        final VeloGuest.Guest guest = account == null ? null : VeloGuest.find(this, account, user);
+        if (guest != null) {
+            parts.add(getString(R.string.velo_guest_until, java.text.DateFormat.getDateTimeInstance(
+                    java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT).format(new java.util.Date(guest.until))));
+        }
         if (disabled.contains(user)) {
             parts.add(getString(R.string.velo_admin_disabled));
         } else if (online.contains(user)) {
@@ -300,6 +312,7 @@ public class VeloAdminActivity extends XmppActivity
             actions.add(() -> confirm(getString(R.string.velo_admin_confirm_wipe_delete_now, name),
                     R.string.velo_admin_delete_forever, () -> {
                         RemoteWipe.removePending(this, account, user);
+                        VeloGuest.forget(this, account, user);
                         perform(VeloAdmin.DELETE, user, null);
                     }));
             labels.add(getString(R.string.velo_admin_wipe_stop_waiting));
@@ -325,6 +338,13 @@ public class VeloAdminActivity extends XmppActivity
         actions.add(() -> confirm(getString(R.string.velo_admin_confirm_kick, name),
                 R.string.velo_admin_action_kick, () -> perform(VeloAdmin.KICK, user, null)));
         if (pending == null && !blocked) {
+            // Velo 0.50: an existing user becomes a guest, or a guest gets a new end
+            final boolean isGuest = VeloGuest.find(this, account, user) != null;
+            labels.add(getString(isGuest ? R.string.velo_guest_change : R.string.velo_guest_make));
+            actions.add(() -> askGuestDays(days -> {
+                VeloGuest.addGuest(this, account, user, days);
+                renderRows();
+            }));
             labels.add(getString(R.string.velo_admin_action_remove_wipe));
             actions.add(() -> confirm(getString(R.string.velo_admin_confirm_remove_wipe, name),
                     R.string.velo_admin_action_remove_wipe,
@@ -340,6 +360,7 @@ public class VeloAdminActivity extends XmppActivity
                 () -> confirm(getString(R.string.velo_admin_confirm_delete_again, name),
                         R.string.velo_admin_delete_forever, () -> {
                             RemoteWipe.removePending(this, account, user);
+                            VeloGuest.forget(this, account, user);
                             perform(VeloAdmin.DELETE, user, null);
                         })));
         new MaterialAlertDialogBuilder(this)
@@ -367,7 +388,24 @@ public class VeloAdminActivity extends XmppActivity
                 .show();
     }
 
-    private void askNewUser() {
+    private void askGuestDays() {
+        askGuestDays(this::askNewUser);
+    }
+
+    private void askGuestDays(final java.util.function.IntConsumer then) {
+        final String[] names = new String[VeloGuest.DAYS.length];
+        for (int i = 0; i < names.length; i++) {
+            names[i] = getResources().getQuantityString(R.plurals.velo_guest_days, VeloGuest.DAYS[i], VeloGuest.DAYS[i]);
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.velo_guest_how_long)
+                .setItems(names, (d, which) -> then.accept(VeloGuest.DAYS[which]))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    /** @param guestDays 0 for a normal user, otherwise the days a guest account lasts */
+    private void askNewUser(final int guestDays) {
         final EditText name = new EditText(this);
         name.setHint(R.string.velo_admin_new_name_hint);
         name.setSingleLine(true);
@@ -377,7 +415,7 @@ public class VeloAdminActivity extends XmppActivity
         box.setPadding(dp(20), dp(8), dp(20), 0);
         box.addView(name, new LinearLayout.LayoutParams(-1, -2));
         final androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.velo_admin_new_user)
+                .setTitle(guestDays > 0 ? R.string.velo_guest_new : R.string.velo_admin_new_user)
                 .setView(box)
                 .setPositiveButton(R.string.velo_admin_create, null)
                 .setNegativeButton(android.R.string.cancel, null)
@@ -395,12 +433,16 @@ public class VeloAdminActivity extends XmppActivity
             }
             dialog.dismiss();
             final String password = VeloPasswordActivity.generate();
-            perform(VeloAdmin.ADD, user, password);
+            perform(VeloAdmin.ADD, user, password, guestDays);
         });
     }
 
     /** Runs a command on one user; with a password, shows it once when the server has taken it. */
     private void perform(final String command, final Jid user, final String password) {
+        perform(command, user, password, 0);
+    }
+
+    private void perform(final String command, final Jid user, final String password, final int guestDays) {
         if (account == null || !account.isOnlineAndConnected()) {
             Toast.makeText(this, R.string.velo_admin_offline, Toast.LENGTH_LONG).show();
             return;
@@ -413,6 +455,9 @@ public class VeloAdminActivity extends XmppActivity
                     }
                     if (!ok) {
                         Toast.makeText(this, R.string.velo_admin_failed, Toast.LENGTH_LONG).show();
+                    } else if (guestDays > 0) {
+                        VeloGuest.addGuest(this, account, user, guestDays);
+                        showPassword(user.getLocal(), password);
                     } else if (password != null) {
                         showPassword(user.getLocal(), password);
                     } else {

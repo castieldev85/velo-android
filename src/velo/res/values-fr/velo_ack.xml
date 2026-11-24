@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: Presa visione (VeloAck) -->
+<resources>
+    <string name="velo_ack">Accusé de lecture</string>
+    <string name="velo_ack_confirm">✅ Je confirme avoir lu</string>
+    <string name="velo_ack_you_confirmed">✅ Vous avez confirmé le %s</string>
+    <string name="velo_ack_who_when">%1$s (%2$s)</string>
+    <string name="velo_ack_confirmed_by">✅ Lu par : %s</string>
+    <string name="velo_ack_waiting">⏳ En attente de confirmation de lecture</string>
+    <string name="velo_ack_confirm_question">Confirmez-vous avoir lu ce message ? L\'expéditeur le verra, avec la date et l\'heure.</string>
+    <string name="velo_ack_confirm_button">J\'ai lu</string>
+    <string name="velo_ack_done_text">Lu et pris en compte</string>
+    <string name="velo_ack_not_encrypted">Seulement dans une conversation chiffrée</string>
+    <string name="velo_ack_write_first">Écrivez d\'abord le message, puis choisissez Accusé de lecture</string>
+</resources>

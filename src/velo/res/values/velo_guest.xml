@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: Ospite a tempo (VeloGuest) -->
+<resources>
+    <string name="velo_guest_new">New temporary guest</string>
+    <string name="velo_guest_how_long">How long does the guest stay?</string>
+    <string name="velo_guest_until">Guest until %s</string>
+    <string name="velo_guest_notice">This is a guest account: it ends on %s. Then Velo deletes itself from this phone.</string>
+    <string name="velo_guest_make">Make temporary guest</string>
+    <string name="velo_guest_change">Change guest end</string>
+    <plurals name="velo_guest_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+</resources>

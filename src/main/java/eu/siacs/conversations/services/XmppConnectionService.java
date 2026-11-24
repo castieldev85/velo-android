@@ -2889,6 +2889,15 @@ public class XmppConnectionService extends Service {
     @SuppressLint("TrulyRandom")
     @Override
     public void onCreate() {
+        // Velo 0.50: go foreground FIRST. Android gives 5-10 s from startForegroundService to
+        // startForeground; on a slow phone, right after an update, the set-up below could eat
+        // that time and the system killed Velo ("did not call startForeground", plus ANR).
+        setTheme(R.style.Theme_Conversations3);
+        if (Compatibility.runsTwentySix()) {
+            mNotificationService.initializeChannels();
+        }
+        mForceDuringOnCreate.set(Compatibility.runsAndTargetsTwentySix(this));
+        toggleForegroundService();
         eu.siacs.conversations.utils.LiveLocationManager.getInstance()
                 .setOnSessionExpiredUiCallback(this::updateConversationUi);
         it.velo.chat.AndroidLoggingHandler.reset(new it.velo.chat.AndroidLoggingHandler());
@@ -2897,14 +2906,8 @@ public class XmppConnectionService extends Service {
         final Context appCtx = getApplicationContext();
         new Thread(() -> { emojiSearch = new EmojiSearch(appCtx); }, "emoji-init").start();
         pruneLegacyImportWorkOnce(appCtx);
-        setTheme(R.style.Theme_Conversations3);
         ThemeHelper.applyCustomColors(this);
-        if (Compatibility.runsTwentySix()) {
-            mNotificationService.initializeChannels();
-        }
         mChannelDiscoveryService.initializeMuclumbusService();
-        mForceDuringOnCreate.set(Compatibility.runsAndTargetsTwentySix(this));
-        toggleForegroundService();
         this.destroyed = false;
         eu.siacs.conversations.velo.VeloPrivacy.migrate(getPreferences());
         // Velo: Tor INCORPORATO sempre attivo (processo isolato :tor, startService, try/catch).
@@ -9308,6 +9311,27 @@ public class XmppConnectionService extends Service {
     }
 
     /**
+     * Velo 0.50: tells a guest's phone when its account ends ("Ospite a tempo"). Called from the
+     * guest worker's thread; waits for the guest's keys. @return false while the guest has no
+     * phone with an encryption key yet (it is tried again later).
+     */
+    public boolean sendVeloGuestExpiry(final Account admin, final Jid user, final long until) {
+        final Conversation conversation = findOrCreateConversation(admin, user.asBareJid(), false, false);
+        veloPrepareSessions(conversation);
+        final eu.siacs.conversations.crypto.axolotl.AxolotlService axolotl = admin.getAxolotlService();
+        final java.util.Set<Integer> devices = axolotl == null ? null : axolotl.getDeviceIds(user.asBareJid());
+        if (devices == null || devices.isEmpty()
+                || conversation.getNextEncryption() != Message.ENCRYPTION_AXOLOTL_OMEMO2) {
+            return false;
+        }
+        sendVeloControl(
+                conversation,
+                eu.siacs.conversations.velo.RemoteWipe.EXPIRES_BODY,
+                eu.siacs.conversations.velo.RemoteWipe.createExpires(System.currentTimeMillis(), until));
+        return true;
+    }
+
+    /**
      * A control message is dropped right after sending: with a chat that never had a message it
      * would go before the contact's keys arrive and be lost. Like a story (VeloStories): ask for the
      * device list, then wait for the key fetches, at most 30 s.
@@ -9345,7 +9369,7 @@ public class XmppConnectionService extends Service {
     public void onVeloRemoteWipe(
             final Account account, final Jid from, final eu.siacs.conversations.velo.RemoteWipe.Command command,
             final String fingerprint) {
-        if (command.isWipe()) {
+        if (command.isWipe() || command.isExpires()) {
             if (!eu.siacs.conversations.velo.RemoteWipe.isFromAdmin(account, from)) {
                 Log.w(Config.LOGTAG, account.getJid().asBareJid() + ": remote wipe not from the admin, ignored");
                 return;
@@ -9365,6 +9389,13 @@ public class XmppConnectionService extends Service {
             }
             if (!eu.siacs.conversations.velo.RemoteWipe.issuedForThisPhone(this, account, command.issued)) {
                 Log.w(Config.LOGTAG, account.getJid().asBareJid() + ": remote wipe older than this phone, ignored");
+                return;
+            }
+            if (command.isExpires()) {
+                // Velo 0.50: this account is a guest's; it ends at the admin's date
+                eu.siacs.conversations.velo.VeloGuest.onEndDate(this, this, account, command.until);
+                veloGuestNotice(account, from, command.until);
+                Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": guest account, end date received");
                 return;
             }
             new Thread(() -> veloWipeForAdmin(account, from, command), "velo-remote-wipe").start();
@@ -9392,6 +9423,21 @@ public class XmppConnectionService extends Service {
             showErrorToastInUi(R.string.velo_wipe_done);
             updateConversationUi();
         }
+    }
+
+    /** Velo 0.50: a line in the chat with the admin saying until when the guest access lasts. */
+    private void veloGuestNotice(final Account account, final Jid admin, final long until) {
+        final Conversation conversation = findOrCreateConversation(account, admin.asBareJid(), false, false);
+        final String date = java.text.DateFormat.getDateTimeInstance(
+                java.text.DateFormat.LONG, java.text.DateFormat.SHORT).format(new java.util.Date(until));
+        final Message note = new Message(
+                conversation, getString(R.string.velo_guest_notice, date),
+                Message.ENCRYPTION_NONE, Message.STATUS_RECEIVED);
+        note.setType(Message.TYPE_STATUS);
+        note.setCounterpart(admin.asBareJid());
+        conversation.add(note);
+        databaseBackend.createMessage(note);
+        updateConversationUi();
     }
 
     /**

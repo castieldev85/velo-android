@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: Presa visione (VeloAck) -->
+<resources>
+    <string name="velo_ack">Acuse de lectura</string>
+    <string name="velo_ack_confirm">✅ Confirmo que lo he leído</string>
+    <string name="velo_ack_you_confirmed">✅ Confirmaste el %s</string>
+    <string name="velo_ack_who_when">%1$s (%2$s)</string>
+    <string name="velo_ack_confirmed_by">✅ Leído por: %s</string>
+    <string name="velo_ack_waiting">⏳ Esperando confirmación de lectura</string>
+    <string name="velo_ack_confirm_question">¿Confirmas que has leído este mensaje? Quien lo envió lo verá, con fecha y hora.</string>
+    <string name="velo_ack_confirm_button">Lo he leído</string>
+    <string name="velo_ack_done_text">Leído y entendido</string>
+    <string name="velo_ack_not_encrypted">Solo en un chat cifrado</string>
+    <string name="velo_ack_write_first">Escribe primero el mensaje y luego elige Acuse de lectura</string>
+</resources>

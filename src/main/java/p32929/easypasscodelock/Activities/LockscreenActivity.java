@@ -157,6 +157,7 @@ public class LockscreenActivity extends LockscreenHandler implements ActivityCha
                     FileHelper.zero(currentPass);
                     eu.siacs.conversations.velo.VeloPinGuard.reset(this);
                     eu.siacs.conversations.velo.VeloAutoWipe.onUnlocked(this);
+                    eu.siacs.conversations.velo.VeloComeback.onOpened(this);
                     eu.siacs.conversations.Conversations.notifyAppUnlocked();
                     finish();
                     return;

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: invio programmato dalla graffetta -->
+<resources>
+    <string name="velo_attach_later">Envoyer plus tard</string>
+    <string name="velo_send_later_write_first">Écrivez d’abord le message, puis choisissez quand l’envoyer</string>
+    <string name="velo_send_later_at">⏱ Part %s</string>
+</resources>

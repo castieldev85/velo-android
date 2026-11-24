@@ -18,7 +18,8 @@ public final class VeloAttachSheet {
     private VeloAttachSheet() {}
 
     public static void show(final Context context, final Runnable photo, final Runnable camera, final Runnable video,
-            final Runnable file, final Runnable place, final Runnable livePlace, final Runnable dictate) {
+            final Runnable file, final Runnable place, final Runnable livePlace, final Runnable dictate,
+            final Runnable later, final Runnable poll, final Runnable ack) {
         final BottomSheetDialog dialog = new BottomSheetDialog(context);
         final float density = context.getResources().getDisplayMetrics().density;
         final GridLayout grid = new GridLayout(context);
@@ -32,6 +33,10 @@ public final class VeloAttachSheet {
         add(dialog, grid, density, R.string.velo_attach_place, R.drawable.ic_location_pin_24dp, 0xFF1F8A4D, place);
         add(dialog, grid, density, R.string.velo_attach_live_place, R.drawable.ic_location_pin_24dp, 0xFF0E8078, livePlace);
         add(dialog, grid, density, R.string.velo_dictation, R.drawable.ic_dictation_24, 0xFF4A6078, dictate);
+        // Velo 0.50: the message in the box goes out at the day and hour chosen
+        add(dialog, grid, density, R.string.velo_attach_later, R.drawable.schedule_message, 0xFF5B4FC4, later);
+        add(dialog, grid, density, R.string.velo_poll, R.drawable.ic_poll_24, 0xFFB7791F, poll);
+        add(dialog, grid, density, R.string.velo_ack, R.drawable.ic_ack_24, 0xFF2E7D32, ack);
         dialog.setContentView(grid);
         dialog.show();
         matchNavigationBar(dialog);

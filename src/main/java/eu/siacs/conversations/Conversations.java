@@ -56,6 +56,11 @@ public class Conversations extends Application {
             super.onCreate();
             return;
         }
+        // Velo 0.50: a guest account whose time is over wipes before anything else starts
+        if (eu.siacs.conversations.velo.VeloGuest.checkOwn(this)) {
+            super.onCreate();
+            return;
+        }
         // Velo: cattura l'ultimo crash (anche del processo :tor) per mostrarlo in Diagnostica
         eu.siacs.conversations.velo.VeloCrashLog.install(this);
         EasylockSP.init(getApplicationContext());
@@ -151,6 +156,8 @@ public class Conversations extends Application {
                                 EasyLock.checkPassword(activity);
                             } else {
                                 appLocked = false;
+                                // Velo 0.50: without the app lock, opening Velo is "I'm back"
+                                eu.siacs.conversations.velo.VeloComeback.onOpened(activity);
                             }
                         } else if (appLocked) {
                             // An activity appeared while locked — cover it too.

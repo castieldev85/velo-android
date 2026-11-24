@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: Ospite a tempo (VeloGuest) -->
+<resources>
+    <string name="velo_guest_new">Nuevo invitado temporal</string>
+    <string name="velo_guest_how_long">¿Cuánto tiempo se queda el invitado?</string>
+    <string name="velo_guest_until">Invitado hasta el %s</string>
+    <string name="velo_guest_notice">Esta es una cuenta de invitado: caduca el %s. Después Velo se borra de este teléfono.</string>
+    <string name="velo_guest_make">Convertir en invitado temporal</string>
+    <string name="velo_guest_change">Cambiar fin del invitado</string>
+    <plurals name="velo_guest_days">
+        <item quantity="one">%d día</item>
+        <item quantity="other">%d días</item>
+    </plurals>
+</resources>

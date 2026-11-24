@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: Ospite a tempo (VeloGuest) -->
+<resources>
+    <string name="velo_guest_new">Nouvel invité temporaire</string>
+    <string name="velo_guest_how_long">Combien de temps l\'invité reste-t-il ?</string>
+    <string name="velo_guest_until">Invité jusqu\'au %s</string>
+    <string name="velo_guest_notice">Ceci est un compte invité : il expire le %s. Ensuite Velo s\'efface de ce téléphone.</string>
+    <string name="velo_guest_make">Rendre invité temporaire</string>
+    <string name="velo_guest_change">Changer la fin de l\'invité</string>
+    <plurals name="velo_guest_days">
+        <item quantity="one">%d jour</item>
+        <item quantity="other">%d jours</item>
+    </plurals>
+</resources>

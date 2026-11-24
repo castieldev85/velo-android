@@ -1678,7 +1678,32 @@ public abstract class XmppActivity extends ActionBarActivity {
         return nightModeFlags == Configuration.UI_MODE_NIGHT_YES;
     }
 
+    // Velo: true only for a real picture, not the coloured initial drawn when there is none
+    public static boolean hasRealAvatar(final AvatarService.Avatarable user) {
+        if (user == null) {
+            return false;
+        }
+        if (user instanceof eu.siacs.conversations.entities.Contact contact) {
+            return contact.getProfilePhoto() != null || contact.getAvatarFilename() != null;
+        }
+        if (user instanceof eu.siacs.conversations.entities.Account account) {
+            return account.getAvatar() != null;
+        }
+        if (user instanceof eu.siacs.conversations.entities.Conversation conversation) {
+            return hasRealAvatar(conversation.getContact());
+        }
+        if (user instanceof eu.siacs.conversations.entities.MucOptions.User mucUser) {
+            return mucUser.getContact() != null
+                    ? hasRealAvatar(mucUser.getContact())
+                    : mucUser.getAvatar() != null;
+        }
+        return true;
+    }
+
     public void ShowAvatarPopup(final AvatarService.Avatarable user) {
+        if (!hasRealAvatar(user)) {
+            return;
+        }
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.avatar_dialog); // Your custom layout
         ImageView imageView = dialog.findViewById(R.id.avatar);

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: tocco sul nome utente nei dettagli del contatto -->
+<resources>
+    <string name="velo_username">Nom d’utilisateur</string>
+    <string name="velo_username_copied">Nom d’utilisateur copié</string>
+</resources>

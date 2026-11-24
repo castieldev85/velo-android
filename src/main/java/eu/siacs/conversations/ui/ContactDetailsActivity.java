@@ -964,10 +964,24 @@ public class ContactDetailsActivity extends OmemoActivity
         AvatarWorkerTask.loadAvatar(
                 contact, binding.detailsContactBadge, R.dimen.avatar_on_details_screen_size);
         showCover(contact);
-        binding.detailsContactBadge.setOnClickListener(this::onBadgeClick);
+        // Velo: a tap opens the picture big, with pinch zoom (the address book link is not used in Velo)
+        binding.detailsContactBadge.setOnClickListener(v -> ShowAvatarPopup(contact));
         binding.detailsContactBadge.setOnLongClickListener(v -> {
             ShowAvatarPopup(contact);
             return true;
+        });
+        // Velo: a tap on the username copies it
+        binding.detailsContactjid.setOnClickListener(v -> {
+            final android.content.ClipboardManager clipboard =
+                    (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            if (clipboard == null) {
+                return;
+            }
+            clipboard.setPrimaryClip(android.content.ClipData.newPlainText(
+                    getString(R.string.velo_username), binding.detailsContactjid.getText()));
+            if (Build.VERSION.SDK_INT < 33) {
+                Toast.makeText(this, R.string.velo_username_copied, Toast.LENGTH_SHORT).show();
+            }
         });
 
         binding.presenceIndicator.setStatus(contact);

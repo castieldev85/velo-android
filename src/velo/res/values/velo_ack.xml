@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: Presa visione (VeloAck) -->
+<resources>
+    <string name="velo_ack">Read receipt request</string>
+    <string name="velo_ack_confirm">✅ Confirm I have read it</string>
+    <string name="velo_ack_you_confirmed">✅ You confirmed on %s</string>
+    <string name="velo_ack_who_when">%1$s (%2$s)</string>
+    <string name="velo_ack_confirmed_by">✅ Read by: %s</string>
+    <string name="velo_ack_waiting">⏳ Waiting for confirmation of reading</string>
+    <string name="velo_ack_confirm_question">Confirm that you have read this message? The sender will see it, with date and time.</string>
+    <string name="velo_ack_confirm_button">I have read it</string>
+    <string name="velo_ack_done_text">Read and acknowledged</string>
+    <string name="velo_ack_not_encrypted">Only in an encrypted chat</string>
+    <string name="velo_ack_write_first">Write the message first, then choose Read receipt request</string>
+</resources>

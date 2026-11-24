@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: Presa visione (VeloAck) -->
+<resources>
+    <string name="velo_ack">Presa visione</string>
+    <string name="velo_ack_confirm">✅ Confermo di aver letto</string>
+    <string name="velo_ack_you_confirmed">✅ Hai confermato il %s</string>
+    <string name="velo_ack_who_when">%1$s (%2$s)</string>
+    <string name="velo_ack_confirmed_by">✅ Presa visione: %s</string>
+    <string name="velo_ack_waiting">⏳ In attesa di presa visione</string>
+    <string name="velo_ack_confirm_question">Confermi di aver letto questo messaggio? Chi l\'ha mandato lo vedrà, con data e ora.</string>
+    <string name="velo_ack_confirm_button">Ho letto</string>
+    <string name="velo_ack_done_text">Presa visione</string>
+    <string name="velo_ack_not_encrypted">Solo in una chat cifrata</string>
+    <string name="velo_ack_write_first">Scrivi prima il messaggio, poi scegli Presa visione</string>
+</resources>

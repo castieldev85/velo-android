@@ -34,6 +34,10 @@ public final class RemoteWipe {
     public static final String NAMESPACE = "urn:velo:remote-wipe:0";
     public static final String WIPE = "wipe";
     public static final String WIPED = "wiped";
+    /** Velo 0.50: the end of a guest account ("Ospite a tempo"), sent by the admin; see VeloGuest. */
+    public static final String EXPIRES = "expires";
+    public static final String EXPIRES_BODY = "Velo: accesso ospite a tempo.";
+    private static final String UNTIL = "until";
     /** The admin's account on every Velo server (the "admin" acl of ejabberd). */
     public static final String ADMIN = "admin";
     public static final String WIPE_BODY = "Velo: il gestore ha scollegato questo telefono.";
@@ -54,15 +58,22 @@ public final class RemoteWipe {
         public final String name;
         public final long issued;
         public final String mode;
+        /** For {@link #EXPIRES}: when the guest account ends (ms since 1970); 0 otherwise. */
+        public final long until;
 
-        Command(final String name, final long issued, final String mode) {
+        Command(final String name, final long issued, final String mode, final long until) {
             this.name = name;
             this.issued = issued;
             this.mode = mode;
+            this.until = until;
         }
 
         public boolean isWipe() {
             return WIPE.equals(name);
+        }
+
+        public boolean isExpires() {
+            return EXPIRES.equals(name);
         }
     }
 
@@ -73,6 +84,13 @@ public final class RemoteWipe {
         return wipe;
     }
 
+    public static Element createExpires(final long issued, final long until) {
+        final Element expires = new Element(EXPIRES, NAMESPACE);
+        expires.setAttribute(ISSUED, String.valueOf(issued));
+        expires.setAttribute(UNTIL, String.valueOf(until));
+        return expires;
+    }
+
     public static Element createWiped(final long issued) {
         final Element wiped = new Element(WIPED, NAMESPACE);
         wiped.setAttribute(ISSUED, String.valueOf(issued));
@@ -81,7 +99,8 @@ public final class RemoteWipe {
 
     public static boolean is(final Element element) {
         return NAMESPACE.equals(element.getNamespace())
-                && (WIPE.equals(element.getName()) || WIPED.equals(element.getName()));
+                && (WIPE.equals(element.getName()) || WIPED.equals(element.getName())
+                        || EXPIRES.equals(element.getName()));
     }
 
     /** Whether this outgoing message is a command or an answer: sent, never kept in the chat. */
@@ -114,7 +133,9 @@ public final class RemoteWipe {
         }
         try {
             final long issued = Long.parseLong(element.getAttribute(ISSUED));
-            return new Command(element.getName(), issued, element.getAttribute(MODE));
+            final long until = EXPIRES.equals(element.getName())
+                    ? Long.parseLong(element.getAttribute(UNTIL)) : 0;
+            return new Command(element.getName(), issued, element.getAttribute(MODE), until);
         } catch (final NumberFormatException e) {
             return null;
         }

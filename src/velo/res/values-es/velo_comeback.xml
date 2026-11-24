@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: Messaggio se non torno (VeloComeback) -->
+<resources>
+    <string name="velo_comeback_title">Mensaje si no vuelvo</string>
+    <string name="velo_comeback_off">Desactivado</string>
+    <string name="velo_comeback_on">Activo: tras %1$d días sin abrir Velo, a %2$s</string>
+    <string name="velo_comeback_explanation">Si no abres Velo durante los días que elijas, Velo envía un mensaje cifrado a una persona de confianza. El día antes, una notificación te recuerda abrir Velo. Con el bloqueo de la app activo, solo cuenta desbloquear con tu PIN. Se envía una sola vez y luego se desactiva. El teléfono debe estar encendido y conectado para que salga.</string>
+    <string name="velo_comeback_set_up">Activar</string>
+    <string name="velo_comeback_change">Cambiar</string>
+    <string name="velo_comeback_turn_off">Desactivar</string>
+    <string name="velo_comeback_after">¿Después de cuántos días?</string>
+    <string name="velo_comeback_who">¿A quién?</string>
+    <string name="velo_comeback_no_contacts">Primero añade un contacto</string>
+    <string name="velo_comeback_text_for">Mensaje para %s</string>
+    <string name="velo_comeback_default_text">Hace %d días que no abro Velo. Si no sabes nada de mí, intenta localizarme.</string>
+    <string name="velo_comeback_save">Guardar</string>
+    <string name="velo_comeback_empty">Escribe el mensaje</string>
+    <string name="velo_comeback_warning">Abre Velo: mañana se enviará el mensaje a tu persona de confianza</string>
+    <string name="velo_comeback_sent">Velo no se ha abierto durante los días elegidos: se ha enviado el mensaje a tu persona de confianza</string>
+    <string name="velo_comeback_contact_from">%1$s (perfil %2$s)</string>
+</resources>

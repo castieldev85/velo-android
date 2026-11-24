@@ -184,6 +184,18 @@
             android:background="?attr/selectableItemBackground"
             android:visibility="gone" />
 
+        <!-- Velo 0.50: Presa visione, chi ha confermato o il pulsante per confermare -->
+        <TextView
+            android:id="@+id/velo_ack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:textStyle="bold"
+            android:textAppearance="?textAppearanceBodySmall"
+            android:paddingVertical="6dp"
+            android:paddingHorizontal="4dp"
+            android:visibility="gone" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/download_button"
             style="@style/Widget.Material3.Button.ElevatedButton"

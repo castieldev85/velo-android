@@ -247,6 +247,13 @@ public class VeloProfileActivity extends XmppActivity
         avatar.setBackgroundColor(surface);
         avatar.setContentDescription(getString(R.string.velo_profile_photo));
         avatar.setOnClickListener(v -> changePhoto());
+        // Velo 0.50: holding the own picture shows it big
+        avatar.setOnLongClickListener(v -> {
+            if (account != null) {
+                ShowAvatarPopup(account);
+            }
+            return true;
+        });
         AvatarWorkerTask.loadAvatar(account, avatar, R.dimen.avatar_on_details_screen_size);
         final LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(108), dp(108));
         avatarParams.topMargin = -dp(54);

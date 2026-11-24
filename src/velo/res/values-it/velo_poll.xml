@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.50: sondaggi (messaggio con risposte numerate, voto con la reazione) -->
+<resources>
+    <string name="velo_poll">Sondaggio</string>
+    <string name="velo_poll_question">Domanda</string>
+    <string name="velo_poll_option">Risposta %d</string>
+    <string name="velo_poll_send">Invia sondaggio</string>
+    <string name="velo_poll_incomplete">Scrivi la domanda e almeno due risposte</string>
+    <string name="velo_poll_box_busy">Invia o cancella prima il testo che stai scrivendo</string>
+</resources>

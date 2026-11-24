@@ -3803,7 +3803,9 @@ public class ConversationFragment extends XmppFragment
     }
 
     private void setupDialogReactionRow(final LinearLayout row, final Message message, final Runnable onDismiss) {
-        final String[] emojis = {"❤️", "👍", "👎", "😂", "😲", "😢"};
+        // Velo 0.50: on a poll the quick reactions are its numbers, one tap is one vote
+        final String[] emojis = eu.siacs.conversations.velo.VeloPoll.reactionsFor(
+                message.getBody(), new String[] {"❤️", "👍", "👎", "😂", "😲", "😢"});
         final var aggregated = message.getAggregatedReactions();
         final int sizePx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 44, getResources().getDisplayMetrics());
         final TypedValue selectorTv = new TypedValue();
@@ -4457,7 +4459,7 @@ public class ConversationFragment extends XmppFragment
     private void scheduleMessage() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             final var datePicker = com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
-                    .setTitleText("Schedule Message")
+                    .setTitleText(R.string.velo_attach_later)
                     .setSelection(com.google.android.material.datepicker.MaterialDatePicker.todayInUtcMilliseconds())
                     .setCalendarConstraints(
                             new com.google.android.material.datepicker.CalendarConstraints.Builder()
@@ -4468,7 +4470,7 @@ public class ConversationFragment extends XmppFragment
             datePicker.addOnPositiveButtonClickListener((date) -> {
                 final Calendar now = Calendar.getInstance();
                 final var timePicker = new com.google.android.material.timepicker.MaterialTimePicker.Builder()
-                        .setTitleText("Schedule Message")
+                        .setTitleText(R.string.velo_attach_later)
                         .setHour(now.get(Calendar.HOUR_OF_DAY))
                         .setMinute(now.get(Calendar.MINUTE))
                         .setTimeFormat(android.text.format.DateFormat.is24HourFormat(activity) ? com.google.android.material.timepicker.TimeFormat.CLOCK_24H : com.google.android.material.timepicker.TimeFormat.CLOCK_12H)
@@ -6722,7 +6724,47 @@ public class ConversationFragment extends XmppFragment
                 () -> attachFile(ATTACHMENT_CHOICE_LOCATION),
                 // Velo 0.46.4: first the duration, as from the menu; without one nothing started
                 this::showLiveLocationDurationPicker,
-                this::veloToggleDictation);
+                this::veloToggleDictation,
+                this::veloSendLater,
+                this::veloPoll,
+                this::veloAck);
+    }
+
+    // Velo 0.50: Presa visione, the message in the box goes out asking to be confirmed as read
+    private void veloAck() {
+        final Editable body = binding.textinput.getText();
+        final String text = eu.siacs.conversations.velo.VeloAck.compose(body == null ? null : body.toString());
+        if (text == null) {
+            Toast.makeText(activity, R.string.velo_ack_write_first, Toast.LENGTH_LONG).show();
+            return;
+        }
+        binding.textinput.setText(text);
+        sendMessage();
+    }
+
+    // Velo 0.50: a poll goes out as a normal message from the text box
+    private void veloPoll() {
+        final Editable draft = binding.textinput.getText();
+        if (draft != null && !draft.toString().trim().isEmpty()) {
+            // the poll travels through the text box: a half-written message would be lost
+            Toast.makeText(activity, R.string.velo_poll_box_busy, Toast.LENGTH_LONG).show();
+            return;
+        }
+        eu.siacs.conversations.velo.VeloPoll.show(activity, text -> {
+            binding.textinput.setText(text);
+            sendMessage();
+        });
+    }
+
+    // Velo 0.50: "Invia più tardi" from the paper clip; the scheduling itself is the base code's
+    // (held in the service, saved as waiting, picked up again after a restart)
+    private void veloSendLater() {
+        final Editable body = binding.textinput.getText();
+        if (body == null || body.toString().trim().isEmpty()) {
+            Toast.makeText(activity, R.string.velo_send_later_write_first, Toast.LENGTH_LONG).show();
+            return;
+        }
+        scheduleMessage();
     }
 
     private void showVeloTimerDialog() {
