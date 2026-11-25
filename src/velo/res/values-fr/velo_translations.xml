@@ -150,7 +150,7 @@
     <string name="velo_server_name">Serveur</string>
     <string name="velo_whats_new_title">Nouveautés de Velo %s</string>
     <string name="velo_whats_new_ok">Compris</string>
-    <string name="velo_whats_new_text">Velo 0.50 : nouveautés et corrections.\n\n• Envoyer plus tard, Sondage et Accusé de lecture depuis le trombone.\n• Message si je ne reviens pas, dans Sécurité : si vous n\'ouvrez pas Velo pendant les jours choisis, un message chiffré part vers une personne de confiance.\n• Invités avec date de fin (Gérer les utilisateurs) et la grande photo d\'un toucher dans les détails.\n• 0.50.1 : corrigée après une revue du code. Le message si vous ne revenez pas et la fin des invités marchent aussi après un redémarrage du téléphone, et un appel entrant ne compte plus comme un retour. Une pièce jointe ne part plus tout de suite par erreur.</string>
+    <string name="velo_whats_new_text">Velo 0.51 : sondages comme sur Telegram.\n\n• Chaque réponse d\'un sondage est maintenant un bouton : un toucher vote, une autre réponse déplace le vote, la même le retire.\n• Après le vote vous voyez la barre et le pourcentage de chaque réponse ; la ligne dessous montre qui a voté quoi.\n• Ceux qui n\'ont pas encore mis à jour voient l\'ancien sondage et votent avec le numéro : leur vote compte aussi.</string>
     <string name="velo_invite_title">Invitation</string>
     <string name="velo_invite_have">J\'ai une invitation</string>
     <string name="velo_invite_invalid_title">Ce n\'est pas une invitation Velo</string>

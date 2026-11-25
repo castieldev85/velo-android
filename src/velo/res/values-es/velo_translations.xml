@@ -155,7 +155,7 @@
     <string name="velo_server_name">Servidor</string>
     <string name="velo_whats_new_title">Novedades de Velo %s</string>
     <string name="velo_whats_new_ok">Entendido</string>
-    <string name="velo_whats_new_text">Velo 0.50: novedades y correcciones.\n\n• Enviar más tarde, Encuesta y Acuse de lectura desde el clip.\n• Mensaje si no vuelvo, en Seguridad: si no abres Velo durante los días que eliges, sale un mensaje cifrado a una persona de confianza.\n• Invitados con fecha de fin (Gestionar usuarios) y la foto grande con un toque en los detalles.\n• 0.50.1: corregida tras una revisión del código. El mensaje si no vuelves y el fin de los invitados funcionan también tras reiniciar el teléfono, y una llamada entrante ya no cuenta como vuelta. Un adjunto ya no sale enseguida por error.</string>
+    <string name="velo_whats_new_text">Velo 0.51: encuestas como en Telegram.\n\n• Cada respuesta de una encuesta es ahora un botón: un toque vota, otra respuesta cambia el voto, la misma lo quita.\n• Tras votar ves la barra y el porcentaje de cada respuesta; la línea de abajo muestra quién votó qué.\n• Quien aún no ha actualizado ve la encuesta de antes y vota con el número: su voto también cuenta.</string>
     <string name="velo_invite_title">Invitación</string>
     <string name="velo_invite_have">Tengo una invitación</string>
     <string name="velo_invite_invalid_title">No es una invitación de Velo</string>

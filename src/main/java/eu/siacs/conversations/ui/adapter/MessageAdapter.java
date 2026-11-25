@@ -1199,6 +1199,175 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
         hide.setOnClickListener(v -> veloHideTranslation(uuid));
     }
 
+    private static void veloHidePoll(final BubbleMessageItemViewHolder viewHolder) {
+        final LinearLayout box = viewHolder.veloPoll();
+        if (box != null) {
+            box.removeAllViews();
+            box.setVisibility(GONE);
+        }
+    }
+
+    /**
+     * Velo 0.51: a poll drawn like Telegram's. Under it is still the 0.50 message with numbered
+     * choices, and a vote is still the reaction of its number: older Velo and other apps keep
+     * working. Before voting there is one button per choice; after voting (or on your own poll)
+     * every choice shows its bar and percent, and yours is ticked. Tapping a choice votes, moves
+     * the vote, or takes it back; the line below lists who voted what.
+     */
+    private void veloBindPoll(final BubbleMessageItemViewHolder viewHolder, final Message message,
+            final BubbleColor bubbleColor) {
+        final LinearLayout box = viewHolder.veloPoll();
+        if (box == null) {
+            return;
+        }
+        box.removeAllViews();
+        final eu.siacs.conversations.velo.VeloPoll.Poll poll =
+                eu.siacs.conversations.velo.VeloPoll.parse(message.getBody());
+        if (poll == null) {
+            box.setVisibility(GONE);
+            return;
+        }
+        viewHolder.messageBody().setText("📊 " + poll.question);
+        viewHolder.messageBody().setVisibility(View.VISIBLE);
+        final Reaction.Aggregated aggregated = message.getConversation() instanceof Conversation c
+                ? c.aggregatedReactionsFor(message, r -> null)
+                : message.getAggregatedReactions();
+        final int n = poll.options.size();
+        final int[] votes = new int[n];
+        final List<List<Reaction>> voters = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            voters.add(new ArrayList<>());
+        }
+        int total = 0;
+        for (final Map.Entry<EmojiSearch.Emoji, Collection<Reaction>> entry : aggregated.reactions) {
+            final int choice = eu.siacs.conversations.velo.VeloPoll.choiceOf(entry.getKey().toString());
+            if (choice >= 0 && choice < n) {
+                votes[choice] += entry.getValue().size();
+                voters.get(choice).addAll(entry.getValue());
+                total += entry.getValue().size();
+            }
+        }
+        final int mine = eu.siacs.conversations.velo.VeloPoll.ourVote(aggregated.ourReactions);
+        final boolean results = mine >= 0 || message.getStatus() != Message.STATUS_RECEIVED;
+        final float density = activity.getResources().getDisplayMetrics().density;
+        for (int i = 0; i < n; i++) {
+            final int choice = i;
+            final View.OnClickListener vote = v -> sendReactions(message,
+                    eu.siacs.conversations.velo.VeloPoll.vote(aggregated.ourReactions, choice));
+            if (!results) {
+                final MaterialButton button = new MaterialButton(activity, null,
+                        com.google.android.material.R.attr.materialButtonOutlinedStyle);
+                button.setText(poll.options.get(i));
+                button.setAllCaps(false);
+                button.setOnClickListener(vote);
+                button.setContentDescription("velo_poll_choice_" + (i + 1));
+                box.addView(button, new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                continue;
+            }
+            final int percent = eu.siacs.conversations.velo.VeloPoll.percent(votes[i], total);
+            final LinearLayout row = new LinearLayout(activity);
+            row.setOrientation(LinearLayout.VERTICAL);
+            row.setPadding(0, Math.round(6 * density), 0, Math.round(6 * density));
+            final android.util.TypedValue ripple = new android.util.TypedValue();
+            activity.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, ripple, true);
+            row.setBackgroundResource(ripple.resourceId);
+            row.setOnClickListener(vote);
+            row.setContentDescription("velo_poll_choice_" + (i + 1));
+            final LinearLayout line = new LinearLayout(activity);
+            line.setOrientation(LinearLayout.HORIZONTAL);
+            final TextView label = new TextView(activity);
+            label.setText((i == mine ? "✓ " : "") + poll.options.get(i));
+            setTextColor(label, bubbleColor);
+            if (i == mine) {
+                label.setTypeface(label.getTypeface(), android.graphics.Typeface.BOLD);
+            }
+            line.addView(label, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+            final TextView amount = new TextView(activity);
+            amount.setText(percent + "%");
+            amount.setPadding(Math.round(12 * density), 0, 0, 0);
+            setTextColor(amount, bubbleColor);
+            line.addView(amount);
+            row.addView(line);
+            final com.google.android.material.progressindicator.LinearProgressIndicator bar =
+                    new com.google.android.material.progressindicator.LinearProgressIndicator(activity);
+            bar.setMax(100);
+            bar.setProgressCompat(percent, false);
+            bar.setTrackCornerRadius(Math.round(3 * density));
+            bar.setTrackThickness(Math.round(6 * density));
+            // the empty part must show on every bubble colour (white on white was invisible), and
+            // Material 3's gap and end dot look like a second, tiny vote
+            bar.setTrackColor(androidx.core.graphics.ColorUtils.setAlphaComponent(label.getCurrentTextColor(), 0x40));
+            bar.setIndicatorTrackGapSize(0);
+            bar.setTrackStopIndicatorSize(0);
+            final LinearLayout.LayoutParams barParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            barParams.topMargin = Math.round(4 * density);
+            row.addView(bar, barParams);
+            box.addView(row, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
+        final TextView footer = new TextView(activity);
+        footer.setPadding(0, Math.round(6 * density), 0, Math.round(2 * density));
+        footer.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodySmall);
+        setTextColor(footer, bubbleColor);
+        if (total == 0) {
+            footer.setText(R.string.velo_poll_no_votes);
+        } else {
+            final String count = activity.getResources().getQuantityString(R.plurals.velo_poll_votes, total, total);
+            footer.setText(results ? count + " · " + activity.getString(R.string.velo_poll_see_voters) : count);
+            if (results) {
+                footer.setOnClickListener(v -> veloShowPollVoters(message, poll, voters));
+            }
+        }
+        box.addView(footer);
+        box.setVisibility(View.VISIBLE);
+    }
+
+    private void veloShowPollVoters(final Message message, final eu.siacs.conversations.velo.VeloPoll.Poll poll,
+            final List<List<Reaction>> voters) {
+        final StringBuilder text = new StringBuilder();
+        for (int i = 0; i < poll.options.size(); i++) {
+            if (voters.get(i).isEmpty()) {
+                continue;
+            }
+            if (text.length() > 0) {
+                text.append("\n\n");
+            }
+            text.append(eu.siacs.conversations.velo.VeloPoll.NUMBERS[i]).append(' ')
+                    .append(poll.options.get(i)).append("\n").append(veloVoterNames(message, voters.get(i)));
+        }
+        new MaterialAlertDialogBuilder(activity)
+                .setTitle(R.string.velo_poll_voters)
+                .setMessage(text.toString())
+                .setPositiveButton(R.string.ok, null)
+                .show();
+    }
+
+    private String veloVoterNames(final Message message, final List<Reaction> reactions) {
+        final List<String> names = new ArrayList<>();
+        final List<Reaction> others = new ArrayList<>();
+        for (final Reaction reaction : reactions) {
+            if (!reaction.received) {
+                names.add(activity.getString(R.string.velo_poll_you));
+            } else {
+                others.add(reaction);
+            }
+        }
+        if (!others.isEmpty()) {
+            final var c = message.getConversation();
+            if (c instanceof Conversation conversation && c.getMode() == Conversational.MODE_MULTI) {
+                final List<MucOptions.User> users = conversation.getMucOptions().findUsers(others);
+                if (!users.isEmpty()) {
+                    names.add(UIHelper.concatNames(users));
+                }
+            } else if (c instanceof Conversation conversation) {
+                names.add(conversation.getContact().getDisplayName());
+            }
+        }
+        return String.join(", ", names);
+    }
+
     private static void veloHideAck(final BubbleMessageItemViewHolder viewHolder) {
         final TextView ack = viewHolder.veloAck();
         if (ack != null) {
@@ -1487,6 +1656,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
         viewHolder.messageBody().setMovementMethod(method);
         veloBindTranslation(viewHolder, message, bubbleColor);
         veloBindAck(viewHolder, message, bubbleColor);
+        veloBindPoll(viewHolder, message, bubbleColor);
     }
 
     private final BetterLinkMovementMethod mBetterLinkMovementMethod = new BetterLinkMovementMethod() {
@@ -2365,6 +2535,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
         // message it showed before (info, media and other paths never reach veloBindAck); the
         // text paths show it again below when this message asks for it
         veloHideAck(viewHolder);
+        veloHidePoll(viewHolder);
         if (muted) {
             // Muted MUC participant
             displayInfoMessage(viewHolder, "Muted", bubbleColor);
@@ -2597,6 +2768,10 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
                     message.getAggregatedReactions(),
                     reactions -> sendReactions(message, reactions),
                     emoji -> showDetailedReaction(message, emoji));
+        }
+        if (viewHolder.veloPoll() != null && viewHolder.veloPoll().getVisibility() == View.VISIBLE) {
+            // Velo 0.51: the poll shows its votes in the bubble, the number chips would repeat them
+            viewHolder.reactions().setVisibility(GONE);
         }
 
         var subject = message.getSubject();
@@ -3522,6 +3697,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
 
         protected abstract TextView veloAck();
 
+        protected abstract LinearLayout veloPoll();
+
         protected abstract AlbumLayout album();
 
         protected abstract LinearLayout attachments();
@@ -3679,6 +3856,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
         }
 
         @Override
+        protected LinearLayout veloPoll() {
+            return this.binding.messageContent.veloPoll;
+        }
+
+        @Override
         protected AlbumLayout album() {
             return this.binding.messageContent.album;
         }
@@ -3741,6 +3923,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
         @Override
         protected TextView veloAck() {
             return this.binding.messageContent.veloAck;
+        }
+
+        @Override
+        protected LinearLayout veloPoll() {
+            return this.binding.messageContent.veloPoll;
         }
 
         @Override

@@ -230,7 +230,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">What\'s new in Velo %s</string>
     <string name="velo_whats_new_ok">Got it</string>
-    <string name="velo_whats_new_text">Velo 0.50: new things and fixes.\n\n• Send later, Poll and Read confirmation from the paper clip.\n• Message if I don\'t come back, in Security: if you don\'t open Velo for the days you choose, an encrypted message goes to a person you trust.\n• Guests with an end date (Manage users) and the big photo with a tap in the details.\n• 0.50.1: fixed after a code review. The message if you don\'t come back and the end of guests also work after the phone restarts, and an incoming call no longer counts as coming back. An attachment can no longer leave at once by mistake.</string>
+    <string name="velo_whats_new_text">Velo 0.51: polls like Telegram.\n\n• A poll now has a button for each answer: one tap votes, another answer moves your vote, the same one takes it back.\n• After voting you see a bar and the percent for each answer; the line below shows who voted what.\n• Phones not updated yet still see the old poll and vote with the number: their votes count too.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Remove and wipe their phone</string>
     <string name="velo_admin_action_wipe_phone">Wipe their phone only</string>

@@ -96,6 +96,97 @@ public final class VeloPoll {
         return found.size() < 2 ? usual : found.toArray(new String[0]);
     }
 
+    // ------------------------------------------------------------ Velo 0.51: poll with buttons
+
+    /** A poll read back from its message: the question and the choices, in order. */
+    public static final class Poll {
+        public final String question;
+        public final List<String> options;
+
+        Poll(final String question, final List<String> options) {
+            this.question = question;
+            this.options = options;
+        }
+    }
+
+    /**
+     * The poll in a message body, or null when it is no poll (no "📊 ", or fewer than two
+     * numbered choices). The choices must be 1️⃣ 2️⃣ … in order, as {@link #compose} writes them.
+     */
+    @androidx.annotation.Nullable
+    public static Poll parse(final String body) {
+        if (body == null || !body.startsWith("📊 ")) {
+            return null;
+        }
+        final StringBuilder question = new StringBuilder();
+        final List<String> options = new ArrayList<>();
+        for (final String line : body.substring("📊 ".length()).split("\n")) {
+            final int next = options.size();
+            if (next < NUMBERS.length && line.startsWith(NUMBERS[next] + " ")) {
+                options.add(line.substring(NUMBERS[next].length() + 1).trim());
+            } else if (options.isEmpty()) {
+                if (question.length() > 0 || !line.trim().isEmpty()) {
+                    question.append(question.length() > 0 ? "\n" : "").append(line);
+                }
+            } else if (!line.trim().isEmpty()) {
+                return null; // text after the choices: not a poll Velo wrote
+            }
+        }
+        final String q = question.toString().trim();
+        return q.isEmpty() || options.size() < 2 ? null : new Poll(q, options);
+    }
+
+    /** The choice an emoji votes for (0-based), or -1. Other apps may drop the U+FE0F. */
+    public static int choiceOf(final String emoji) {
+        if (emoji == null) {
+            return -1;
+        }
+        final String key = emoji.replace("️", "");
+        for (int i = 0; i < NUMBERS.length; i++) {
+            if (NUMBERS[i].replace("️", "").equals(key)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Our reactions after tapping a choice: one vote only, so any other number goes; tapping the
+     * choice we already voted takes the vote back. Our other reactions (❤️…) stay.
+     */
+    public static java.util.Set<String> vote(final java.util.Collection<String> ours, final int choice) {
+        final java.util.Set<String> result = new java.util.LinkedHashSet<>();
+        boolean had = false;
+        for (final String reaction : ours) {
+            final int c = choiceOf(reaction);
+            if (c < 0) {
+                result.add(reaction);
+            } else if (c == choice) {
+                had = true;
+            }
+        }
+        if (!had) {
+            result.add(NUMBERS[choice]);
+        }
+        return result;
+    }
+
+    /** Our current vote (0-based), or -1. */
+    public static int ourVote(final java.util.Collection<String> ours) {
+        for (final String reaction : ours) {
+            final int c = choiceOf(reaction);
+            if (c >= 0) {
+                return c;
+            }
+        }
+        return -1;
+    }
+
+    /** Percent of all votes, rounded; 0 with no votes. */
+    public static int percent(final int votes, final int total) {
+        return total <= 0 ? 0 : Math.round(votes * 100f / total);
+    }
+
     private static List<String> texts(final List<EditText> fields) {
         final List<String> out = new ArrayList<>();
         for (final EditText field : fields) {

@@ -7,4 +7,13 @@
     <string name="velo_poll_send">Enviar encuesta</string>
     <string name="velo_poll_incomplete">Escribe la pregunta y al menos dos respuestas</string>
     <string name="velo_poll_box_busy">Primero envía o borra el texto que estás escribiendo</string>
+    <!-- Velo 0.51: sondaggio con i pulsanti -->
+    <string name="velo_poll_no_votes">Aún no hay votos: toca una respuesta</string>
+    <string name="velo_poll_see_voters">ver quién votó</string>
+    <string name="velo_poll_voters">Quién votó</string>
+    <string name="velo_poll_you">Tú</string>
+    <plurals name="velo_poll_votes">
+        <item quantity="one">%d voto</item>
+        <item quantity="other">%d votos</item>
+    </plurals>
 </resources>
