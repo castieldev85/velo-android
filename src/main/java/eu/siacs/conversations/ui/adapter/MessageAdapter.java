@@ -1210,7 +1210,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
     /**
      * Velo 0.51: a poll drawn like Telegram's. Under it is still the 0.50 message with numbered
      * choices, and a vote is still the reaction of its number: older Velo and other apps keep
-     * working. Before voting there is one button per choice; after voting (or on your own poll)
+     * working. Before voting there is one button per choice; after voting (your own poll too)
      * every choice shows its bar and percent, and yours is ticked. Tapping a choice votes, moves
      * the vote, or takes it back; the line below lists who voted what.
      */
@@ -1248,7 +1248,9 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
             }
         }
         final int mine = eu.siacs.conversations.velo.VeloPoll.ourVote(aggregated.ourReactions);
-        final boolean results = mine >= 0 || message.getStatus() != Message.STATUS_RECEIVED;
+        // Velo 0.51.1: buttons for everyone until they vote, the poll's author too (as Telegram);
+        // in 0.51.0 the author saw empty bars and no way to vote
+        final boolean results = mine >= 0;
         final float density = activity.getResources().getDisplayMetrics().density;
         for (int i = 0; i < n; i++) {
             final int choice = i;

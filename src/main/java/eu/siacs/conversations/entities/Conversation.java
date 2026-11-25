@@ -1362,12 +1362,15 @@ public class Conversation extends AbstractEntity
                 if (printableValue(generatedName)) {
                     return generatedName;
                 } else {
-                    return contactJid.getLocal() != null ? contactJid.getLocal() : contactJid;
+                    // Velo: never the domain ("Server" for a bare domain)
+                    return eu.siacs.conversations.velo.VeloNames.of(contactJid);
                 }
             }
         } else if (!Config.QUICKSY_DOMAIN.equals(contactJid.getDomain())
                 && isWithStranger()) {
-            return contactJid;
+            // Velo 0.51.1: someone not in the contacts was shown as user@domain, and the
+            // notification title (unlike the chat list) printed it as it was
+            return eu.siacs.conversations.velo.VeloNames.of(contactJid);
         } else {
             return this.getContact().getDisplayName();
         }

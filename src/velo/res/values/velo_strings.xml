@@ -230,7 +230,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">What\'s new in Velo %s</string>
     <string name="velo_whats_new_ok">Got it</string>
-    <string name="velo_whats_new_text">Velo 0.51: polls like Telegram.\n\n• A poll now has a button for each answer: one tap votes, another answer moves your vote, the same one takes it back.\n• After voting you see a bar and the percent for each answer; the line below shows who voted what.\n• Phones not updated yet still see the old poll and vote with the number: their votes count too.</string>
+    <string name="velo_whats_new_text">Velo 0.51: polls like Telegram.\n\n• A poll now has a button for each answer: one tap votes, another answer moves your vote, the same one takes it back.\n• After voting you see a bar and the percent for each answer; the line below shows who voted what.\n• Phones not updated yet still see the old poll and vote with the number: their votes count too.\n• 0.51.1: buttons on your own polls too, and a notification from someone who is not in your contacts no longer shows the server\'s address.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Remove and wipe their phone</string>
     <string name="velo_admin_action_wipe_phone">Wipe their phone only</string>
