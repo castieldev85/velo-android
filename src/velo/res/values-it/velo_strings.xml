@@ -242,7 +242,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">Novità di Velo %s</string>
     <string name="velo_whats_new_ok">Ho capito</string>
-    <string name="velo_whats_new_text">Velo 0.51: sondaggi come su Telegram.\n\n• Ogni risposta di un sondaggio ora è un pulsante: un tocco vota, un\'altra risposta sposta il voto, la stessa lo toglie.\n• Dopo il voto vedi la barra e la percentuale di ogni risposta; la riga sotto mostra chi ha votato cosa.\n• Chi non ha ancora aggiornato vede il sondaggio di prima e vota con il numero: il suo voto conta lo stesso.\n• 0.51.1: i pulsanti ci sono anche nei tuoi sondaggi, e la notifica di chi non è tra i tuoi contatti non mostra più l\'indirizzo del server.</string>
+    <string name="velo_whats_new_text">Velo 0.52: dettatura e trascrizione in quattro lingue.\n\n• La dettatura e la trascrizione dei vocali ora funzionano in italiano, inglese, spagnolo e francese.\n• La lingua è quella dell\'app; puoi cambiarla in Impostazioni → Dati e media → Lingua della voce.\n• Tieni premuto “Trascrivi” su un vocale per trascriverlo in un\'altra lingua.\n• Ogni lingua si scarica una volta sola, al primo uso (circa 40 MB), e poi funziona senza internet.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Togli e cancella dal telefono</string>
     <string name="velo_admin_action_wipe_phone">Cancella solo il telefono</string>

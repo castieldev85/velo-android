@@ -74,21 +74,45 @@ public final class VeloSpeechManager {
                 .build();
     }
 
-    private static final String DEFAULT_DIR = "vosk-model-small-it-0.22";
     /** Scritto per ultimo, a modello intero: una cartella senza non conta, resti di versioni vecchie compresi. */
     private static final String COMPLETE = ".velo-complete";
     private static final Object LOCK = new Object();
 
-    /** true se il modello e' intero sul telefono. */
-    public static boolean isReady(final Context context, final String dir) {
+    /** true se il modello della lingua e' intero sul telefono. */
+    public static boolean isReady(final Context context, final String lang) {
+        final String dir = VeloKnownModels.speechDir(lang);
+        return dir != null && isDirReady(context, dir);
+    }
+
+    private static boolean isDirReady(final Context context, final String dir) {
         final File model = new File(new File(context.getFilesDir(), "velo-vosk"), dir);
         return new File(model, COMPLETE).isFile() && new File(model, "am/final.mdl").isFile();
     }
 
-    /** Il modello non si apre: via tutto, al prossimo giro si riscarica. */
-    public static void discard(final Context context) {
+    /** Il modello di questa lingua non si apre: via solo lui, al prossimo giro si riscarica. */
+    public static void discard(final Context context, final String lang) {
+        final String dir = VeloKnownModels.speechDir(lang);
+        if (dir == null) {
+            return;
+        }
         synchronized (LOCK) {
-            deleteRecursive(new File(context.getFilesDir(), "velo-vosk"));
+            deleteRecursive(new File(new File(context.getFilesDir(), "velo-vosk"), dir));
+        }
+    }
+
+    /**
+     * Velo 0.52: toglie i resti (scompattamento interrotto, cartella a meta' della lingua che si sta
+     * scaricando, versioni vecchie) e lascia intatti i modelli interi delle altre lingue.
+     */
+    private static void clearLeftovers(final File base, final String dir) {
+        final File[] children = base.listFiles();
+        if (children == null) {
+            return;
+        }
+        for (final File c : children) {
+            if (c.getName().equals(dir) || !VeloKnownModels.isSpeechDir(c.getName())) {
+                deleteRecursive(c);
+            }
         }
     }
 
@@ -104,8 +128,13 @@ public final class VeloSpeechManager {
                 throw new Cancelled();
             }
             final File base = new File(context.getFilesDir(), "velo-vosk");
-            if (isReady(context, DEFAULT_DIR)) {
-                return new File(base, DEFAULT_DIR);
+            final String expectedDir = VeloKnownModels.speechDir(lang);
+            final String expectedSha = VeloKnownModels.speechSha256(lang);
+            if (expectedDir == null || expectedSha == null) {
+                throw new IOException("Lingua non disponibile: " + lang);
+            }
+            if (isDirReady(context, expectedDir)) {
+                return new File(base, expectedDir);
             }
             final String zip;
             final String dir;
@@ -121,7 +150,11 @@ public final class VeloSpeechManager {
                     }
                     manifest = new JSONObject(body.string());
                 }
-                final JSONObject m = manifest.getJSONObject(lang);
+                final JSONObject m = manifest.optJSONObject(lang);
+                if (m == null) {
+                    // server non ancora aggiornato con i modelli nuovi
+                    throw new IOException("Lingua non ancora disponibile sul server");
+                }
                 zip = m.getString("zip");
                 dir = m.getString("dir");
                 size = m.getLong("size");
@@ -130,20 +163,20 @@ public final class VeloSpeechManager {
                 throw new IOException("Elenco modelli vocali non valido", e);
             }
             if (!VeloKnownModels.isServerFileName(zip)
-                    || !VeloKnownModels.SPEECH_DIR.equals(dir)
-                    || !VeloKnownModels.SPEECH_SHA256.equals(sha)) {
+                    || !expectedDir.equals(dir)
+                    || !expectedSha.equals(sha)) {
                 throw new IOException("Modello vocale non riconosciuto");
             }
             final File modelDir = new File(base, dir);
-            if (isReady(context, dir)) {
+            if (isDirReady(context, dir)) {
                 return modelDir;
             }
 
-            // Via i resti di download interrotti e di versioni vecchie
-            deleteRecursive(base);
-            if (!base.mkdirs()) {
+            // Via i resti di download interrotti e di versioni vecchie, non le altre lingue
+            if (!base.isDirectory() && !base.mkdirs()) {
                 throw new IOException("Non riesco a creare la cartella del modello vocale");
             }
+            clearLeftovers(base, dir);
             // Lo ZIP piu' il modello scompattato, che pesa circa il doppio
             if (context.getFilesDir().getUsableSpace() < size * 4) {
                 throw new IOException("Spazio insufficiente sul telefono (servono circa "
@@ -172,7 +205,8 @@ public final class VeloSpeechManager {
             if (!new File(unpacked, "am/final.mdl").isFile()
                     || !new File(unpacked, COMPLETE).createNewFile()
                     || !unpacked.renameTo(modelDir)) {
-                deleteRecursive(base);
+                deleteRecursive(unpacking);
+                deleteRecursive(modelDir);
                 throw new IOException("Modello vocale incompleto dopo lo scompattamento");
             }
             deleteRecursive(unpacking);

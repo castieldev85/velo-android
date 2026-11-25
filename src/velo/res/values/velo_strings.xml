@@ -230,7 +230,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">What\'s new in Velo %s</string>
     <string name="velo_whats_new_ok">Got it</string>
-    <string name="velo_whats_new_text">Velo 0.51: polls like Telegram.\n\n• A poll now has a button for each answer: one tap votes, another answer moves your vote, the same one takes it back.\n• After voting you see a bar and the percent for each answer; the line below shows who voted what.\n• Phones not updated yet still see the old poll and vote with the number: their votes count too.\n• 0.51.1: buttons on your own polls too, and a notification from someone who is not in your contacts no longer shows the server\'s address.</string>
+    <string name="velo_whats_new_text">Velo 0.52: dictation and transcription in four languages.\n\n• Dictation and voice-message transcription now work in Italian, English, Spanish and French.\n• The language is the app\'s one; you can change it in Settings → Data and media → Voice language.\n• Long press “Transcribe” on a voice message to transcribe it in another language.\n• Each language is downloaded once, the first time you use it (about 40 MB), and then works without internet.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Remove and wipe their phone</string>
     <string name="velo_admin_action_wipe_phone">Wipe their phone only</string>

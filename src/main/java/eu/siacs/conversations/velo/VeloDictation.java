@@ -97,7 +97,7 @@ public final class VeloDictation implements RecognitionListener {
                     m = new Model(dir.getAbsolutePath());
                 } catch (final java.io.IOException unreadable) {
                     // Velo 0.29.1: un modello rovinato sul telefono non blocca per sempre: si riscarica una volta
-                    VeloSpeechManager.discard(app);
+                    VeloSpeechManager.discard(app, lang);
                     m = new Model(VeloSpeechManager.ensureModel(app, account, lang, progress).getAbsolutePath());
                 }
                 final Model model = m;

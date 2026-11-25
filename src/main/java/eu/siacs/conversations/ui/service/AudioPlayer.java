@@ -127,6 +127,8 @@ public class AudioPlayer
         viewHolder.transcribe.setIconTint(color);
         viewHolder.transcribe.setIconResource(R.drawable.subject);
         viewHolder.transcribe.setOnClickListener(this);
+        // Velo 0.52: long press = transcribe in another language
+        viewHolder.transcribe.setOnLongClickListener(this::veloTranscribeLongClicked);
         MessageAdapter.setTextColor(viewHolder.transcript, viewHolder.bubbleColor);
         applyState(viewHolder, message);
         veloApplyTranscript(viewHolder, message);
@@ -206,20 +208,45 @@ public class AudioPlayer
             veloRefreshTranscripts();
             return;
         }
-        if (eu.siacs.conversations.velo.VeloTranscriber.isModelReady(context)) {
-            veloStartTranscription(message);
+        veloTranscribeIn(message, eu.siacs.conversations.velo.VeloSpeechLang.get(context));
+    }
+
+    /** Velo 0.52: long press on "Transcribe" (also on "Hide"/"Show text"): choose the language. */
+    private boolean veloTranscribeLongClicked(final View button) {
+        final RelativeLayout audioPlayer = (RelativeLayout) button.getParent();
+        final Message message = (Message) audioPlayer.getTag();
+        if (message == null || eu.siacs.conversations.velo.VeloTranscriber.isRunning(message)) {
+            return true;
+        }
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(messageAdapter.getActivity())
+                .setTitle(R.string.velo_transcribe_choose_language)
+                .setItems(eu.siacs.conversations.velo.VeloSpeechLang.names(),
+                        (dialog, which) -> veloTranscribeIn(message,
+                                eu.siacs.conversations.velo.VeloSpeechLang.LANGS[which]))
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+        return true;
+    }
+
+    /** Transcribes in {@code lang}, asking first when that language's model is not on the phone. */
+    private void veloTranscribeIn(final Message message, final String lang) {
+        final Context context = messageAdapter.getActivity();
+        if (eu.siacs.conversations.velo.VeloTranscriber.isModelReady(context, lang)) {
+            veloStartTranscription(message, lang);
             return;
         }
         new com.google.android.material.dialog.MaterialAlertDialogBuilder(context)
                 .setTitle(R.string.velo_transcribe_model_title)
-                .setMessage(R.string.velo_transcribe_model_message)
+                .setMessage(context.getString(R.string.velo_transcribe_model_message,
+                        eu.siacs.conversations.velo.VeloSpeechLang.name(lang),
+                        eu.siacs.conversations.velo.VeloSpeechLang.sizeMb(lang)))
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.velo_transcribe_download,
-                        (dialog, which) -> veloStartTranscription(message))
+                        (dialog, which) -> veloStartTranscription(message, lang))
                 .show();
     }
 
-    private void veloStartTranscription(final Message message) {
+    private void veloStartTranscription(final Message message, final String lang) {
         final Context context = messageAdapter.getActivity();
         final String uuid = message.getUuid();
         final java.io.File audio = messageAdapter.getFileBackend().getFile(message);
@@ -241,6 +268,7 @@ public class AudioPlayer
                 account,
                 message,
                 audio,
+                lang,
                 new eu.siacs.conversations.velo.VeloTranscriber.Callback() {
                     @Override
                     public void onDownload(final long done, final long total) {

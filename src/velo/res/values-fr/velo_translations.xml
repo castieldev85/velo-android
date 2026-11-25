@@ -150,7 +150,7 @@
     <string name="velo_server_name">Serveur</string>
     <string name="velo_whats_new_title">Nouveautés de Velo %s</string>
     <string name="velo_whats_new_ok">Compris</string>
-    <string name="velo_whats_new_text">Velo 0.51 : sondages comme sur Telegram.\n\n• Chaque réponse d\'un sondage est maintenant un bouton : un toucher vote, une autre réponse déplace le vote, la même le retire.\n• Après le vote vous voyez la barre et le pourcentage de chaque réponse ; la ligne dessous montre qui a voté quoi.\n• Ceux qui n\'ont pas encore mis à jour voient l\'ancien sondage et votent avec le numéro : leur vote compte aussi.\n• 0.51.1 : les boutons sont aussi dans vos sondages, et la notification d\'une personne absente de vos contacts ne montre plus l\'adresse du serveur.</string>
+    <string name="velo_whats_new_text">Velo 0.52 : dictée et transcription en quatre langues.\n\n• La dictée et la transcription des messages vocaux fonctionnent maintenant en italien, anglais, espagnol et français.\n• La langue est celle de l\'application ; vous pouvez la changer dans Paramètres → Données et médias → Langue de la voix.\n• Appuyez longuement sur « Transcrire » sur un message vocal pour le transcrire dans une autre langue.\n• Chaque langue se télécharge une seule fois, à la première utilisation (environ 40 Mo), puis fonctionne sans internet.</string>
     <string name="velo_invite_title">Invitation</string>
     <string name="velo_invite_have">J\'ai une invitation</string>
     <string name="velo_invite_invalid_title">Ce n\'est pas une invitation Velo</string>

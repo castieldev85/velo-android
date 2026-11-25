@@ -4011,7 +4011,8 @@ public class ConversationFragment extends XmppFragment
         veloDictAfter = full.substring(pos);
         veloDictCommitted = "";
         veloDictation = new eu.siacs.conversations.velo.VeloDictation();
-        veloDictation.start(activity, account, "it", new eu.siacs.conversations.velo.VeloDictation.Ui() {
+        veloDictation.start(activity, account,
+                eu.siacs.conversations.velo.VeloSpeechLang.get(activity), new eu.siacs.conversations.velo.VeloDictation.Ui() {
             @Override
             public void onPreparing() {
                 veloDictCardWaiting(getString(R.string.velo_dict_wait));

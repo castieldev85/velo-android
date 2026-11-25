@@ -8,6 +8,15 @@
             android:key="auto_send_recording"
             android:summary="@string/pref_auto_send_recording_summary"
             android:title="@string/pref_auto_send_recording" />
+        <!-- Velo 0.52: language of dictation and voice-message transcription -->
+        <ListPreference
+            android:defaultValue="auto"
+            android:entries="@array/velo_speech_language_entries"
+            android:entryValues="@array/velo_speech_language_values"
+            android:icon="@drawable/ic_dictation_24"
+            android:key="velo_speech_language"
+            android:title="@string/velo_speech_language"
+            app:useSimpleSummaryProvider="true" />
         <ListPreference
             android:defaultValue="@string/picture_compression"
             android:entries="@array/picture_compression_entries"

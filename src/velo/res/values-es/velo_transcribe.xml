@@ -7,9 +7,12 @@
     <string name="velo_transcribe_show">Mostrar texto</string>
     <string name="velo_transcript_note">Transcrito en el teléfono</string>
     <string name="velo_transcribe_model_title">Transcripción de mensajes de voz</string>
-    <string name="velo_transcribe_model_message">Para transcribir hace falta el reconocimiento de voz en italiano (48 MB). Se descarga una sola vez del servidor de Velo y después funciona sin internet: los mensajes de voz nunca salen del teléfono.</string>
+    <string name="velo_transcribe_model_message" formatted="true">Para transcribir hace falta el reconocimiento de voz (%1$s, %2$d MB). Se descarga una sola vez del servidor de Velo y después funciona sin internet: los mensajes de voz nunca salen del teléfono.</string>
     <string name="velo_transcribe_download">Descargar</string>
     <string name="velo_transcribe_downloading" formatted="true">Descargando %d%%</string>
     <string name="velo_transcribe_empty">No se ha reconocido ninguna palabra</string>
     <string name="velo_transcribe_failed" formatted="true">No se pudo transcribir: %s</string>
+    <string name="velo_transcribe_choose_language">Transcribir en</string>
+    <string name="velo_speech_language">Idioma de la voz</string>
+    <string name="velo_speech_language_auto">Igual que la app</string>
 </resources>

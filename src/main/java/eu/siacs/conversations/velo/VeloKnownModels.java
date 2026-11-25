@@ -12,9 +12,50 @@ import java.util.Set;
  */
 final class VeloKnownModels {
 
-    static final String SPEECH_DIR = "vosk-model-small-it-0.22";
-    static final String SPEECH_SHA256 =
-            "9ec65e75861d1c6c2e457cccd932705340dcdf233f5b239f00733b4de0bf3267";
+    /**
+     * Velo 0.52: one Vosk model per speech language, {lang, folder, SHA-256 of the ZIP}. All
+     * "small" models from alphacephei.com, Apache-2.0.
+     */
+    private static final String[][] SPEECH = {
+        {"it", "vosk-model-small-it-0.22",
+            "9ec65e75861d1c6c2e457cccd932705340dcdf233f5b239f00733b4de0bf3267"},
+        {"en", "vosk-model-small-en-us-0.15",
+            "30f26242c4eb449f948e42cb302dd7a686cb29a3423a8367f99ff41780942498"},
+        {"es", "vosk-model-small-es-0.42",
+            "09b239888f633ef2f0b4e09736e3d9936acfd810bc65d53fad45261762c6511f"},
+        {"fr", "vosk-model-small-fr-0.22",
+            "cabf6180e177eb9b3a9a9d43a437bd5e549f3a7d09525e5d69a3fed787be12ad"},
+    };
+
+    /** The model folder for a speech language, or null when Velo has no model for it. */
+    static String speechDir(final String lang) {
+        for (final String[] m : SPEECH) {
+            if (m[0].equals(lang)) {
+                return m[1];
+            }
+        }
+        return null;
+    }
+
+    /** The SHA-256 of that language's ZIP, or null. */
+    static String speechSha256(final String lang) {
+        for (final String[] m : SPEECH) {
+            if (m[0].equals(lang)) {
+                return m[2];
+            }
+        }
+        return null;
+    }
+
+    /** true for the folder of one of the models above (anything else in the model folder is old). */
+    static boolean isSpeechDir(final String dir) {
+        for (final String[] m : SPEECH) {
+            if (m[1].equals(dir)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private static final Set<String> TRANSLATION_FILES =
             new HashSet<>(Arrays.asList("model.intgemm.alphas.bin", "vocab.spm", "lex.s2t.bin"));

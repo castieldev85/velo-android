@@ -38,7 +38,8 @@ import eu.siacs.conversations.persistance.DatabaseBackend;
 /**
  * Velo 0.49: transcription of voice messages, entirely on the phone. The audio file is decoded
  * (MediaExtractor + MediaCodec, down-mixed to mono 16-bit PCM) and fed to Vosk with the same
- * Italian model as the dictation ({@link VeloSpeechManager}); nothing leaves the device.
+ * model as the dictation ({@link VeloSpeechManager}, language from {@link VeloSpeechLang});
+ * nothing leaves the device.
  *
  * <p>The text is kept in the app's encrypted database ({@code velo_transcripts}, never part of a
  * backup) and goes away with its message: {@link #cleanup(DatabaseBackend)} runs with every expiry
@@ -57,8 +58,6 @@ public final class VeloTranscriber {
     }
 
     private static final String TABLE = "velo_transcripts";
-    private static final String LANG = "it";
-    private static final String MODEL_DIR = VeloKnownModels.SPEECH_DIR;
     private static final long TIMEOUT_US = 10_000;
 
     private static final ExecutorService WORKER = Executors.newSingleThreadExecutor();
@@ -72,8 +71,8 @@ public final class VeloTranscriber {
 
     private VeloTranscriber() {}
 
-    public static boolean isModelReady(final Context context) {
-        return VeloSpeechManager.isReady(context, MODEL_DIR);
+    public static boolean isModelReady(final Context context, final String lang) {
+        return VeloSpeechManager.isReady(context, lang);
     }
 
     public static boolean isRunning(final Message message) {
@@ -110,12 +109,17 @@ public final class VeloTranscriber {
         return text == null || text.isEmpty() ? null : text;
     }
 
-    /** Transcribes the message's audio file; callbacks on the main thread. */
+    /**
+     * Transcribes the message's audio file in {@code lang} (Velo 0.52: one of
+     * {@link VeloSpeechLang#LANGS}); a new transcription replaces the old text. Callbacks on the
+     * main thread.
+     */
     public static void transcribe(
             final Context context,
             final Account account,
             final Message message,
             final File audio,
+            final String lang,
             final Callback callback) {
         final String uuid = message.getUuid();
         if (!RUNNING.add(uuid)) {
@@ -129,7 +133,7 @@ public final class VeloTranscriber {
                                 VeloSpeechManager.ensureModel(
                                         app,
                                         account,
-                                        LANG,
+                                        lang,
                                         new VeloSpeechManager.Progress() {
                                             @Override
                                             public void onDownload(final long done, final long total) {
@@ -150,8 +154,8 @@ public final class VeloTranscriber {
                             model = new Model(dir.getAbsolutePath());
                         } catch (final IOException unreadable) {
                             // a broken model is fetched again once, as the dictation does
-                            VeloSpeechManager.discard(app);
-                            model = new Model(VeloSpeechManager.ensureModel(app, account, LANG,
+                            VeloSpeechManager.discard(app, lang);
+                            model = new Model(VeloSpeechManager.ensureModel(app, account, lang,
                                     new VeloSpeechManager.Progress() {
                                         @Override
                                         public void onDownload(final long done, final long total) {}
