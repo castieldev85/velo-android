@@ -2898,6 +2898,9 @@ public class XmppConnectionService extends Service {
         }
         mForceDuringOnCreate.set(Compatibility.runsAndTargetsTwentySix(this));
         toggleForegroundService();
+        // Velo 0.50.1: the background checks (comeback, guest, auto wipe) find the service here
+        // too; before, only an opened screen filled it, so after a reboot they skipped silently
+        eu.siacs.conversations.ui.XmppActivity.staticXmppConnectionService = this;
         eu.siacs.conversations.utils.LiveLocationManager.getInstance()
                 .setOnSessionExpiredUiCallback(this::updateConversationUi);
         it.velo.chat.AndroidLoggingHandler.reset(new it.velo.chat.AndroidLoggingHandler());
@@ -3245,6 +3248,9 @@ public class XmppConnectionService extends Service {
             // ignored
         }
         destroyed = true;
+        if (eu.siacs.conversations.ui.XmppActivity.staticXmppConnectionService == this) {
+            eu.siacs.conversations.ui.XmppActivity.staticXmppConnectionService = null;
+        }
         fileObserver.stopWatching();
         internalPingExecutor.shutdown();
         storyRetractionExecutor.shutdown();
@@ -9416,6 +9422,11 @@ public class XmppConnectionService extends Service {
                     eu.siacs.conversations.velo.VeloAdmin.forUser(
                             eu.siacs.conversations.velo.VeloAdmin.DELETE, from, null),
                     ok -> {
+                        if (ok) {
+                            // Velo 0.50.1: a guest is forgotten only once its account is gone; when
+                            // the delete fails, the guest check deletes it again later
+                            eu.siacs.conversations.velo.VeloGuest.forget(this, account, from);
+                        }
                         showErrorToastInUi(ok ? R.string.velo_wipe_done_deleted : R.string.velo_wipe_done_not_deleted);
                         updateConversationUi();
                     });

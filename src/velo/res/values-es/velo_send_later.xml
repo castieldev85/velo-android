@@ -4,4 +4,6 @@
     <string name="velo_attach_later">Enviar más tarde</string>
     <string name="velo_send_later_write_first">Escribe primero el mensaje y luego elige cuándo enviarlo</string>
     <string name="velo_send_later_at">⏱ Sale %s</string>
+    <!-- Velo 0.50.1 -->
+    <string name="velo_attachment_busy">Primero envía o quita el adjunto: no puede salir más tarde, como encuesta o con acuse de lectura</string>
 </resources>

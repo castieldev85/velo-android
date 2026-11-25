@@ -1693,9 +1693,10 @@ public abstract class XmppActivity extends ActionBarActivity {
             return hasRealAvatar(conversation.getContact());
         }
         if (user instanceof eu.siacs.conversations.entities.MucOptions.User mucUser) {
-            return mucUser.getContact() != null
-                    ? hasRealAvatar(mucUser.getContact())
-                    : mucUser.getAvatar() != null;
+            // Velo 0.50.1: also a member whose picture is only in the group (a contact without
+            // one of its own); AvatarService draws that picture then
+            return mucUser.getAvatar() != null
+                    || (mucUser.getContact() != null && hasRealAvatar(mucUser.getContact()));
         }
         return true;
     }

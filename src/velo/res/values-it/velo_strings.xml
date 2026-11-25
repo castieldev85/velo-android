@@ -242,7 +242,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">Novità di Velo %s</string>
     <string name="velo_whats_new_ok">Ho capito</string>
-    <string name="velo_whats_new_text">Velo 0.49.0: trascrizione dei vocali.\n\n• Sotto ogni vocale c\'è ora il pulsante Trascrivi: il testo compare sotto il messaggio.\n• Tutto avviene sul telefono, senza internet: il vocale non esce mai. La prima volta Velo scarica il riconoscimento vocale italiano (48 MB).\n• Il testo sparisce insieme al suo messaggio (messaggi a tempo, Elimina per tutti).</string>
+    <string name="velo_whats_new_text">Velo 0.50: novità e correzioni.\n\n• Invia più tardi, Sondaggio e Presa visione dalla graffetta.\n• Messaggio se non torno, in Sicurezza: se non apri Velo per i giorni che scegli, parte un messaggio cifrato a una persona di fiducia.\n• Ospiti a tempo (Gestisci utenti) e foto grande con un tocco nei dettagli.\n• 0.50.1: corretta dopo una revisione del codice. Il messaggio se non torni e la scadenza degli ospiti funzionano anche dopo un riavvio del telefono, e una chiamata in arrivo non conta più come ritorno. Un allegato non parte più subito per errore.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Togli e cancella dal telefono</string>
     <string name="velo_admin_action_wipe_phone">Cancella solo il telefono</string>

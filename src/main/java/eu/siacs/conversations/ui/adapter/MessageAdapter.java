@@ -1199,6 +1199,15 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
         hide.setOnClickListener(v -> veloHideTranslation(uuid));
     }
 
+    private static void veloHideAck(final BubbleMessageItemViewHolder viewHolder) {
+        final TextView ack = viewHolder.veloAck();
+        if (ack != null) {
+            ack.setVisibility(GONE);
+            ack.setOnClickListener(null);
+            ack.setClickable(false);
+        }
+    }
+
     // Velo 0.50: Presa visione (VeloAck), the line under a 📋 message
     private void veloBindAck(final BubbleMessageItemViewHolder viewHolder, final Message message,
             final BubbleColor bubbleColor) {
@@ -1207,9 +1216,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
             return;
         }
         if (!eu.siacs.conversations.velo.VeloAck.isRequest(message)) {
-            ack.setVisibility(GONE);
-            ack.setOnClickListener(null);
-            ack.setClickable(false);
+            veloHideAck(viewHolder);
             return;
         }
         ack.setText(eu.siacs.conversations.velo.VeloAck.line(activity, message));
@@ -2354,6 +2361,10 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageI
             // can't land on this message's image later.
             Glide.with(activity).clear(viewHolder.image());
         }
+        // Velo 0.50.1: a recycled bubble must not keep the "Confermo di aver letto" line of the
+        // message it showed before (info, media and other paths never reach veloBindAck); the
+        // text paths show it again below when this message asks for it
+        veloHideAck(viewHolder);
         if (muted) {
             // Muted MUC participant
             displayInfoMessage(viewHolder, "Muted", bubbleColor);

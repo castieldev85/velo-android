@@ -4,4 +4,6 @@
     <string name="velo_attach_later">Invia più tardi</string>
     <string name="velo_send_later_write_first">Scrivi prima il messaggio, poi scegli quando inviarlo</string>
     <string name="velo_send_later_at">⏱ Parte %s</string>
+    <!-- Velo 0.50.1 -->
+    <string name="velo_attachment_busy">Prima invia o togli l’allegato: non può partire più tardi, come sondaggio o con presa visione</string>
 </resources>

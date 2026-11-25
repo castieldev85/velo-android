@@ -31,7 +31,6 @@
     <string name="message_retracted">Mensaje eliminado para todos</string>
     <string name="magic_create_text">Crea tu cuenta en tu propio servidor XMPP y da tu dirección completa a tus contactos.</string>
     <string name="velo_only_own_server">Velo solo funciona con contactos y grupos de tu propio servidor</string>
-    <string name="velo_contact_name_hint">Nombre de usuario</string>
     <string name="velo_no_plaintext">Este chat no se puede cifrar, así que Velo no enviará nada aquí</string>
     <string name="velo_new_device">⚠ %s usa un dispositivo nuevo. Toca aquí para verificarlo</string>
     <string name="velo_server_key_mismatch">La clave del servidor no es la incorporada en Velo: conexión rechazada</string>
@@ -156,7 +155,7 @@
     <string name="velo_server_name">Servidor</string>
     <string name="velo_whats_new_title">Novedades de Velo %s</string>
     <string name="velo_whats_new_ok">Entendido</string>
-    <string name="velo_whats_new_text">Velo 0.49.0: transcripción de mensajes de voz.\n\n• Debajo de cada mensaje de voz hay ahora un botón Transcribir: el texto aparece debajo del mensaje.\n• Todo ocurre en el teléfono, sin internet: el mensaje de voz nunca sale de él. La primera vez Velo descarga el reconocimiento de voz en italiano (48 MB).\n• El texto desaparece junto con su mensaje (mensajes temporales, Eliminar para todos).</string>
+    <string name="velo_whats_new_text">Velo 0.50: novedades y correcciones.\n\n• Enviar más tarde, Encuesta y Acuse de lectura desde el clip.\n• Mensaje si no vuelvo, en Seguridad: si no abres Velo durante los días que eliges, sale un mensaje cifrado a una persona de confianza.\n• Invitados con fecha de fin (Gestionar usuarios) y la foto grande con un toque en los detalles.\n• 0.50.1: corregida tras una revisión del código. El mensaje si no vuelves y el fin de los invitados funcionan también tras reiniciar el teléfono, y una llamada entrante ya no cuenta como vuelta. Un adjunto ya no sale enseguida por error.</string>
     <string name="velo_invite_title">Invitación</string>
     <string name="velo_invite_have">Tengo una invitación</string>
     <string name="velo_invite_invalid_title">No es una invitación de Velo</string>
@@ -206,4 +205,5 @@
     <string name="ephemeral_messages_off">Desactivados</string>
     <string name="ephemeral_messages_change">Cambiar</string>
     <string name="playback_speed">Velocidad de reproducción</string>
+    <string name="velo_contact_name_hint">Nombre de usuario</string>
 </resources>

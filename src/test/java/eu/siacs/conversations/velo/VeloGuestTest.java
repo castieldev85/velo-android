@@ -25,18 +25,35 @@ public class VeloGuestTest {
     }
 
     @Test
-    public void atTheEndWipesAToldGuestAndDeletesOneThatNeverCame() {
+    public void atTheEndAlwaysTriesTheWipeFirst() {
+        // 0.50.1: also a guest who never got the date (tickAdmin sends it, already past)
         assertEquals(VeloGuest.Step.WIPE, VeloGuest.next(guest(NOW, true, 0), NOW, false));
-        assertEquals(VeloGuest.Step.DELETE, VeloGuest.next(guest(NOW, false, 0), NOW, false));
+        assertEquals(VeloGuest.Step.WIPE, VeloGuest.next(guest(NOW, false, 0), NOW, false));
     }
 
     @Test
     public void afterTheWipeWaitsADayForTheAnswer() {
         final long sent = NOW - 1000;
         assertEquals(VeloGuest.Step.NOTHING, VeloGuest.next(guest(NOW - 5000, true, sent), NOW, true));
-        assertEquals(VeloGuest.Step.FORGET, VeloGuest.next(guest(NOW - 5000, true, sent), NOW, false));
         assertEquals(VeloGuest.Step.DELETE,
                 VeloGuest.next(guest(NOW - 5000, true, NOW - VeloGuest.ANSWER_WAIT_MS), NOW, true));
+    }
+
+    @Test
+    public void withTheWaitGoneTheAccountIsDeletedNeverForgotten() {
+        // 0.50.1: "Smetti di aspettare", or the answer came but the delete failed: the guest is
+        // still recorded, so its account is deleted on the server (before: forgotten, kept for good)
+        assertEquals(VeloGuest.Step.DELETE,
+                VeloGuest.next(guest(NOW - 5000, true, NOW - 1000), NOW, false));
+    }
+
+    @Test
+    public void theWholeAppGoesOnlyWithNoOtherAccount() {
+        assertTrue(VeloGuest.wholeApp(java.util.List.of("guest"), "guest"));
+        assertTrue(VeloGuest.wholeApp(java.util.List.of(), "guest"));
+        // an account added after the date came stays (0.50.1)
+        assertFalse(VeloGuest.wholeApp(java.util.List.of("guest", "mine"), "guest"));
+        assertFalse(VeloGuest.wholeApp(java.util.List.of("mine"), "guest"));
     }
 
     @Test

@@ -32,7 +32,8 @@ import eu.siacs.conversations.xmpp.Jid;
  * Velo 0.50, "Messaggio se non torno": when Velo has not been opened for the chosen number of
  * days, an encrypted message goes to one trusted contact. A day before, a notification says to
  * open Velo. It counts time like {@link VeloAutoWipe} (the clock that doesn't move with the date).
- * With the app lock on only a real unlock counts as "back", otherwise opening Velo does.
+ * With the app lock on only a real unlock counts as "back", otherwise opening a Velo screen does
+ * (not the call screen, which opens by itself on an incoming call).
  * After it has gone out it switches itself off, so it is sent once.
  */
 public final class VeloComeback {

@@ -310,11 +310,7 @@ public class VeloAdminActivity extends XmppActivity
             // Velo 0.41: the phone has not answered yet
             labels.add(getString(R.string.velo_admin_wipe_delete_now));
             actions.add(() -> confirm(getString(R.string.velo_admin_confirm_wipe_delete_now, name),
-                    R.string.velo_admin_delete_forever, () -> {
-                        RemoteWipe.removePending(this, account, user);
-                        VeloGuest.forget(this, account, user);
-                        perform(VeloAdmin.DELETE, user, null);
-                    }));
+                    R.string.velo_admin_delete_forever, () -> perform(VeloAdmin.DELETE, user, null)));
             labels.add(getString(R.string.velo_admin_wipe_stop_waiting));
             actions.add(() -> {
                 RemoteWipe.removePending(this, account, user);
@@ -358,11 +354,7 @@ public class VeloAdminActivity extends XmppActivity
         actions.add(() -> confirm(getString(R.string.velo_admin_confirm_delete, name),
                 R.string.velo_admin_action_delete,
                 () -> confirm(getString(R.string.velo_admin_confirm_delete_again, name),
-                        R.string.velo_admin_delete_forever, () -> {
-                            RemoteWipe.removePending(this, account, user);
-                            VeloGuest.forget(this, account, user);
-                            perform(VeloAdmin.DELETE, user, null);
-                        })));
+                        R.string.velo_admin_delete_forever, () -> perform(VeloAdmin.DELETE, user, null))));
         new MaterialAlertDialogBuilder(this)
                 .setTitle(name)
                 .setItems(labels.toArray(new String[0]), (d, which) -> actions.get(which).run())
@@ -452,6 +444,13 @@ public class VeloAdminActivity extends XmppActivity
                 runOnUiThread(() -> {
                     if (isFinishing()) {
                         return;
+                    }
+                    if (ok && (VeloAdmin.DELETE.equals(command) || VeloAdmin.ADD.equals(command))) {
+                        // Velo 0.50.1: the wait and the guest go only once the account is really
+                        // deleted (before, an error or no network turned the guest into a normal
+                        // user); a new user never inherits an old guest of the same name
+                        RemoteWipe.removePending(this, account, user);
+                        VeloGuest.forget(this, account, user);
                     }
                     if (!ok) {
                         Toast.makeText(this, R.string.velo_admin_failed, Toast.LENGTH_LONG).show();

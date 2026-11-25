@@ -156,8 +156,6 @@ public class Conversations extends Application {
                                 EasyLock.checkPassword(activity);
                             } else {
                                 appLocked = false;
-                                // Velo 0.50: without the app lock, opening Velo is "I'm back"
-                                eu.siacs.conversations.velo.VeloComeback.onOpened(activity);
                             }
                         } else if (appLocked) {
                             // An activity appeared while locked — cover it too.
@@ -169,6 +167,13 @@ public class Conversations extends Application {
                             if (!isLockPromptAlive()) {
                                 EasyLock.checkPassword(activity);
                             }
+                        }
+                        // Velo 0.50.1: "I'm back" for "Messaggio se non torno" is a screen the user
+                        // opened while Velo is not locked. Not the call screen: it opens by itself
+                        // on an incoming call, and a call every few days kept the count at zero.
+                        if (!appLocked
+                                && !(activity instanceof eu.siacs.conversations.ui.RtpSessionActivity)) {
+                            eu.siacs.conversations.velo.VeloComeback.onOpened(activity);
                         }
                     }
 

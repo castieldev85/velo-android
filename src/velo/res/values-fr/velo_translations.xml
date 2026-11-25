@@ -26,7 +26,6 @@
     <string name="message_retracted">Message supprimé pour tous</string>
     <string name="magic_create_text">Créez votre compte sur votre propre serveur XMPP et donnez votre adresse complète à vos contacts.</string>
     <string name="velo_only_own_server">Velo ne fonctionne qu\'avec les contacts et les groupes de votre propre serveur</string>
-    <string name="velo_contact_name_hint">Nom d\'utilisateur</string>
     <string name="velo_no_plaintext">Cette discussion ne peut pas être chiffrée, Velo n\'enverra donc rien ici</string>
     <string name="velo_new_device">⚠ %s utilise un nouvel appareil. Touchez ici pour le vérifier</string>
     <string name="velo_server_key_mismatch">La clé du serveur ne correspond pas à celle intégrée à Velo : connexion refusée</string>
@@ -151,7 +150,7 @@
     <string name="velo_server_name">Serveur</string>
     <string name="velo_whats_new_title">Nouveautés de Velo %s</string>
     <string name="velo_whats_new_ok">Compris</string>
-    <string name="velo_whats_new_text">Velo 0.49.0 : transcription des messages vocaux.\n\n• Sous chaque message vocal il y a maintenant un bouton Transcrire : le texte apparaît sous le message.\n• Tout se passe sur le téléphone, sans internet : le message vocal ne le quitte jamais. La première fois, Velo télécharge la reconnaissance vocale italienne (48 Mo).\n• Le texte disparaît avec son message (messages éphémères, Supprimer pour tous).</string>
+    <string name="velo_whats_new_text">Velo 0.50 : nouveautés et corrections.\n\n• Envoyer plus tard, Sondage et Accusé de lecture depuis le trombone.\n• Message si je ne reviens pas, dans Sécurité : si vous n\'ouvrez pas Velo pendant les jours choisis, un message chiffré part vers une personne de confiance.\n• Invités avec date de fin (Gérer les utilisateurs) et la grande photo d\'un toucher dans les détails.\n• 0.50.1 : corrigée après une revue du code. Le message si vous ne revenez pas et la fin des invités marchent aussi après un redémarrage du téléphone, et un appel entrant ne compte plus comme un retour. Une pièce jointe ne part plus tout de suite par erreur.</string>
     <string name="velo_invite_title">Invitation</string>
     <string name="velo_invite_have">J\'ai une invitation</string>
     <string name="velo_invite_invalid_title">Ce n\'est pas une invitation Velo</string>
@@ -201,4 +200,5 @@
     <string name="ephemeral_messages_off">Désactivés</string>
     <string name="ephemeral_messages_change">Modifier</string>
     <string name="playback_speed">Vitesse de lecture</string>
+    <string name="velo_contact_name_hint">Nom d\'utilisateur</string>
 </resources>

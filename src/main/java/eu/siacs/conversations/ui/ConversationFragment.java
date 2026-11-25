@@ -1557,6 +1557,12 @@ public class ConversationFragment extends XmppFragment
             return;
         }
 
+        if (hasAttachments && sendAt != null) {
+            // Velo 0.50.1: attachments always go at once (commitAttachments has no time), so a
+            // scheduled send with one would leave now; refused, the text and the file stay
+            Toast.makeText(activity, R.string.velo_attachment_busy, Toast.LENGTH_LONG).show();
+            return;
+        }
         if (hasAttachments) {
             // The caption goes to the first attachment only (see commitAttachments()).
             // Wire formats that cannot carry a caption (legacy OMEMO v0.3 encrypts only the
@@ -6730,8 +6736,23 @@ public class ConversationFragment extends XmppFragment
                 this::veloAck);
     }
 
+    /**
+     * Velo 0.50.1: with an attachment ready, send later, poll and confirmation are refused: the
+     * attachment would leave at once and the poll or the request would only be its caption.
+     */
+    private boolean veloAttachmentBusy() {
+        if (mediaPreviewAdapter != null && mediaPreviewAdapter.getItemCount() > 0) {
+            Toast.makeText(activity, R.string.velo_attachment_busy, Toast.LENGTH_LONG).show();
+            return true;
+        }
+        return false;
+    }
+
     // Velo 0.50: Presa visione, the message in the box goes out asking to be confirmed as read
     private void veloAck() {
+        if (veloAttachmentBusy()) {
+            return;
+        }
         final Editable body = binding.textinput.getText();
         final String text = eu.siacs.conversations.velo.VeloAck.compose(body == null ? null : body.toString());
         if (text == null) {
@@ -6744,6 +6765,9 @@ public class ConversationFragment extends XmppFragment
 
     // Velo 0.50: a poll goes out as a normal message from the text box
     private void veloPoll() {
+        if (veloAttachmentBusy()) {
+            return;
+        }
         final Editable draft = binding.textinput.getText();
         if (draft != null && !draft.toString().trim().isEmpty()) {
             // the poll travels through the text box: a half-written message would be lost
@@ -6759,6 +6783,9 @@ public class ConversationFragment extends XmppFragment
     // Velo 0.50: "Invia più tardi" from the paper clip; the scheduling itself is the base code's
     // (held in the service, saved as waiting, picked up again after a restart)
     private void veloSendLater() {
+        if (veloAttachmentBusy()) {
+            return;
+        }
         final Editable body = binding.textinput.getText();
         if (body == null || body.toString().trim().isEmpty()) {
             Toast.makeText(activity, R.string.velo_send_later_write_first, Toast.LENGTH_LONG).show();

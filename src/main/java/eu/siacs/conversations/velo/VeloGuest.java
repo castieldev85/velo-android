@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.xmpp.Jid;
@@ -49,7 +50,7 @@ public final class VeloGuest {
     private static final String OWN_UNTIL = "own_until";
     private static final String OWN_LEFT_MS = "own_left_ms";
     private static final String OWN_LAST_ELAPSED = "own_last_elapsed";
-    /** Whether the guest account was the only one on this phone: then the whole app goes. */
+    /** Up to 0.50.0 (counted once, when the date came); only removed now, see {@link #checkOwn}. */
     private static final String OWN_ONLY = "own_only";
     private static final String WORK = "velo_guest";
     static final long DAY_MS = 24 * 60 * 60 * 1000L;
@@ -106,20 +107,54 @@ public final class VeloGuest {
     }
 
     /** What the admin's Velo should do now for one guest (pure, testable). */
-    enum Step { NOTHING, TELL, WIPE, DELETE, FORGET }
+    enum Step { NOTHING, TELL, WIPE, DELETE }
 
+    /**
+     * Velo 0.50.1: the guest is forgotten only once its account is really gone from the server
+     * ({@link #deleteOnServer}, or the service after the phone's answer). So a guest still here
+     * after the wipe is deleted on the server: the phone did not answer in a day, the admin stopped
+     * waiting, or the delete after the answer failed. Before, a missing wait meant "forget", and
+     * the account stayed on the server for good.
+     */
     static Step next(final Guest guest, final long now, final boolean wipeStillPending) {
         if (guest.wipeSent > 0) {
-            if (!wipeStillPending) {
-                return Step.FORGET; // the phone answered: the service deleted the account
-            }
-            return now - guest.wipeSent >= ANSWER_WAIT_MS ? Step.DELETE : Step.NOTHING;
+            return wipeStillPending && now - guest.wipeSent < ANSWER_WAIT_MS
+                    ? Step.NOTHING : Step.DELETE;
         }
         if (now >= guest.until) {
-            // a guest who never got the date has no phone to wipe: delete the account at once
-            return guest.told ? Step.WIPE : Step.DELETE;
+            // also a guest who never got the date: tickAdmin first tries to reach its phone
+            return Step.WIPE;
         }
         return guest.told ? Step.NOTHING : Step.TELL;
+    }
+
+    /**
+     * Deletes the guest's account on the server; the guest is forgotten only when that worked, or
+     * when the account turns out to be gone already (then the delete has nothing left to do).
+     */
+    static void deleteOnServer(final Context context, final XmppConnectionService service,
+            final Account admin, final Jid user) {
+        VeloAdmin.run(service, admin, VeloAdmin.DELETE,
+                VeloAdmin.forUser(VeloAdmin.DELETE, user, null), ok -> {
+                    Log.d(Config.LOGTAG, "guest expired: account deleted " + ok);
+                    if (ok) {
+                        gone(context, service, admin, user);
+                        return;
+                    }
+                    VeloAdmin.list(service, admin, VeloAdmin.LIST_USERS, "registereduserjids", all -> {
+                        if (all != null && !all.contains(user.asBareJid())) {
+                            gone(context, service, admin, user);
+                        }
+                        // otherwise the next check tries again
+                    });
+                });
+    }
+
+    private static void gone(final Context context, final XmppConnectionService service,
+            final Account admin, final Jid user) {
+        RemoteWipe.removePending(context, admin, user);
+        forget(context, admin, user);
+        service.updateConversationUi();
     }
 
     public static void addGuest(final Context context, final Account admin, final Jid user, final int days) {
@@ -190,22 +225,19 @@ public final class VeloGuest {
                     }
                 }
                 case WIPE -> {
+                    // Velo 0.50.1: a guest who never got the date gets it now (already past: its
+                    // phone wipes itself). Only with no phone to reach is the account deleted
+                    // straight away; before, it was deleted and the phone kept all the chats.
+                    if (!guest.told && !service.sendVeloGuestExpiry(admin, guest.user, guest.until)) {
+                        Log.d(Config.LOGTAG, "guest expired, no phone to reach: account deleted");
+                        deleteOnServer(context, service, admin, guest.user);
+                        break;
+                    }
                     service.sendVeloRemoteWipe(admin, guest.user, RemoteWipe.MODE_DELETE);
-                    put(context, guest.wipeSentAt(now));
+                    put(context, guest.told().wipeSentAt(now));
                     Log.d(Config.LOGTAG, "guest expired: wipe sent");
                 }
-                case DELETE -> {
-                    RemoteWipe.removePending(context, admin, guest.user);
-                    VeloAdmin.run(service, admin, VeloAdmin.DELETE,
-                            VeloAdmin.forUser(VeloAdmin.DELETE, guest.user, null), ok -> {
-                                if (ok) {
-                                    forget(context, admin, guest.user);
-                                    service.updateConversationUi();
-                                }
-                                Log.d(Config.LOGTAG, "guest expired: account deleted " + ok);
-                            });
-                }
-                case FORGET -> forget(context, admin, guest.user);
+                case DELETE -> deleteOnServer(context, service, admin, guest.user);
                 default -> {}
             }
         }
@@ -223,7 +255,6 @@ public final class VeloGuest {
                 .putLong(OWN_UNTIL, until)
                 .putLong(OWN_LEFT_MS, left)
                 .putLong(OWN_LAST_ELAPSED, SystemClock.elapsedRealtime())
-                .putBoolean(OWN_ONLY, service.getAccounts().size() <= 1)
                 .commit();
         schedule(context);
     }
@@ -232,6 +263,16 @@ public final class VeloGuest {
     public static long ownEnd(final Context context) {
         return preferences(context).getString(OWN_ACCOUNT, null) == null
                 ? 0 : preferences(context).getLong(OWN_UNTIL, 0);
+    }
+
+    /** Pure: the whole app goes only when no account other than the guest's is on this phone. */
+    static boolean wholeApp(final List<String> accountUuids, final String guestUuid) {
+        for (final String uuid : accountUuids) {
+            if (!uuid.equals(guestUuid)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Pure: whether the guest time is over, by the date or by the counted time. */
@@ -258,13 +299,20 @@ public final class VeloGuest {
         if (!over(System.currentTimeMillis(), preferences.getLong(OWN_UNTIL, Long.MAX_VALUE), left)) {
             return false;
         }
-        if (!preferences.getBoolean(OWN_ONLY, true)) {
+        // Velo 0.50.1: the phone's accounts are counted NOW, from the database (it needs no
+        // service). Before, they were counted when the date arrived, so an account added later
+        // went too in the wipe of the whole app.
+        final List<String> uuids = new ArrayList<>();
+        for (final Account each : DatabaseBackend.getInstance(context).getAccounts()) {
+            uuids.add(each.getUuid());
+        }
+        if (!wholeApp(uuids, accountUuid)) {
             // other accounts on this phone stay: only the guest account goes, through the service
             final XmppConnectionService service = XmppActivity.staticXmppConnectionService;
-            final Account account = service == null ? null : service.findAccountByUuid(accountUuid);
             if (service == null) {
-                return false; // tried again by the worker once the service runs
+                return false; // tried again by the worker once the service runs; never a blind wipe
             }
+            final Account account = service.findAccountByUuid(accountUuid);
             Log.d(Config.LOGTAG, "guest time over: only the guest account goes");
             clearOwn(context);
             if (account != null) {
