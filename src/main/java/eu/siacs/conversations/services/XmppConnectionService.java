@@ -1602,6 +1602,25 @@ public class XmppConnectionService extends Service {
         return message;
     }
 
+    /**
+     * Velo 0.53: a story already uploaded for one contact, for {@code target}: the same
+     * encrypted upload (its key travels inside the target's own OMEMO envelope) and the same
+     * local file, so neither a second upload nor a second copy on the phone. Null when the
+     * file is gone.
+     */
+    public Message veloReusedStoryMessage(final Conversation target, final Message source, final String url) {
+        final File file = getFileBackend().getFile(source);
+        if (!file.exists()) {
+            return null;
+        }
+        final Message message = new Message(target, "", target.getNextEncryption());
+        message.setCounterpart(target.getNextCounterpart());
+        message.setType(source.getType() == Message.TYPE_IMAGE ? Message.TYPE_IMAGE : Message.TYPE_FILE);
+        message.setRelativeFilePath(file.getAbsolutePath());
+        getFileBackend().updateFileParams(message, url);
+        return message;
+    }
+
     private void shareUriToConversations(
             final List<Conversation> targets, final Uri uri, final String type,
             final String caption) {

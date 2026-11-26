@@ -230,7 +230,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">What\'s new in Velo %s</string>
     <string name="velo_whats_new_ok">Got it</string>
-    <string name="velo_whats_new_text">Velo 0.52: dictation and transcription in four languages.\n\n• Dictation and voice-message transcription now work in Italian, English, Spanish and French.\n• The language is the app\'s one; you can change it in Settings → Data and media → Voice language.\n• Long press “Transcribe” on a voice message to transcribe it in another language.\n• Each language is downloaded once, the first time you use it (about 40 MB), and then works without internet.</string>
+    <string name="velo_whats_new_text">Velo 0.53: lighter stories.\n\n• A story is now uploaded only once, however many contacts see it: much less data and battery, above all for videos.\n• It stays end-to-end encrypted: each contact gets the key inside their own encrypted message.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Remove and wipe their phone</string>
     <string name="velo_admin_action_wipe_phone">Wipe their phone only</string>

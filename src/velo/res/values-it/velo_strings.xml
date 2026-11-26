@@ -242,7 +242,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">Novità di Velo %s</string>
     <string name="velo_whats_new_ok">Ho capito</string>
-    <string name="velo_whats_new_text">Velo 0.52: dettatura e trascrizione in quattro lingue.\n\n• La dettatura e la trascrizione dei vocali ora funzionano in italiano, inglese, spagnolo e francese.\n• La lingua è quella dell\'app; puoi cambiarla in Impostazioni → Dati e media → Lingua della voce.\n• Tieni premuto “Trascrivi” su un vocale per trascriverlo in un\'altra lingua.\n• Ogni lingua si scarica una volta sola, al primo uso (circa 40 MB), e poi funziona senza internet.</string>
+    <string name="velo_whats_new_text">Velo 0.53: storie più leggere.\n\n• Una storia ora si carica una volta sola, per quanti contatti la vedano: molti meno dati e batteria, soprattutto con i video.\n• Resta cifrata end-to-end: ogni contatto riceve la chiave dentro il suo messaggio cifrato.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Togli e cancella dal telefono</string>
     <string name="velo_admin_action_wipe_phone">Cancella solo il telefono</string>

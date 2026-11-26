@@ -155,7 +155,7 @@
     <string name="velo_server_name">Servidor</string>
     <string name="velo_whats_new_title">Novedades de Velo %s</string>
     <string name="velo_whats_new_ok">Entendido</string>
-    <string name="velo_whats_new_text">Velo 0.52: dictado y transcripción en cuatro idiomas.\n\n• El dictado y la transcripción de los mensajes de voz ahora funcionan en italiano, inglés, español y francés.\n• El idioma es el de la app; puedes cambiarlo en Ajustes → Datos y multimedia → Idioma de la voz.\n• Mantén pulsado “Transcribir” en un mensaje de voz para transcribirlo en otro idioma.\n• Cada idioma se descarga una sola vez, la primera vez que lo usas (unos 40 MB), y después funciona sin internet.</string>
+    <string name="velo_whats_new_text">Velo 0.53: historias más ligeras.\n\n• Ahora una historia se sube una sola vez, la vean cuantos contactos la vean: muchos menos datos y batería, sobre todo con los vídeos.\n• Sigue cifrada de extremo a extremo: cada contacto recibe la clave dentro de su propio mensaje cifrado.</string>
     <string name="velo_invite_title">Invitación</string>
     <string name="velo_invite_have">Tengo una invitación</string>
     <string name="velo_invite_invalid_title">No es una invitación de Velo</string>

@@ -439,16 +439,67 @@ public final class VeloStories {
         };
         new Thread(() -> {
             awaitKeys(chosen);
-            for (final Conversation conversation : chosen) {
-                conversation.setVeloStoryPending(VeloStory.create(id, expires, caption), expires);
-                if (video) {
-                    service.attachFileToConversation(conversation, uri, mime, null, callback);
-                } else {
-                    service.attachImageToConversation(conversation, uri, mime, null, callback);
+            // Velo 0.53: uploaded once, for the first contact; the others get the same
+            // encrypted upload, each with the key inside its own OMEMO envelope
+            final Conversation first = chosen.get(0);
+            final List<Conversation> others = new ArrayList<>(chosen.subList(1, chosen.size()));
+            final UiCallback<Message> firstDone = new UiCallback<>() {
+                @Override
+                public void success(final Message sent) {
+                    final Message.FileParams params = sent.getFileParams();
+                    final String url = params == null ? null : params.url;
+                    new Thread(() -> spread(service, sent, url, others, uri, mime, video, id, expires, caption, callback),
+                            "velo-story").start();
                 }
-            }
+
+                @Override
+                public void error(final int errorCode, final Message message) {
+                    callback.error(errorCode, message);
+                    new Thread(() -> spread(service, null, null, others, uri, mime, video, id, expires, caption, callback),
+                            "velo-story").start();
+                }
+
+                @Override
+                public void userInputRequired(final android.app.PendingIntent pi, final Message message) {}
+            };
+            first.setVeloStoryPending(VeloStory.create(id, expires, caption), expires);
+            attach(service, first, uri, mime, video, others.isEmpty() ? callback : firstDone);
         }, "velo-story").start();
         Toast.makeText(activity, activity.getString(R.string.velo_story_sent, chosen.size()), Toast.LENGTH_LONG).show();
+    }
+
+    private static void attach(final XmppConnectionService service, final Conversation conversation, final Uri uri,
+            final String mime, final boolean video, final UiCallback<Message> callback) {
+        if (video) {
+            service.attachFileToConversation(conversation, uri, mime, null, callback);
+        } else {
+            service.attachImageToConversation(conversation, uri, mime, null, callback);
+        }
+    }
+
+    /**
+     * Velo 0.53: the story uploaded for the first contact goes to the others with the same URL.
+     * Without a URL (upload failed, offline, no upload service) each of them gets its own upload,
+     * as before 0.53. The story mark is set right before each message: it goes stale after ten
+     * minutes, and a big video can take longer than that to upload.
+     */
+    private static void spread(final XmppConnectionService service, final Message sent, final String url,
+            final List<Conversation> others, final Uri uri, final String mime, final boolean video,
+            final String id, final long expires, final String caption, final UiCallback<Message> callback) {
+        for (final Conversation conversation : others) {
+            conversation.setVeloStoryPending(VeloStory.create(id, expires, caption), expires);
+            final Message reused = sent == null || url == null || url.isEmpty()
+                    ? null
+                    : service.veloReusedStoryMessage(conversation, sent, url);
+            if (reused != null) {
+                service.sendMessage(reused);
+            } else {
+                // the picked file may be gone by now (editor copies): use the one already prepared
+                final java.io.File prepared = sent == null ? null : service.getFileBackend().getFile(sent);
+                attach(service, conversation, prepared != null && prepared.exists() ? Uri.fromFile(prepared) : uri,
+                        mime, video, callback);
+            }
+        }
     }
 
     /**
