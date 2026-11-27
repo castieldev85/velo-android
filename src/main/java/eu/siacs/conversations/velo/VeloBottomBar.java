@@ -505,10 +505,13 @@ public final class VeloBottomBar {
     private static boolean choiceForChats = false;
 
     /** A profile chosen on the Profile page: Chats switches to it when it comes back. */
-    public static void chooseForChats(final Account account) {
+    public static void chooseForChats(@Nullable final Account account) {
         rememberSelected(account);
         choiceForChats = true;
     }
+
+    /** Velo 0.54: what {@link #takeChoiceForChats} answers when "All accounts" was chosen. */
+    public static final String ALL_PROFILES = "*all*";
 
     /** The profile chosen elsewhere that Chats still has to switch to, if any (once). */
     @Nullable
@@ -517,7 +520,8 @@ public final class VeloBottomBar {
             return null;
         }
         choiceForChats = false;
-        return selectedAccountUuid;
+        // Velo 0.54: "All accounts" (null) was mistaken for "no choice", so Chats kept one profile
+        return selectedAccountUuid == null ? ALL_PROFILES : selectedAccountUuid;
     }
 
     /** Shows or hides a bar put on with {@link #attach}, and the room kept for it under the screen. */

@@ -290,7 +290,9 @@ public class ConversationsActivity extends XmppActivity
         if (bottomnav.getMenu().findItem(R.id.velo_nav_profile) != null) {
             // Velo 0.45: a profile chosen on the Profile page becomes the one of the chat list too
             final String chosenElsewhere = eu.siacs.conversations.velo.VeloBottomBar.takeChoiceForChats();
-            if (chosenElsewhere != null) {
+            if (eu.siacs.conversations.velo.VeloBottomBar.ALL_PROFILES.equals(chosenElsewhere)) {
+                veloSelectProfile(null);
+            } else if (chosenElsewhere != null) {
                 for (final Account account : xmppConnectionService.getAccounts()) {
                     if (chosenElsewhere.equals(account.getUuid())) {
                         veloSelectProfile(account);

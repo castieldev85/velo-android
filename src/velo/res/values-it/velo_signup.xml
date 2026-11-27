@@ -17,4 +17,8 @@
     <string name="velo_report_sending">Invio la segnalazione…</string>
     <string name="velo_report_sent">Segnalazione inviata. Grazie.</string>
     <string name="velo_report_failed">Segnalazione non inviata. Riprova più tardi.</string>
+    <!-- Velo 0.54 -->
+    <string name="velo_signup_note">Solo nome utente e password. Niente email, niente numero.</string>
+    <string name="velo_signup_user_hint">Scelto da Velo, puoi cambiarlo</string>
+    <string name="velo_signup_password_hint">Creata da Velo e salvata su questo telefono. Annotala se vuoi usare Velo anche su un altro telefono.</string>
 </resources>

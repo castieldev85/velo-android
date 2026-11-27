@@ -17,4 +17,8 @@
     <string name="velo_report_sending">Enviando la denuncia…</string>
     <string name="velo_report_sent">Denuncia enviada. Gracias.</string>
     <string name="velo_report_failed">Denuncia no enviada. Inténtalo más tarde.</string>
+    <!-- Velo 0.54 -->
+    <string name="velo_signup_note">Solo nombre de usuario y contraseña. Sin correo, sin número de teléfono.</string>
+    <string name="velo_signup_user_hint">Elegido por Velo, puedes cambiarlo</string>
+    <string name="velo_signup_password_hint">Creada por Velo y guardada en este teléfono. Anótala si quieres usar Velo también en otro teléfono.</string>
 </resources>

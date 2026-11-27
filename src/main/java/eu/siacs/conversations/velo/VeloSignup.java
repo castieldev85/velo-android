@@ -45,7 +45,32 @@ public final class VeloSignup {
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     public static final String[] REASONS = {"spam", "molestie", "illegale", "altro"};
 
+    /** Velo 0.54: the account page fills in a proposed user name and password (one tap to join). */
+    public static final String EXTRA_SUGGEST = "velo_signup_suggest";
+
+    private static final String[] ADJECTIVES = {
+        "blue", "calm", "swift", "brave", "quiet", "lucky", "sunny", "misty",
+        "bold", "happy", "wild", "gentle", "silver", "golden", "clever", "rapid"
+    };
+    private static final String[] ANIMALS = {
+        "fox", "owl", "lynx", "otter", "panda", "koala", "falcon", "tiger",
+        "dolphin", "raven", "wolf", "heron", "badger", "robin", "seal", "hawk"
+    };
+
     private VeloSignup() {}
+
+    /** A user name nobody has to invent, like "swiftotter4821": the person can still change it. */
+    public static String suggestUser() {
+        final java.security.SecureRandom random = new java.security.SecureRandom();
+        return ADJECTIVES[random.nextInt(ADJECTIVES.length)]
+                + ANIMALS[random.nextInt(ANIMALS.length)]
+                + (1000 + random.nextInt(9000));
+    }
+
+    /** A strong password (same generator as the password notice), kept by Velo on the phone. */
+    public static String suggestPassword() {
+        return VeloPasswordActivity.generate();
+    }
 
     /** Thrown with the code the site answered ("limite", "robot", "dati", ...). */
     static final class SiteError extends IOException {
@@ -126,7 +151,8 @@ public final class VeloSignup {
         if (token == null || VeloServers.conflicts(server)) {
             return null;
         }
-        return VeloInviteActivity.joinIntent(activity, server, token, null, null);
+        return VeloInviteActivity.joinIntent(activity, server, token, null, null)
+                .putExtra(EXTRA_SUGGEST, true);
     }
 
     /**

@@ -43,4 +43,14 @@ public class VeloSignupTest {
         Assert.assertNull(VeloFriendInvite.user(invite));
         Assert.assertEquals("Velo", VeloServers.parseInvite(invite).name);
     }
+    @Test
+    public void suggestedNameAndPasswordAreValidAndStrong() {
+        for (int i = 0; i < 200; i++) {
+            final String user = VeloSignup.suggestUser();
+            Assert.assertTrue(user, user.matches("[a-z]+[0-9]{4}"));
+            Assert.assertTrue(user, user.length() <= 20);
+            final String password = VeloSignup.suggestPassword();
+            Assert.assertTrue(VeloPasswordActivity.strength(password) >= VeloPasswordActivity.MIN_STRENGTH);
+        }
+    }
 }

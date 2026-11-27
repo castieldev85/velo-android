@@ -230,7 +230,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">What\'s new in Velo %s</string>
     <string name="velo_whats_new_ok">Got it</string>
-    <string name="velo_whats_new_text">Velo 0.53: lighter stories.\n\n• A story is now uploaded only once, however many contacts see it: much less data and battery, above all for videos.\n• It stays end-to-end encrypted: each contact gets the key inside their own encrypted message.</string>
+    <string name="velo_whats_new_text">Velo 0.54: profiles and new accounts.\n\n• With more than one profile, “All accounts” on the Profile page now really shows the chats of all profiles together.\n• Creating an account is easier: username and password are ready, and it is clear right away that no email or phone number is needed.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Remove and wipe their phone</string>
     <string name="velo_admin_action_wipe_phone">Wipe their phone only</string>

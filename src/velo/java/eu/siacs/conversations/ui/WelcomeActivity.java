@@ -281,6 +281,7 @@ public class WelcomeActivity extends XmppActivity implements XmppConnectionServi
             binding.registerNewAccount.setTextColor(binding.useExisting.getTextColors());
             binding.registerNewAccount.setTypeface(binding.useExisting.getTypeface());
             binding.registerNewAccount.setOnClickListener(v -> eu.siacs.conversations.velo.VeloSignup.start(this));
+            binding.veloSignupNote.setVisibility(View.VISIBLE);
             binding.useVeloTrial.setVisibility(View.VISIBLE);
             binding.useVeloTrial.setOnClickListener(v -> {
                 try {

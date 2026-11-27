@@ -17,4 +17,8 @@
     <string name="velo_report_sending">Sending the report…</string>
     <string name="velo_report_sent">Report sent. Thank you.</string>
     <string name="velo_report_failed">Report not sent. Try again later.</string>
+    <!-- Velo 0.54 -->
+    <string name="velo_signup_note">Only a username and a password. No email, no phone number.</string>
+    <string name="velo_signup_user_hint">Chosen by Velo, you can change it</string>
+    <string name="velo_signup_password_hint">Created by Velo and kept on this phone. Note it down if you want to use Velo on another phone too.</string>
 </resources>

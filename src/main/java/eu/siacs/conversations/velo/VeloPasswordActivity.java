@@ -109,7 +109,7 @@ public class VeloPasswordActivity extends XmppActivity
         return bytes.length == 0 || pool == 0 ? 0 : bytes.length * Math.log(pool) / Math.log(2);
     }
 
-    static String generate() {
+    public static String generate() {
         final SecureRandom random = new SecureRandom();
         final StringBuilder password = new StringBuilder(LENGTH);
         for (int i = 0; i < LENGTH; i++) {

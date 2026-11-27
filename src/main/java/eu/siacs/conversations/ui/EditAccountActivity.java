@@ -1265,6 +1265,19 @@ public class EditAccountActivity extends OmemoActivity
                 }
                 this.binding.accountPassword.requestFocus();
             }
+            // Velo 0.54: from "Create an account" (store), name and password are already there;
+            // the password stays visible so the person can note it for another phone
+            if (mVeloInviteToken != null
+                    && getIntent() != null
+                    && getIntent().getBooleanExtra(eu.siacs.conversations.velo.VeloSignup.EXTRA_SUGGEST, false)
+                    && this.binding.accountJid.getText().length() == 0
+                    && this.binding.accountPassword.getText().length() == 0) {
+                this.binding.accountJid.setText(eu.siacs.conversations.velo.VeloSignup.suggestUser());
+                this.binding.accountPassword.setText(eu.siacs.conversations.velo.VeloSignup.suggestPassword());
+                this.binding.accountPassword.setTransformationMethod(null);
+                this.binding.accountJidLayout.setHelperText(getString(R.string.velo_signup_user_hint));
+                this.binding.accountPasswordLayout.setHelperText(getString(R.string.velo_signup_password_hint));
+            }
         }
         SharedPreferences preferences = getPreferences();
         mUseTor = preferences.getBoolean("use_tor", getResources().getBoolean(R.bool.use_tor));

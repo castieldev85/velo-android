@@ -155,7 +155,7 @@
     <string name="velo_server_name">Servidor</string>
     <string name="velo_whats_new_title">Novedades de Velo %s</string>
     <string name="velo_whats_new_ok">Entendido</string>
-    <string name="velo_whats_new_text">Velo 0.53: historias más ligeras.\n\n• Ahora una historia se sube una sola vez, la vean cuantos contactos la vean: muchos menos datos y batería, sobre todo con los vídeos.\n• Sigue cifrada de extremo a extremo: cada contacto recibe la clave dentro de su propio mensaje cifrado.</string>
+    <string name="velo_whats_new_text">Velo 0.54: perfiles y cuentas nuevas.\n\n• Con varios perfiles, “Todas las cuentas” en la página Perfil ahora muestra de verdad los chats de todos los perfiles juntos.\n• Crear una cuenta es más fácil: el nombre de usuario y la contraseña ya están listos, y se ve enseguida que no hace falta correo ni número de teléfono.</string>
     <string name="velo_invite_title">Invitación</string>
     <string name="velo_invite_have">Tengo una invitación</string>
     <string name="velo_invite_invalid_title">No es una invitación de Velo</string>

@@ -483,7 +483,12 @@ public class VeloProfileActivity extends XmppActivity
                 xmppConnectionService.getAccounts(),
                 account,
                 chosen -> {
-                    if (chosen != null) {
+                    if (chosen == null) {
+                        // Velo 0.54: this page shows one profile at a time; "All accounts" is for
+                        // the chat list, so back to it
+                        VeloBottomBar.chooseForChats(null);
+                        VeloBottomBar.open(this, R.id.chats);
+                    } else {
                         VeloBottomBar.chooseForChats(chosen);
                         account = chosen;
                         jid = chosen.getJid().asBareJid().toString();
