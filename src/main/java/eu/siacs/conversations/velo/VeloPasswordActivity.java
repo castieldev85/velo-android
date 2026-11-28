@@ -61,7 +61,7 @@ public class VeloPasswordActivity extends XmppActivity
     public static void maybeShowNotice(final Activity activity, final XmppConnectionService service) {
         final Account account = VeloUpdater.account(service);
         if (account == null || !account.isOnlineAndConnected() || noticeOpen || activity.isFinishing()
-                || VeloWhatsNew.isOpen()) {
+                || VeloWhatsNew.isOpen() || VeloIntro.isOpen()) {
             return;
         }
         final SharedPreferences preferences = service.getPreferences();

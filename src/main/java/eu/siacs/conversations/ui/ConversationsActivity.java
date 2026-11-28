@@ -1791,6 +1791,8 @@ public class ConversationsActivity extends XmppActivity
     // Velo 0.24: nobody has to go looking in the settings to find out there is a new version
     private void veloUpdateUpdateButton() {
         eu.siacs.conversations.velo.VeloUpdater.checkFromHome(xmppConnectionService);
+        // Velo 0.55: someone new to Velo gets three cards with the basics, before anything else
+        eu.siacs.conversations.velo.VeloIntro.maybeShow(this, xmppConnectionService);
         // Velo 0.38: after an update, the list of what changed comes first
         eu.siacs.conversations.velo.VeloWhatsNew.maybeShow(this, xmppConnectionService);
         eu.siacs.conversations.velo.VeloPasswordActivity.maybeShowNotice(this, xmppConnectionService);

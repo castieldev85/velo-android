@@ -150,7 +150,7 @@
     <string name="velo_server_name">Serveur</string>
     <string name="velo_whats_new_title">Nouveautés de Velo %s</string>
     <string name="velo_whats_new_ok">Compris</string>
-    <string name="velo_whats_new_text">Velo 0.54 : profils et nouveaux comptes.\n\n• Avec plusieurs profils, « Tous les comptes » sur la page Profil affiche maintenant vraiment les discussions de tous les profils ensemble.\n• Créer un compte est plus simple : le nom d\'utilisateur et le mot de passe sont déjà prêts, et on voit tout de suite qu\'il ne faut ni e-mail ni numéro de téléphone.</string>
+    <string name="velo_whats_new_text">Velo 0.55 : un accueil pour les nouveaux.\n\n• Les nouveaux venus sur Velo trouvent maintenant au premier lancement trois courtes fiches : pas de numéro de téléphone, comment commencer une discussion, stories et profils.\n• Depuis la 0.54 : « Tous les comptes » sur la page Profil affiche les discussions de tous les profils ensemble, et créer un compte ne demande qu’un toucher.</string>
     <string name="velo_invite_title">Invitation</string>
     <string name="velo_invite_have">J\'ai une invitation</string>
     <string name="velo_invite_invalid_title">Ce n\'est pas une invitation Velo</string>

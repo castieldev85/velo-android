@@ -17,7 +17,7 @@ import eu.siacs.conversations.services.XmppConnectionService;
  */
 public final class VeloWhatsNew {
 
-    private static final String SEEN = "velo_whats_new_seen";
+    static final String SEEN = "velo_whats_new_seen";
     private static boolean open = false;
 
     private VeloWhatsNew() {}
@@ -27,7 +27,7 @@ public final class VeloWhatsNew {
     }
 
     public static void maybeShow(final Activity activity, final XmppConnectionService service) {
-        if (open || activity.isFinishing() || service == null || VeloUpdater.account(service) == null) {
+        if (open || VeloIntro.isOpen() || activity.isFinishing() || service == null || VeloUpdater.account(service) == null) {
             return;
         }
         final SharedPreferences preferences = service.getPreferences();

@@ -242,7 +242,7 @@
     <!-- Velo 0.38: window with the news after an update (rewrite velo_whats_new_text for every release) -->
     <string name="velo_whats_new_title">Novità di Velo %s</string>
     <string name="velo_whats_new_ok">Ho capito</string>
-    <string name="velo_whats_new_text">Velo 0.54: profili e nuovi account.\n\n• Con più profili, “Tutti gli account” dalla pagina Profilo ora mostra davvero le chat di tutti i profili insieme.\n• Creare un account è più semplice: nome utente e password sono già pronti, e si vede subito che non servono né email né numero di telefono.</string>
+    <string name="velo_whats_new_text">Velo 0.55: un benvenuto per chi arriva.\n\n• Chi è nuovo su Velo ora trova al primo avvio tre brevi schede: niente numero di telefono, come iniziare una chat, storie e profili.\n• Dalla 0.54: “Tutti gli account” dalla pagina Profilo mostra le chat di tutti i profili insieme, e creare un account richiede un tocco.</string>
     <!-- Velo 0.41: remote wipe from Manage users -->
     <string name="velo_admin_action_remove_wipe">Togli e cancella dal telefono</string>
     <string name="velo_admin_action_wipe_phone">Cancella solo il telefono</string>

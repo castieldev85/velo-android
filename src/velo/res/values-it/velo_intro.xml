@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Velo 0.55: first-launch introduction cards (VeloIntro) -->
+<resources>
+    <string name="velo_intro_next">Avanti</string>
+    <string name="velo_intro_skip">Salta</string>
+    <string name="velo_intro_start">Inizia</string>
+    <string name="velo_intro_1_title">Benvenuto su Velo</string>
+    <string name="velo_intro_1_text">Niente numero di telefono e niente email: le persone ti trovano solo con il tuo nome utente, e Velo si collega sempre attraverso Tor.</string>
+    <string name="velo_intro_2_title">Inizia una chat</string>
+    <string name="velo_intro_2_text">Apri Contatti per aggiungere qualcuno con il suo nome utente, oppure mandagli un invito. Tra i contatti potresti già trovare Team Velo: scrivi lì per domande o problemi, risponde lo sviluppatore.</string>
+    <string name="velo_intro_3_title">Storie e profili</string>
+    <string name="velo_intro_3_text">Pubblica una storia dall\'alto della lista chat: la vedono solo i contatti che scegli e sparisce dopo 24 ore. In Profilo puoi aggiungere altri account e passare dall\'uno all\'altro.</string>
+</resources>
